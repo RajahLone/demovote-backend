@@ -1,0 +1,38 @@
+plugins {
+	id 'java'
+	id 'war'
+	id 'org.springframework.boot' version '3.4.2'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'fr.triplea'
+version = '0.0.1-SNAPSHOT'
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+
+repositories { mavenCentral() }
+
+dependencies {
+	
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+
+  implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.0'
+  implementation 'org.hibernate.validator:hibernate-validator:8.0.2.Final'
+	
+  runtimeOnly 'org.postgresql:postgresql'
+
+  providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+	
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+tasks.named('test') { useJUnitPlatform() }
+
+tasks.withType(JavaCompile).configureEach { options.compilerArgs.add("-parameters") }
