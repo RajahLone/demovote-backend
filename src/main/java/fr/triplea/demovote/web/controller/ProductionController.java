@@ -45,7 +45,7 @@ public class ProductionController
  
   @GetMapping(value = "/form/{id}")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public ResponseEntity<Production> getForm(@PathVariable("id") int id)
+  public ResponseEntity<Production> getForm(@PathVariable int id)
   { 
     Production p = productionRepository.findById(id);
     
@@ -58,6 +58,10 @@ public class ProductionController
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
   public Production create(@RequestBody(required = true) Production production) 
   { 
+    Production found = productionRepository.findById(0);
+    
+    if (found== null) { production.setNumeroProduction(null); }
+
     if (production.getType() == null) { production.setType(ProductionType.AUTRE); }
     if (production.getNumeroVersion() == null) { production.setNumeroVersion(1); }
     
@@ -66,7 +70,7 @@ public class ProductionController
  
   @PutMapping(value = "/update/{id}")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public ResponseEntity<Production> update(@PathVariable("id") int id, @RequestBody(required = true) Production production) 
+  public ResponseEntity<Production> update(@PathVariable int id, @RequestBody(required = true) Production production) 
   { 
     Production found = productionRepository.findById(id);
     
@@ -98,7 +102,7 @@ public class ProductionController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public ResponseEntity<Object> disableProduction(@PathVariable("id") int id) 
+  public ResponseEntity<Object> disableProduction(@PathVariable int id) 
   { 
     Production found = productionRepository.getReferenceById(id);
     

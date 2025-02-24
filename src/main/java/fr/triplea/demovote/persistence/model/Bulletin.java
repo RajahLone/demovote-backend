@@ -18,7 +18,7 @@ public class Bulletin
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_bulletin")
+  @Column(name = "numero_bulletin", nullable = false)
   private Integer numeroBulletin;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -76,6 +76,7 @@ public class Bulletin
   public Bulletin() { super(); }
  
   
+  public void setNumeroBulletin(Integer numeroBulletin) { this.numeroBulletin = numeroBulletin; }
   public Integer getNumeroBulletin() { return this.numeroBulletin; }
 
   public void setCategorie(Categorie c) { this.categorie = c; }

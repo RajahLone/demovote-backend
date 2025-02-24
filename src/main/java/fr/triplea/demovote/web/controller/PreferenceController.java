@@ -39,12 +39,16 @@ public class PreferenceController
   //@PreAuthorize("hasRole('LISTE_PREFERENCES')")
   public Preference create(@RequestBody(required = true) Preference preference) 
   { 
+    Preference found = preferenceRepository.findById(0);
+
+    if (found == null) { preference.setNumeroPreference(null); }
+    
     return  preferenceRepository.save(preference);
   }
 
   @PutMapping(value = "/update/{id}")
   //@PreAuthorize("hasRole('LISTE_PREFERENCES')")
-  public ResponseEntity<Preference> update(@PathVariable("id") int id, @RequestBody(required = true) Preference preference) 
+  public ResponseEntity<Preference> update(@PathVariable int id, @RequestBody(required = true) Preference preference) 
   { 
     Preference found = preferenceRepository.findById(id);
     

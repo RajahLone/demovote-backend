@@ -29,17 +29,17 @@ public class Role
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateCreation;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_role")
+  @Column(name = "numero_role", nullable = false)
   private Integer numeroRole;
   
   @Column(name = "flag_actif")
@@ -65,6 +65,7 @@ public class Role
   
   public LocalDateTime getDateModification() { return this.dateModification; }
   
+  public void setNumeroRole(Integer numeroRole) { this.numeroRole = numeroRole; }
   public Integer getNumeroRole() { return this.numeroRole; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }

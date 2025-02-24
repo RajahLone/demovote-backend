@@ -11,6 +11,9 @@ import fr.triplea.demovote.persistence.model.Variable;
 public interface VariableRepository extends JpaRepository<Variable, Integer> 
 {
   
+  @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v ORDER BY v.type ASC, v.code ASC ")
+  List<Variable> findAll();
+  
   @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v WHERE v.numero_variable = :id ")
   Variable findById(@Param("id") int id);
 

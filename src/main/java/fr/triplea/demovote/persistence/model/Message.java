@@ -31,7 +31,7 @@ public class Message
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_message")
+  @Column(name = "numero_message", nullable = false)
   private Integer numeroMessage;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -51,6 +51,7 @@ public class Message
   
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
+  public void setNumeroMessage(Integer numeroMessage) { this.numeroMessage = numeroMessage; }
   public Integer getNumeroMessage() { return this.numeroMessage; }
   
   public void setParticipant(Participant p) { this.participant = p; }

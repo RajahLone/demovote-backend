@@ -39,12 +39,12 @@ public class Participant
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateCreation;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
 
   @ManyToMany(fetch = FetchType.EAGER)
@@ -55,7 +55,7 @@ public class Participant
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_participant")
+  @Column(name = "numero_participant", nullable = false)
   private Integer numeroParticipant;
 
   @Column(name = "flag_actif")
@@ -163,6 +163,7 @@ public class Participant
   public List<Role> getRoles() { return roles; }
   public void setRoles(final List<Role> roles) { this.roles = roles; }
   
+  public void setNumeroParticipant(Integer numeroParticipant) { this.numeroParticipant = numeroParticipant; }
   public Integer getNumeroParticipant() { return this.numeroParticipant; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }

@@ -24,17 +24,17 @@ public class Variable
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateCreation;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_variable")
+  @Column(name = "numero_variable", nullable = false)
   private Integer numeroVariable;
   
   @Column(length = 64, nullable = false)
@@ -57,6 +57,7 @@ public class Variable
   
   public LocalDateTime getDateModification() { return this.dateModification; }
   
+  public void setNumeroVariable(Integer numeroVariable) { this.numeroVariable = numeroVariable; }
   public Integer getNumeroVariable() { return this.numeroVariable; }
   
   public void setType(String str) { if (str != null) { this.type = StringUtils.truncate(str, 64); } }

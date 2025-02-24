@@ -54,6 +54,10 @@ public class VariableController
   //@PreAuthorize("hasRole('LISTE_VARIABLES')")
   public Variable create(@RequestBody(required = true) Variable variable) 
   { 
+    Variable found = variableRepository.findById(0);
+    
+    if (found == null) { variable.setNumeroVariable(null); }
+    
     return variableRepository.save(variable);
   }
  
@@ -82,9 +86,16 @@ public class VariableController
   //@PreAuthorize("hasRole('LISTE_VARIABLES')")
   public ResponseEntity<Object> deleteVariable(@PathVariable int id) 
   { 
-    variableRepository.deleteById(id);
+    Variable found = variableRepository.findById(id);
+
+    if (found != null) 
+    { 
+      variableRepository.deleteById(id); 
+      
+      return ResponseEntity.ok().build();
+    }
     
-    return ResponseEntity.ok().build();
+    return ResponseEntity.notFound().build(); 
   }
 
 }

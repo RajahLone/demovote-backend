@@ -39,17 +39,17 @@ public class Production
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateCreation;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_production")
+  @Column(name = "numero_production", nullable = false)
   private Integer numeroProduction;
 
   @Column(name = "flag_actif")
@@ -138,6 +138,7 @@ public class Production
   
   public LocalDateTime getDateModification() { return this.dateModification; }
   
+  public void setNumeroProduction(Integer numeroProduction) { this.numeroProduction = numeroProduction; }
   public Integer getNumeroProduction() { return this.numeroProduction; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }
@@ -181,6 +182,7 @@ public class Production
   public void setVignette(byte[] v) { this.vignette = v; }
   public byte[] getVignette() { return this.vignette; }
  
+  //@Version
   public void setNumeroVersion(int n) { this.numeroVersion = Integer.valueOf(n); }
   public Integer getNumeroVersion() { return this.numeroVersion; }
   

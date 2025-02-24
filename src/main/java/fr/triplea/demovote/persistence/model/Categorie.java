@@ -30,17 +30,17 @@ public class Categorie
    
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateCreation;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_categorie")
+  @Column(name = "numero_categorie", nullable = false)
   private Integer numeroCategorie;
 
   @Column(name = "flag_actif")
@@ -82,6 +82,7 @@ public class Categorie
   
   public LocalDateTime getDateModification() { return this.dateModification; }
   
+  public void setNumeroCategorie(Integer numeroCategorie) { this.numeroCategorie = numeroCategorie; }
   public Integer getNumeroCategorie() { return this.numeroCategorie; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }

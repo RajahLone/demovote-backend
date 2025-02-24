@@ -40,7 +40,7 @@ public class ParticipantController
 
   @GetMapping(value = "/form/{id}")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public ResponseEntity<Participant> getForm(@PathVariable("id") int id) 
+  public ResponseEntity<Participant> getForm(@PathVariable int id) 
   { 
     Participant p = participantRepository.findById(id);
 
@@ -53,6 +53,10 @@ public class ParticipantController
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
   public Participant create(@RequestBody(required = true) Participant participant) 
   { 
+    Participant found = participantRepository.findById(0);
+    
+    if (found == null) { participant.setNumeroParticipant(null); }
+
     if (participant.getStatus() == null) { participant.setStatus(ParticipantStatus.EN_ATTENTE); }
     if (participant.getModePaiement() == null) { participant.setModePaiement(ParticipantModePaiement.ESPECES); }
     
@@ -61,7 +65,7 @@ public class ParticipantController
 
   @PutMapping(value = "/update/{id}")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public ResponseEntity<Object> update(@PathVariable("id") int id, @RequestBody(required = true) Participant participant) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Participant participant) 
   { 
     Participant found = participantRepository.findById(id);
     
@@ -107,7 +111,7 @@ public class ParticipantController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public ResponseEntity<Object> disableParticipant(@PathVariable("id") int id) 
+  public ResponseEntity<Object> disableParticipant(@PathVariable int id) 
   { 
     Participant found = participantRepository.getReferenceById(id);
     

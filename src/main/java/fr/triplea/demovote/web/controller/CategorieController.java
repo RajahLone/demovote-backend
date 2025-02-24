@@ -38,7 +38,7 @@ public class CategorieController
 
   @GetMapping(value = "/form/{id}")
   //@PreAuthorize("hasRole('LISTE_CATEGORIES')")
-  public ResponseEntity<Categorie> getForm(@PathVariable("id") int id)
+  public ResponseEntity<Categorie> getForm(@PathVariable int id)
   { 
     Categorie c = categorieRepository.findById(id);
     
@@ -51,12 +51,16 @@ public class CategorieController
   //@PreAuthorize("hasRole('LISTE_CATEGORIES')")
   public Categorie create(@RequestBody(required = true) Categorie categorie) 
   { 
+    Categorie found = categorieRepository.findById(0);
+    
+    if (found == null) { categorie.setNumeroCategorie(null); }
+
     return categorieRepository.save(categorie);
   }
 
   @PutMapping(value = "/update/{id}")
   //@PreAuthorize("hasRole('LISTE_CATEGORIES')")
-  public ResponseEntity<Object> update(@PathVariable("id") int id, @RequestBody(required = true) Categorie categorie) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Categorie categorie) 
   { 
     Categorie found = categorieRepository.findById(id);
     
@@ -82,7 +86,7 @@ public class CategorieController
 
   @DeleteMapping(value = "/retire/{id}")
   //@PreAuthorize("hasRole('LISTE_CATEGORIES')")
-  public ResponseEntity<Object> disableCategorie(@PathVariable("id") int id) 
+  public ResponseEntity<Object> disableCategorie(@PathVariable int id) 
   { 
     Categorie c = categorieRepository.getReferenceById(id);
     

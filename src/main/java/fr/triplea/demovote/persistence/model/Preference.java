@@ -26,17 +26,17 @@ public class Preference
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateCreation;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd-MM-yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_preference")
+  @Column(name = "numero_preference", nullable = false)
   private Integer numeroPreference;
 
   @ManyToOne
@@ -56,6 +56,7 @@ public class Preference
 
   public LocalDateTime getDateModification() { return this.dateModification; }
   
+  public void setNumeroPreference(Integer numeroPreference) { this.numeroPreference = numeroPreference; }
   public Integer getNumeroPreference() { return this.numeroPreference; }
   
   public void setParticipant(Participant p) { this.participant = p; }

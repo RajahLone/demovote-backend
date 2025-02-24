@@ -17,7 +17,7 @@ public class Presentation
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "numero_presentation")
+  @Column(name = "numero_presentation", nullable = false)
   private Integer numeroPresentation;
 
   @ManyToOne
@@ -38,6 +38,7 @@ public class Presentation
   public Presentation() { super(); }
 
   
+  public void setNumeroPresentation(Integer numeroPresentation) { this.numeroPresentation = numeroPresentation; }
   public Integer getNumeroPresentation() { return this.numeroPresentation; }
   
   public void setCategorie(Categorie c) { this.categorie = c; }

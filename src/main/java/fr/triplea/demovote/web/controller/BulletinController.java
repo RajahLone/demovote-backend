@@ -125,7 +125,7 @@ public class BulletinController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasRole('PAGE_VOTER')")
-  public ResponseEntity<Object> remove(@PathVariable("id") int id) 
+  public ResponseEntity<Object> remove(@PathVariable int id) 
   { 
     if (id > 0) { bulletinRepository.deleteById(id); }
     

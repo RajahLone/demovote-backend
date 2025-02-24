@@ -25,7 +25,7 @@ public class MessageController
   
   @GetMapping(value = "/list/{id}")
   //@PreAuthorize("hasRole('PAGE_MESSAGERIE')")
-  public List<Message> getList(@PathVariable("id") int id)
+  public List<Message> getList(@PathVariable int id)
   { 
     return messageRepository.findAll(id, id); 
   }
