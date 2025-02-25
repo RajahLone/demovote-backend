@@ -1,6 +1,8 @@
 package fr.triplea.demovote.web.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -111,7 +113,7 @@ public class ParticipantController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public ResponseEntity<Object> disableParticipant(@PathVariable int id) 
+  public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id) 
   { 
     Participant found = participantRepository.getReferenceById(id);
     
@@ -121,7 +123,10 @@ public class ParticipantController
       
       participantRepository.saveAndFlush(found);
 
-      return ResponseEntity.ok().build();  
+      Map<String, Boolean> response = new HashMap<>();
+      response.put("deleted", Boolean.TRUE);
+      
+      return ResponseEntity.ok(response); 
     }      
     
     return ResponseEntity.notFound().build(); 

@@ -1,5 +1,8 @@
 package fr.triplea.demovote.web.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -125,11 +128,14 @@ public class BulletinController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasRole('PAGE_VOTER')")
-  public ResponseEntity<Object> remove(@PathVariable int id) 
+  public ResponseEntity<Map<String, Boolean>> remove(@PathVariable int id) 
   { 
     if (id > 0) { bulletinRepository.deleteById(id); }
     
-    return ResponseEntity.status(HttpStatus.ACCEPTED).build(); 
+    Map<String, Boolean> response = new HashMap<>();
+    response.put("deleted", Boolean.TRUE);
+    
+    return ResponseEntity.ok(response); 
   }
 
 }

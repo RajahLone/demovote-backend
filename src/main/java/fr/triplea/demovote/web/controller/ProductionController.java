@@ -1,7 +1,9 @@
 package fr.triplea.demovote.web.controller;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -102,7 +104,7 @@ public class ProductionController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public ResponseEntity<Object> disableProduction(@PathVariable int id) 
+  public ResponseEntity<Map<String, Boolean>> disableProduction(@PathVariable int id) 
   { 
     Production found = productionRepository.getReferenceById(id);
     
@@ -112,7 +114,10 @@ public class ProductionController
       
       productionRepository.saveAndFlush(found);
       
-      return ResponseEntity.ok().build();
+      Map<String, Boolean> response = new HashMap<>();
+      response.put("deleted", Boolean.TRUE);
+      
+      return ResponseEntity.ok(response); 
     }      
     
     return ResponseEntity.notFound().build(); 

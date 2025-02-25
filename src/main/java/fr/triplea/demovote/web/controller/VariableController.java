@@ -1,7 +1,9 @@
 package fr.triplea.demovote.web.controller;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -84,7 +86,7 @@ public class VariableController
 
   @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasRole('LISTE_VARIABLES')")
-  public ResponseEntity<Object> deleteVariable(@PathVariable int id) 
+  public ResponseEntity<Map<String, Boolean>> deleteVariable(@PathVariable int id) 
   { 
     Variable found = variableRepository.findById(id);
 
@@ -92,7 +94,10 @@ public class VariableController
     { 
       variableRepository.deleteById(id); 
       
-      return ResponseEntity.ok().build();
+      Map<String, Boolean> response = new HashMap<>();
+      response.put("deleted", Boolean.TRUE);
+      
+      return ResponseEntity.ok(response); 
     }
     
     return ResponseEntity.notFound().build(); 

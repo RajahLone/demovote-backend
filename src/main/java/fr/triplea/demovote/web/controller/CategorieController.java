@@ -1,6 +1,8 @@
 package fr.triplea.demovote.web.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -84,9 +86,9 @@ public class CategorieController
     return ResponseEntity.notFound().build(); 
   }
 
-  @DeleteMapping(value = "/retire/{id}")
+  @DeleteMapping(value = "/delete/{id}")
   //@PreAuthorize("hasRole('LISTE_CATEGORIES')")
-  public ResponseEntity<Object> disableCategorie(@PathVariable int id) 
+  public ResponseEntity<Map<String, Boolean>> disableCategorie(@PathVariable int id) 
   { 
     Categorie c = categorieRepository.getReferenceById(id);
     
@@ -96,7 +98,10 @@ public class CategorieController
       
       categorieRepository.saveAndFlush(c);
 
-      return ResponseEntity.status(HttpStatus.FOUND).build();  
+      Map<String, Boolean> response = new HashMap<>();
+      response.put("deleted", Boolean.TRUE);
+      
+      return ResponseEntity.ok(response); 
     }      
     
     return ResponseEntity.notFound().build(); 
