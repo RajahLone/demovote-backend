@@ -62,9 +62,11 @@ public class Variable
   
   public void setType(String str) { if (str != null) { this.type = StringUtils.truncate(str, 64); } }
   public String getType() { return this.type; }
+  public boolean hasType() { if (this.type == null) { return false; } if (this.type.isBlank()) { return false; } return true; }
   
   public void setCode(String str) { if (str != null) { this.code = StringUtils.truncate(str, 64); } }
   public String getCode() { return this.code; }
+  public boolean hasCode() { if (this.code == null) { return false; } if (this.code.isBlank()) { return false; } return true; }
   
   public void setValeur(String str) { if (str != null) { this.valeur = StringUtils.truncate(str, 4000); } }
   public String getValeur() { return this.valeur; }

@@ -91,6 +91,7 @@ public class Categorie
   
   public void setLibelle(String str) { if (str != null) { this.libelle = StringUtils.truncate(str, 128); } }
   public String getLibelle() { return this.libelle; }
+  public boolean hasLibelle() { if (this.libelle == null) { return false; } if (this.libelle.isBlank()) { return false; } return true; }
   
   public void setNumeroOrdre(int o) { this.numeroOrdre = Integer.valueOf(o); }
   public Integer getNumeroOrdre() { return this.numeroOrdre; }

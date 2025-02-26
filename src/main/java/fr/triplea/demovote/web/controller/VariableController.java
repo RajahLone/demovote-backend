@@ -60,7 +60,9 @@ public class VariableController
     
     if (found == null) { variable.setNumeroVariable(null); }
     
-    return variableRepository.save(variable);
+    if (variable.hasType() && variable.hasCode()) { return variableRepository.save(variable); }
+    
+    return null;
   }
  
   @PutMapping(value = "/update/{id}")

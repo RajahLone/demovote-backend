@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -56,8 +55,10 @@ public class CategorieController
     Categorie found = categorieRepository.findById(0);
     
     if (found == null) { categorie.setNumeroCategorie(null); }
+    
+    if (categorie.hasLibelle()) { return categorieRepository.save(categorie); }
 
-    return categorieRepository.save(categorie);
+    return null;
   }
 
   @PutMapping(value = "/update/{id}")
