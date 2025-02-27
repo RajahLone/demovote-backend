@@ -16,6 +16,7 @@ import com.google.common.collect.Sets;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -103,6 +104,7 @@ public class Participant
   private String email;
 
   @Enumerated(EnumType.STRING) 
+  @Convert(converter = ParticipantStatusConverter.class)
   private ParticipantStatus status;
 
   @Column(name = "flag_machine")
@@ -126,9 +128,11 @@ public class Participant
   private Boolean useAmigabus = false;
 
   @Enumerated(EnumType.STRING) 
+  @Convert(converter = ParticipantModePaiementConverter.class)
   private ParticipantModePaiement modePaiement;
   
   @Temporal(TemporalType.TIMESTAMP)
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateInscription;
   
   @Column(precision=10, scale=2)
@@ -173,12 +177,14 @@ public class Participant
   
   public void setNom(String str) { if (str != null) { this.nom = StringUtils.truncate(str, 128); } }
   public String getNom() { return this.nom; }
+  public boolean hasNom() { if (this.nom == null) { return false; } if (this.nom.isBlank()) { return false; } return true; }
   
   public void setPrenom(String str) { if (str != null) { this.prenom = StringUtils.truncate(str, 128); } }
   public String getPrenom() { return this.prenom; }
   
   public void setPseudonyme(String str) { if (str != null) { this.pseudonyme = StringUtils.truncate(str, 128); } }
   public String getPseudonyme() { return this.pseudonyme; }
+  public boolean hasPseudonyme() { if (this.pseudonyme == null) { return false; } if (this.pseudonyme.isBlank()) { return false; } return true; }
   
   public void setGroupe(String str) { if (str != null) { this.groupe = StringUtils.truncate(str, 128); } }
   public String getGroupe() { return this.groupe; }

@@ -1,5 +1,6 @@
 package fr.triplea.demovote.web.controller;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,11 @@ public class ParticipantController
     if (participant.getStatus() == null) { participant.setStatus(ParticipantStatus.EN_ATTENTE); }
     if (participant.getModePaiement() == null) { participant.setModePaiement(ParticipantModePaiement.ESPECES); }
     
-    return participantRepository.save(participant);
+    participant.setDateInscription(LocalDateTime.now());
+    
+    if (participant.hasNom() && participant.hasPseudonyme()) { return participantRepository.save(participant); }
+    
+    return null;
   }
 
   @PutMapping(value = "/update/{id}")

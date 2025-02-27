@@ -16,6 +16,7 @@ import io.hypersistence.utils.hibernate.type.basic.Inet;
 import io.hypersistence.utils.hibernate.type.basic.PostgreSQLInetType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -64,6 +65,7 @@ public class Production
   private Inet adresseIP;
  
   @Enumerated(EnumType.STRING) 
+  @Convert(converter = ProductionTypeConverter.class)
   private ProductionType type;
   
   @Column(length = 256, nullable = false)
