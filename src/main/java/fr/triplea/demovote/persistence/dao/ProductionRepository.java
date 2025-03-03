@@ -12,7 +12,7 @@ import fr.triplea.demovote.persistence.model.Production;
 public interface ProductionRepository extends JpaRepository<Production, Integer> 
 {
 
-  @NativeQuery("SELECT DISTINCT p.* FROM vote.productions AS p WHERE p.numero_production = :id p.flag_actif IS TRUE ")
+  @NativeQuery("SELECT DISTINCT p.* FROM vote.productions AS p WHERE p.numero_production = :id AND p.flag_actif IS TRUE ")
   Production findById(@Param("id") int id);
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.productions AS p WHERE p.flag_actif IS TRUE ORDER BY p.titre ASC ")

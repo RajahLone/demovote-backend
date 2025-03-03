@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.persistence.dao.VariableRepository;
+import fr.triplea.demovote.persistence.dto.VariableTypeOptionList;
 import fr.triplea.demovote.persistence.model.Variable;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -36,9 +37,18 @@ public class VariableController
   //@PreAuthorize("hasRole('LISTE_VARIABLES')")
   public List<Variable> getList(@RequestParam(required = false) String type) 
   { 
-    if (type != null) { return variableRepository.findByType(type); } 
+    if (type == null) { return variableRepository.findAll(); }
+    else 
+    if (type.isBlank()) { return variableRepository.findAll(); }
  
-    return variableRepository.findAll(); 
+    return variableRepository.findByType(type); 
+  }
+  
+  @GetMapping(value = "/option-list")
+  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  public List<VariableTypeOptionList> getOptionList() 
+  { 
+    return variableRepository.getTypes(); 
   }
  
   @GetMapping(value = "/form/{id}")

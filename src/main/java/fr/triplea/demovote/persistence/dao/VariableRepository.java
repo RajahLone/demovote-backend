@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
+import fr.triplea.demovote.persistence.dto.VariableTypeOptionList;
 import fr.triplea.demovote.persistence.model.Variable;
 
 public interface VariableRepository extends JpaRepository<Variable, Integer> 
@@ -23,4 +24,8 @@ public interface VariableRepository extends JpaRepository<Variable, Integer>
   @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v WHERE v.type = :type AND v.code = :code ")
   Variable findByTypeAndCode(@Param("type") String type, @Param("code") String code);
 
+  @NativeQuery("SELECT DISTINCT v.type FROM vote.variables AS v ORDER BY v.type ASC ")
+  List<VariableTypeOptionList> getTypes();
+
+  
 }

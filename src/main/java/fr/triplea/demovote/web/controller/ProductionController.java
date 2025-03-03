@@ -38,7 +38,7 @@ public class ProductionController
   private HttpServletRequest request;
 
   
-  @GetMapping(value = "/list", params = {"type"})
+  @GetMapping(value = "/list")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
   public List<Production> getList(@RequestParam(required = false) String type) 
   { 
@@ -58,13 +58,16 @@ public class ProductionController
 
   @PostMapping(value = "/create")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public Production create(@RequestBody(required = true) Production production) 
+  public Production create(@RequestBody(required = true) Production production, HttpServletRequest request) 
   { 
     Production found = productionRepository.findById(0);
     
-    if (found== null) { production.setNumeroProduction(null); }
+    if (found == null) { production.setNumeroProduction(null); }
 
+    production.setAdresseIP(new Inet(request.getRemoteAddr()));
+    
     if (production.getType() == null) { production.setType(ProductionType.AUTRE); }
+    
     if (production.getNumeroVersion() == null) { production.setNumeroVersion(1); }
     
     return productionRepository.save(production);

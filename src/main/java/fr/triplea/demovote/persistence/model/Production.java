@@ -1,8 +1,16 @@
 package fr.triplea.demovote.persistence.model;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.sql.Types;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.geometry.Positions;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -95,7 +103,7 @@ public class Production
   @Column(name="vignette")
   private byte[] vignette;
   
-  private Integer numeroVersion = 1;
+  private Integer numeroVersion = 0;
   
 
 
@@ -178,11 +186,43 @@ public class Production
   public void setNomArchive(String str) { if (str != null) { this.nomArchive = StringUtils.truncate(str, 256); } }
   public String getNomArchive() { return this.nomArchive; }
   
-  public void setArchive(byte[] a) { this.archive = a; }
-  public byte[] getArchive() { return this.archive; }
+  public void setArchive(String a) 
+  { 
+    if (a.startsWith("data:") && a.contains(",")) { a = a.split(",")[1]; } 
   
-  public void setVignette(byte[] v) { this.vignette = v; }
-  public byte[] getVignette() { return this.vignette; }
+    try { this.archive = Base64.getDecoder().decode(a); } catch(Exception e) { this.archive = null; }
+  }
+  public String getArchive() { return "data:application/zip;base64," + Base64.getEncoder().encodeToString(this.archive); }
+  
+  public void setVignette(String v) 
+  { 
+    String[] s;
+    
+    if (v.startsWith("data:") && v.contains(",")) 
+    { 
+      s = v.split(",");
+      v = s[1]; 
+    } 
+    
+    try 
+    { 
+      byte[] img = Base64.getDecoder().decode(v); 
+      
+      ByteArrayInputStream bais = new ByteArrayInputStream(img);
+      
+      BufferedImage originalImage = ImageIO.read(bais);
+      
+      BufferedImage thumbnail = Thumbnails.of(originalImage).crop(Positions.CENTER).size(300, 300).asBufferedImage();
+      
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      
+      ImageIO.write(thumbnail, "png", baos);
+      
+      this.vignette = baos.toByteArray();
+    } 
+    catch(Exception e) { this.vignette = null; }
+  }
+  public String getVignette() { return "data:image/png;base64," + Base64.getEncoder().encodeToString(this.vignette); }
  
   //@Version
   public void setNumeroVersion(int n) { this.numeroVersion = Integer.valueOf(n); }

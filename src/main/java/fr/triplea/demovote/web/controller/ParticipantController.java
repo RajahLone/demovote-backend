@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.persistence.dao.ParticipantRepository;
+import fr.triplea.demovote.persistence.dto.ParticipantOptionList;
 import fr.triplea.demovote.persistence.model.Participant;
 import fr.triplea.demovote.persistence.model.ParticipantModePaiement;
 import fr.triplea.demovote.persistence.model.ParticipantStatus;
@@ -39,6 +40,14 @@ public class ParticipantController
   public List<Participant> getList() 
   { 
     return participantRepository.findAll(); 
+  }
+
+  
+  @GetMapping(value = "/option-list")
+  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  public List<ParticipantOptionList> getOptionList() 
+  { 
+    return participantRepository.getOptionList(); 
   }
 
   @GetMapping(value = "/form/{id}")

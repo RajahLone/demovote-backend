@@ -22,6 +22,9 @@ dependencies {
 
   implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.9.0'
   implementation 'org.hibernate.validator:hibernate-validator:8.0.2.Final'
+  implementation 'com.google.guava:guava:33.4.0-jre'
+  implementation 'com.twelvemonkeys.imageio:imageio-core:3.12.0'
+  implementation 'net.coobird:thumbnailator:0.4.20'
 	
   runtimeOnly 'org.postgresql:postgresql'
 
