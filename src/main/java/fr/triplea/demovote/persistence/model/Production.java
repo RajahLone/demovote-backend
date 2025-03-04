@@ -144,8 +144,10 @@ public class Production
   public Production() { super(); }
 
   
+  public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
+  public void setDateModification(LocalDateTime d) { this.dateModification = d; }
   public LocalDateTime getDateModification() { return this.dateModification; }
   
   public void setNumeroProduction(Integer numeroProduction) { this.numeroProduction = numeroProduction; }
@@ -192,7 +194,7 @@ public class Production
   
     try { this.archive = Base64.getDecoder().decode(a); } catch(Exception e) { this.archive = null; }
   }
-  public String getArchive() { return "data:application/zip;base64," + Base64.getEncoder().encodeToString(this.archive); }
+  public String getArchive() { if (this.archive == null) { return ""; } return "data:application/zip;base64," + Base64.getEncoder().encodeToString(this.archive); }
   
   public void setVignette(String v) 
   { 
@@ -222,7 +224,8 @@ public class Production
     } 
     catch(Exception e) { this.vignette = null; }
   }
-  public String getVignette() { return "data:image/png;base64," + Base64.getEncoder().encodeToString(this.vignette); }
+  public void setVignette(byte[] a) { this.vignette = (a == null) ? null : a.clone(); }
+  public String getVignette() { if (this.vignette == null) { return ""; } return "data:image/png;base64," + Base64.getEncoder().encodeToString(this.vignette); }
  
   //@Version
   public void setNumeroVersion(int n) { this.numeroVersion = Integer.valueOf(n); }

@@ -1,6 +1,7 @@
 package fr.triplea.demovote.web.controller;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.triplea.demovote.persistence.dao.ParticipantRepository;
 import fr.triplea.demovote.persistence.dao.ProductionRepository;
+import fr.triplea.demovote.persistence.dto.ProductionDTO;
+import fr.triplea.demovote.persistence.dto.ProductionShort;
+import fr.triplea.demovote.persistence.model.Participant;
 import fr.triplea.demovote.persistence.model.Production;
 import fr.triplea.demovote.persistence.model.ProductionType;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
@@ -34,6 +39,9 @@ public class ProductionController
   @Autowired
   private ProductionRepository productionRepository;
 
+  @Autowired
+  private ParticipantRepository participantRepository;
+
   @Autowired 
   private HttpServletRequest request;
 
@@ -42,7 +50,12 @@ public class ProductionController
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
   public List<Production> getList(@RequestParam(required = false) String type) 
   { 
-    return productionRepository.findAll(); 
+    List<ProductionShort> prods = productionRepository.findAllEnabled();
+    List<Production> ret = new ArrayList<Production>();
+    
+    for (ProductionShort prod: prods) { ret.add(prod.toProduction()); }
+    
+    return ret; 
   }
  
   @GetMapping(value = "/form/{id}")
@@ -58,19 +71,46 @@ public class ProductionController
 
   @PostMapping(value = "/create")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public Production create(@RequestBody(required = true) Production production, HttpServletRequest request) 
+  public ResponseEntity<Map<String, Boolean>> create(@RequestBody(required = true) ProductionDTO prod_dto, HttpServletRequest request) 
   { 
-    Production found = productionRepository.findById(0);
-    
-    if (found == null) { production.setNumeroProduction(null); }
+    Participant participant = participantRepository.findById(prod_dto.numeroParticipant());
 
-    production.setAdresseIP(new Inet(request.getRemoteAddr()));
-    
-    if (production.getType() == null) { production.setType(ProductionType.AUTRE); }
-    
-    if (production.getNumeroVersion() == null) { production.setNumeroVersion(1); }
-    
-    return productionRepository.save(production);
+    if (participant != null) 
+    {
+      Production prod_new = new Production();
+            
+      prod_new.setNumeroProduction(null);
+      prod_new.setAdresseIP(new Inet(request.getRemoteAddr()));
+      
+      if(prod_dto.type().equals("EXECUTABLE")) { prod_new.setType(ProductionType.EXECUTABLE); }
+      else if(prod_dto.type().equals("GRAPHE")) { prod_new.setType(ProductionType.GRAPHE); }
+      else if(prod_dto.type().equals("MUSIQUE")) { prod_new.setType(ProductionType.MUSIQUE); }
+      else if(prod_dto.type().equals("VIDEO")) { prod_new.setType(ProductionType.VIDEO); }
+      else if(prod_dto.type().equals("TOPIC")) { prod_new.setType(ProductionType.TOPIC); }
+      else { prod_new.setType(ProductionType.AUTRE); }
+        
+      prod_new.setTitre(prod_dto.titre());
+      prod_new.setAuteurs(prod_dto.auteurs());
+      prod_new.setGroupes(prod_dto.groupes());
+      prod_new.setPlateforme(prod_dto.plateforme());
+      prod_new.setCommentaire(prod_dto.commentaire());
+      prod_new.setInformationsPrivees(prod_dto.informationsPrivees());
+
+      prod_new.setParticipant(participant);
+      prod_new.setNomArchive(prod_dto.nomArchive());
+      prod_new.setArchive(prod_dto.archive());
+      prod_new.setVignette(prod_dto.vignette());
+      prod_new.setNumeroVersion(prod_dto.numeroVersion());
+      
+      productionRepository.save(prod_new);
+
+      Map<String, Boolean> response = new HashMap<>();
+      response.put("created", Boolean.TRUE);
+      
+      return ResponseEntity.ok(response); 
+    }
+
+    return ResponseEntity.notFound().build(); 
   }
  
   @PutMapping(value = "/update/{id}")
