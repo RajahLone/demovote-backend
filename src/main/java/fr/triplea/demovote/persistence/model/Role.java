@@ -1,7 +1,9 @@
 package fr.triplea.demovote.persistence.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -61,8 +63,15 @@ public class Role
   public Role() { super(); }
 
   
+  @Transient
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  
+  public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
+  public void setDateCreation(String s) { this.dateCreation = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
+  public void setDateModification(LocalDateTime d) { this.dateModification = d; }
+  public void setDateModification(String s) { this.dateModification = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.dateModification; }
   
   public void setNumeroRole(Integer numeroRole) { this.numeroRole = numeroRole; }

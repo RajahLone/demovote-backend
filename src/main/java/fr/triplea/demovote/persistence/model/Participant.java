@@ -2,8 +2,10 @@ package fr.triplea.demovote.persistence.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,7 +18,6 @@ import com.google.common.collect.Sets;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -104,7 +105,6 @@ public class Participant
   private String email;
 
   @Enumerated(EnumType.STRING) 
-  @Convert(converter = ParticipantStatusConverter.class)
   private ParticipantStatus status;
 
   @Column(name = "flag_machine")
@@ -128,7 +128,6 @@ public class Participant
   private Boolean useAmigabus = false;
 
   @Enumerated(EnumType.STRING) 
-  @Convert(converter = ParticipantModePaiementConverter.class)
   private ParticipantModePaiement modePaiement;
   
   @Temporal(TemporalType.TIMESTAMP)
@@ -160,8 +159,15 @@ public class Participant
   public Participant() { super(); }
 
   
+  @Transient
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  
+  public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
+  public void setDateCreation(String s) { this.dateCreation = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
+  public void setDateModification(LocalDateTime d) { this.dateModification = d; }
+  public void setDateModification(String s) { this.dateModification = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.dateModification; }
   
   public List<Role> getRoles() { return roles; }

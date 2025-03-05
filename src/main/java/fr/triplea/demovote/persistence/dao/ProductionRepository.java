@@ -16,7 +16,7 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
   @NativeQuery("SELECT DISTINCT p.* FROM vote.productions AS p WHERE p.numero_production = :id AND p.flag_actif IS TRUE ")
   Production findById(@Param("id") int id);
   
-  @NativeQuery("SELECT DISTINCT p.numero_production, p.titre, p.auteurs, p.groupes, p.plateforme, p.commentaire, p.informations_privees, p.numero_participant, p.nom_archive, p.vignette, p.numero_version FROM vote.productions AS p WHERE p.flag_actif IS TRUE ORDER BY p.titre ASC ")
+  @NativeQuery("SELECT DISTINCT TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, TO_CHAR(p.date_modification, 'DD/MM/YYYY HH24:MI:SS') as date_modification, p.numero_production, CAST(p.adresse_ip AS VARCHAR) AS adresse_ip, p.type, p.titre, p.auteurs, p.groupes, p.plateforme, p.commentaire, p.informations_privees, p.numero_participant, CONCAT(g.pseudonyme, ' = ', g.nom, ' ', g.prenom) AS nom_gestionnaire, p.nom_archive, p.vignette, p.numero_version FROM vote.productions AS p INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant WHERE p.flag_actif IS TRUE ORDER BY p.titre ASC ")
   List<ProductionShort> findAllEnabled();
   
   @NativeQuery("SELECT DISTINCT p.date_creation, p.date_modification, p.numero_production, p.adresse_ip, p.type, p.titre, p.auteurs, p.groupes, p.plateforme, p.commentaire, p.informations_privees, p.numero_participant, p.nom_archive, p.vignette, p.numero_version FROM vote.productions AS p WHERE p.numero_participant = :participant AND p.flag_actif IS TRUE ")

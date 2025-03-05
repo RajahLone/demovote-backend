@@ -1,6 +1,8 @@
 package fr.triplea.demovote.persistence.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.util.StringUtils;
@@ -18,6 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 
 @Entity(name = "vote.messages")
 @Table(name = "messages")
@@ -49,6 +52,11 @@ public class Message
   public Message() { super(); }
 
   
+  @Transient
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  
+  public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
+  public void setDateCreation(String s) { this.dateCreation = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
   public void setNumeroMessage(Integer numeroMessage) { this.numeroMessage = numeroMessage; }

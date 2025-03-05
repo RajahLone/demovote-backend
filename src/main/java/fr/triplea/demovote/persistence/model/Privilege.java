@@ -1,7 +1,9 @@
 package fr.triplea.demovote.persistence.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,6 +20,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 
 @Entity(name = "vote.privileges")
 @Table(name = "privileges")
@@ -49,8 +52,15 @@ public class Privilege
   public Privilege() { super(); }
 
   
+  @Transient
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  
+  public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
+  public void setDateCreation(String s) { this.dateCreation = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
+  public void setDateModification(LocalDateTime d) { this.dateModification = d; }
+  public void setDateModification(String s) { this.dateModification = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.dateModification; }
   
   public void setNumeroPrivilege(Integer numeroPrivilege) { this.numeroPrivilege = numeroPrivilege; }

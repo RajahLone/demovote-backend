@@ -5,8 +5,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.sql.Types;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 import net.coobird.thumbnailator.Thumbnails;
@@ -24,7 +26,6 @@ import io.hypersistence.utils.hibernate.type.basic.Inet;
 import io.hypersistence.utils.hibernate.type.basic.PostgreSQLInetType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -67,13 +68,17 @@ public class Production
   @ManyToOne
   @JoinColumn(name="numero_participant", referencedColumnName="numero_participant")
   private Participant participant;
+  
+  @Transient
+  private Integer numeroGestionnaire;
+  @Transient
+  private String nomGestionnaire;
 
   @Type(PostgreSQLInetType.class)
   @Column(name = "adresse_ip", columnDefinition = "inet")
   private Inet adresseIP;
  
   @Enumerated(EnumType.STRING) 
-  @Convert(converter = ProductionTypeConverter.class)
   private ProductionType type;
   
   @Column(length = 256, nullable = false)
@@ -143,11 +148,16 @@ public class Production
   
   public Production() { super(); }
 
+
+  @Transient
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
+  public void setDateCreation(String s) { this.dateCreation = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
   
   public void setDateModification(LocalDateTime d) { this.dateModification = d; }
+  public void setDateModification(String s) { this.dateModification = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.dateModification; }
   
   public void setNumeroProduction(Integer numeroProduction) { this.numeroProduction = numeroProduction; }
@@ -161,8 +171,19 @@ public class Production
   public void setParticipant(Participant p) { this.participant = p; }
   public Participant getParticipant() { return this.participant; }
   
+  @Transient
+  public void setNumeroGestionnaire(Integer num) { if (num != null) { this.numeroGestionnaire = num; } }
+  @Transient
+  public Integer getNumeroGestionnaire() { return this.numeroGestionnaire; }
+  
+  @Transient
+  public void setNomGestionnaire(String str) { if (str != null) { this.nomGestionnaire = new String(str); } }
+  @Transient
+  public String getNomGestionnaire() { return this.nomGestionnaire; }
+
   public void setAdresseIP(Inet ip) { this.adresseIP = ip; }
-  public Inet getAdresseIP() { return this.adresseIP; }
+  public void setAdresseIP(String ip) { this.adresseIP = new Inet(ip); }
+  public String getAdresseIP() { return this.adresseIP.getAddress(); }
   
   public void setType(ProductionType enu) { this.type = enu; }
   public ProductionType getType() { return this.type; }
