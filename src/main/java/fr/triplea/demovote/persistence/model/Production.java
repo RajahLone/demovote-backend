@@ -215,7 +215,11 @@ public class Production
   
     try { this.archive = Base64.getDecoder().decode(a); } catch(Exception e) { this.archive = null; }
   }
+  @Transient
+  public void setArchive(byte[] a) { this.archive = (a == null) ? null : a.clone(); }
   public String getArchive() { if (this.archive == null) { return ""; } return "data:application/zip;base64," + Base64.getEncoder().encodeToString(this.archive); }
+  @Transient
+  public byte[] getArchiveAsBinary() { return this.archive; }
   
   public void setVignette(String v) 
   { 

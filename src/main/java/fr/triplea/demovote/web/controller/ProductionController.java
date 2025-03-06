@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,12 +21,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.persistence.dao.ParticipantRepository;
 import fr.triplea.demovote.persistence.dao.ProductionRepository;
-import fr.triplea.demovote.persistence.dto.ProductionDTO;
+import fr.triplea.demovote.persistence.dto.ProductionTransfer;
+import fr.triplea.demovote.persistence.dto.ProductionFile;
 import fr.triplea.demovote.persistence.dto.ProductionShort;
+import fr.triplea.demovote.persistence.dto.ProductionUpdate;
 import fr.triplea.demovote.persistence.model.Participant;
 import fr.triplea.demovote.persistence.model.Production;
 import fr.triplea.demovote.persistence.model.ProductionType;
@@ -50,19 +56,51 @@ public class ProductionController
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
   public List<Production> getList(@RequestParam(required = false) String type) 
   { 
-    List<ProductionShort> prods = productionRepository.findAllEnabled();
+    List<ProductionShort> prods = productionRepository.findAllWithoutArchive();
+    
     List<Production> ret = new ArrayList<Production>();
     
     for (ProductionShort prod: prods) { ret.add(prod.toProduction()); }
     
     return ret; 
   }
- 
+
+  @GetMapping(value = "/file/{id}")
+  @ResponseBody
+  public ResponseEntity<Resource> getFile(@PathVariable int id) 
+  {
+    Production p = productionRepository.findById(id);
+    
+    if (p != null) 
+    { 
+      Resource r = new ByteArrayResource(p.getArchiveAsBinary());
+      
+      return ResponseEntity
+              .ok()
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + p.getNomArchive() + "\"")
+              .header(HttpHeaders.CONTENT_TYPE, "application/zip")
+              .body(r); 
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+
   @GetMapping(value = "/form/{id}")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
   public ResponseEntity<Production> getForm(@PathVariable int id)
   { 
-    Production p = productionRepository.findById(id);
+    ProductionShort p = productionRepository.findByIdWithoutArchive(id);
+    
+    if (p != null) { return ResponseEntity.ok(p.toProduction()); }
+    
+    return ResponseEntity.notFound().build();
+  }
+
+  @GetMapping(value = "/formfile/{id}")
+  //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
+  public ResponseEntity<ProductionFile> getFormFile(@PathVariable int id)
+  { 
+    ProductionFile p = productionRepository.findByIdForUpload(id);
     
     if (p != null) { return ResponseEntity.ok(p); }
     
@@ -71,38 +109,38 @@ public class ProductionController
 
   @PostMapping(value = "/create")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public ResponseEntity<Map<String, Boolean>> create(@RequestBody(required = true) ProductionDTO prod_dto, HttpServletRequest request) 
+  public ResponseEntity<Map<String, Boolean>> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
   { 
-    Participant participant = participantRepository.findById(prod_dto.numeroParticipant());
+    Participant participant = participantRepository.findById(production.numeroParticipant());
 
     if (participant != null) 
     {
-      Production prod_new = new Production();
+      Production fresh = new Production();
             
-      prod_new.setNumeroProduction(null);
-      prod_new.setAdresseIP(new Inet(request.getRemoteAddr()));
+      fresh.setNumeroProduction(null);
+      fresh.setAdresseIP(new Inet(request.getRemoteAddr()));
       
-      if(prod_dto.type().equals("EXECUTABLE")) { prod_new.setType(ProductionType.EXECUTABLE); }
-      else if(prod_dto.type().equals("GRAPHE")) { prod_new.setType(ProductionType.GRAPHE); }
-      else if(prod_dto.type().equals("MUSIQUE")) { prod_new.setType(ProductionType.MUSIQUE); }
-      else if(prod_dto.type().equals("VIDEO")) { prod_new.setType(ProductionType.VIDEO); }
-      else if(prod_dto.type().equals("TOPIC")) { prod_new.setType(ProductionType.TOPIC); }
-      else { prod_new.setType(ProductionType.AUTRE); }
+      if(production.type().equals("EXECUTABLE")) { fresh.setType(ProductionType.EXECUTABLE); }
+      else if(production.type().equals("GRAPHE")) { fresh.setType(ProductionType.GRAPHE); }
+      else if(production.type().equals("MUSIQUE")) { fresh.setType(ProductionType.MUSIQUE); }
+      else if(production.type().equals("VIDEO")) { fresh.setType(ProductionType.VIDEO); }
+      else if(production.type().equals("TOPIC")) { fresh.setType(ProductionType.TOPIC); }
+      else { fresh.setType(ProductionType.AUTRE); }
         
-      prod_new.setTitre(prod_dto.titre());
-      prod_new.setAuteurs(prod_dto.auteurs());
-      prod_new.setGroupes(prod_dto.groupes());
-      prod_new.setPlateforme(prod_dto.plateforme());
-      prod_new.setCommentaire(prod_dto.commentaire());
-      prod_new.setInformationsPrivees(prod_dto.informationsPrivees());
+      fresh.setTitre(production.titre());
+      fresh.setAuteurs(production.auteurs());
+      fresh.setGroupes(production.groupes());
+      fresh.setPlateforme(production.plateforme());
+      fresh.setCommentaire(production.commentaire());
+      fresh.setInformationsPrivees(production.informationsPrivees());
 
-      prod_new.setParticipant(participant);
-      prod_new.setNomArchive(prod_dto.nomArchive());
-      prod_new.setArchive(prod_dto.archive());
-      prod_new.setVignette(prod_dto.vignette());
-      prod_new.setNumeroVersion(prod_dto.numeroVersion());
+      fresh.setParticipant(participant);
+      fresh.setNomArchive(production.nomArchive());
+      fresh.setArchive(production.archive());
+      fresh.setVignette(production.vignette());
+      fresh.setNumeroVersion(production.numeroVersion());
       
-      productionRepository.save(prod_new);
+      productionRepository.save(fresh);
 
       Map<String, Boolean> response = new HashMap<>();
       response.put("created", Boolean.TRUE);
@@ -115,31 +153,81 @@ public class ProductionController
  
   @PutMapping(value = "/update/{id}")
   //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
-  public ResponseEntity<Production> update(@PathVariable int id, @RequestBody(required = true) Production production) 
+  public ResponseEntity<Map<String, Boolean>> update(@PathVariable int id, @RequestBody(required = true) ProductionUpdate production) 
   { 
     Production found = productionRepository.findById(id);
     
     if (found != null)
     {
-      found.setParticipant(production.getParticipant());
+      Participant participant = participantRepository.findById(production.numeroGestionnaire());
+      
+      if (participant != null)
+      {
+        found.setParticipant(participant);
+        found.setEnabled(true);
+        
+        found.setAdresseIP(new Inet(request.getRemoteAddr()));
+        
+        if(production.type().equals("EXECUTABLE")) { found.setType(ProductionType.EXECUTABLE); }
+        else if(production.type().equals("GRAPHE")) { found.setType(ProductionType.GRAPHE); }
+        else if(production.type().equals("MUSIQUE")) { found.setType(ProductionType.MUSIQUE); }
+        else if(production.type().equals("VIDEO")) { found.setType(ProductionType.VIDEO); }
+        else if(production.type().equals("TOPIC")) { found.setType(ProductionType.TOPIC); }
+        else { found.setType(ProductionType.AUTRE); }
+       
+        found.setTitre(production.titre());
+        found.setAuteurs(production.auteurs());
+        found.setGroupes(production.groupes());
+        found.setPlateforme(production.plateforme());
+        found.setCommentaire(production.commentaire());
+        found.setInformationsPrivees(production.informationsPrivees());
+    
+        if (production.vignette() != null) { if (!(production.vignette().isBlank())) { found.setVignette(production.vignette()); } }
+        
+        productionRepository.save(found);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("updated", Boolean.TRUE);
+        
+        return ResponseEntity.ok(response); 
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+  
+  @PutMapping(value = "/upload/{id}")
+  //@PreAuthorize("hasAnyRole('LISTE_PRODUCTIONS_ADMIN', 'LISTE_PRODUCTIONS_USER')")
+  public ResponseEntity<Map<String, Boolean>> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production) 
+  { 
+    Production found = productionRepository.findById(id);
+    
+    if (found != null)
+    {
       found.setEnabled(true);
       
-      found.setAdresseIP(new Inet(request.getRemoteAddr()));
-      found.setType(production.getType()); 
-      found.setTitre(production.getTitre());
-      found.setAuteurs(production.getAuteurs());
-      found.setGroupes(production.getGroupes());
-      found.setPlateforme(production.getPlateforme());
-      found.setCommentaire(production.getCommentaire());
-      found.setInformationsPrivees(production.getInformationsPrivees());
-      found.setNomArchive(production.getNomArchive());
-      found.setArchive(production.getArchive());
-      found.setVignette(production.getVignette());
-      found.setNumeroVersion(found.getNumeroVersion() +1);
-      
-      Production updated = productionRepository.save(found);
-    
-      return ResponseEntity.ok(updated);
+      if (production.archive() != null)
+      {
+        if (!(production.archive().isBlank()))
+        {
+          if (production.nomArchive() != null)
+          {
+            if (!(production.nomArchive().isBlank()))
+            {
+              found.setNomArchive(production.nomArchive());
+              found.setArchive(production.archive());
+              found.setNumeroVersion(found.getNumeroVersion() + 1);
+              
+              productionRepository.save(found);
+
+              Map<String, Boolean> response = new HashMap<>();
+              response.put("updated", Boolean.TRUE);
+              
+              return ResponseEntity.ok(response); 
+            }
+          }
+        }
+      }
     }
     
     return ResponseEntity.notFound().build();

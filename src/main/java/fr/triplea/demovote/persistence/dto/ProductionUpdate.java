@@ -1,8 +1,11 @@
 package fr.triplea.demovote.persistence.dto;
 
-public record ProductionDTO
+public record ProductionUpdate
 (
+  String dateCreation,
+  String dateModification,
   int numeroProduction,
+  String adresseIP,
   String type,
   String titre,
   String auteurs,
@@ -10,9 +13,9 @@ public record ProductionDTO
   String plateforme,
   String commentaire,
   String informationsPrivees,
-  int numeroParticipant,
+  int numeroGestionnaire,
+  String nomGestionnaire,
   String nomArchive,
-  String archive,
   String vignette,
   int numeroVersion
 ) 
