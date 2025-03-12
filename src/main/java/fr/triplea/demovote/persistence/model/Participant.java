@@ -105,7 +105,7 @@ public class Participant
   private String email;
 
   @Enumerated(EnumType.STRING) 
-  private ParticipantStatus status;
+  private ParticipantStatut statut;
 
   @Column(name = "flag_machine")
   private Boolean withMachine = true;
@@ -227,8 +227,8 @@ public class Participant
   public void setEmail(String str) { if (str != null) { this.email = StringUtils.truncate(str, 128); } }
   public String getEmail() { return this.email; }
   
-  public void setStatus(ParticipantStatus enu) { this.status = enu; }
-  public ParticipantStatus getStatus() { return this.status; }
+  public void setStatut(ParticipantStatut enu) { this.statut = enu; }
+  public ParticipantStatut getStatut() { return this.statut; }
   
   public void setWithMachine(boolean b) { this.withMachine = Boolean.valueOf(b); }
   public Boolean getWithMachine() { return this.withMachine; }
@@ -344,7 +344,7 @@ public class Participant
     result = (prime * result) + ((getPays() == null) ? 0 : getPays().hashCode());
     result = (prime * result) + ((getNumeroTelephone() == null) ? 0 : getNumeroTelephone().hashCode());
     result = (prime * result) + ((getEmail() == null) ? 0 : getEmail().hashCode());
-    result = (prime * result) + ((getStatus() == null) ? 0 : getStatus().hashCode());
+    result = (prime * result) + ((getStatut() == null) ? 0 : getStatut().hashCode());
     return result;
   }
 
@@ -387,7 +387,7 @@ public class Participant
            .append(sleepingOnSite ? ", dodo in situ" : "")
            .append(useAmigabus ? ", amigabus" : "")
            .append(", paiement=").append(modePaiement)
-           .append(", status=").append(status)
+           .append(", status=").append(statut)
            .append(", montant=").append(sommeRecue)
            .append(", créé=").append(dateCreation)
            .append(", modifié=").append(dateModification)

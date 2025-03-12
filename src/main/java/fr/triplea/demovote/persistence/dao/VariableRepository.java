@@ -21,11 +21,10 @@ public interface VariableRepository extends JpaRepository<Variable, Integer>
   @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v WHERE v.type = :type ORDER BY v.type ASC, v.code ASC ")
   List<Variable> findByType(@Param("type") String type);
 
-  @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v WHERE v.type = :type AND v.code = :code ")
-  Variable findByTypeAndCode(@Param("type") String type, @Param("code") String code);
+  @NativeQuery("SELECT DISTINCT v.valeur FROM vote.variables AS v WHERE v.type = :type AND v.code = :code ")
+  String findByTypeAndCode(@Param("type") String type, @Param("code") String code);
 
   @NativeQuery("SELECT DISTINCT v.type FROM vote.variables AS v ORDER BY v.type ASC ")
   List<VariableTypeOptionList> getTypes();
-
   
 }

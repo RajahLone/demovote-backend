@@ -1,9 +1,11 @@
 package fr.triplea.demovote.web.controller;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.persistence.dao.ParticipantRepository;
 import fr.triplea.demovote.persistence.dto.ParticipantOptionList;
+import fr.triplea.demovote.persistence.dto.ParticipantTransfer;
 import fr.triplea.demovote.persistence.model.Participant;
 import fr.triplea.demovote.persistence.model.ParticipantModePaiement;
-import fr.triplea.demovote.persistence.model.ParticipantStatus;
+import fr.triplea.demovote.persistence.model.ParticipantStatut;
+
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -37,9 +41,9 @@ public class ParticipantController
 
   @GetMapping(value = "/list")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public List<Participant> getList() 
+  public List<ParticipantTransfer> getList() 
   { 
-    return participantRepository.findAll(); 
+    return participantRepository.getList(); 
   }
 
   
@@ -52,9 +56,9 @@ public class ParticipantController
 
   @GetMapping(value = "/form/{id}")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public ResponseEntity<Participant> getForm(@PathVariable int id) 
+  public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id) 
   { 
-    Participant p = participantRepository.findById(id);
+    ParticipantTransfer p = participantRepository.searchById(id);
 
     if (p != null) { return ResponseEntity.ok(p); }
     
@@ -63,59 +67,117 @@ public class ParticipantController
 
   @PostMapping(value = "/create")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public Participant create(@RequestBody(required = true) Participant participant) 
+  public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(0);
     
-    if (found == null) { participant.setNumeroParticipant(null); }
+    if (found == null) 
+    {
+      if (!(participant.nom().isBlank()))
+      {
+        if (!(participant.pseudonyme().isBlank()))
+        {
+          found = new Participant();
+          
+          found.setRoles(found.getRoles());
+          found.setEnabled(true);
 
-    if (participant.getStatus() == null) { participant.setStatus(ParticipantStatus.EN_ATTENTE); }
-    if (participant.getModePaiement() == null) { participant.setModePaiement(ParticipantModePaiement.ESPECES); }
-    
-    participant.setDateInscription(LocalDateTime.now());
-    
-    if (participant.hasNom() && participant.hasPseudonyme()) { return participantRepository.save(participant); }
-    
+          found.setNom(participant.nom());
+          found.setPrenom(participant.prenom());
+          found.setPseudonyme(participant.pseudonyme());
+          found.setMotDePasse(participant.motDePasse());
+          found.setGroupe(participant.groupe()); 
+          found.setDelaiDeconnexion(participant.delaiDeconnexion());
+          found.setAdresse(participant.adresse());
+          found.setCodePostal(participant.codePostal());
+          found.setVille(participant.ville());
+          found.setPays(participant.pays());
+          found.setNumeroTelephone(participant.numeroTelephone());
+          found.setEmail(participant.email());
+         
+          if (participant.statut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
+          else if(participant.statut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
+          else if(participant.statut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
+          else if(participant.statut().equals("VIREMENT_PAYPAL")) { found.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
+          else if(participant.statut().equals("ORGA")) { found.setStatut(ParticipantStatut.ORGA); }
+          else if(participant.statut().equals("GUEST")) { found.setStatut(ParticipantStatut.GUEST); }
+          else { found.setStatut(ParticipantStatut.EN_ATTENTE); }
+          
+          found.setWithMachine(participant.withMachine());
+          found.setCommentaire(participant.commentaire());
+          found.setHereDay1(participant.hereDay1());
+          found.setHereDay2(participant.hereDay2());
+          found.setHereDay3(participant.hereDay3());
+          found.setSleepingOnSite(participant.sleepingOnSite());
+          found.setUseAmigabus(participant.useAmigabus());
+           
+          if (participant.modePaiement().equals("CHEQUE")) { found.setModePaiement(ParticipantModePaiement.CHEQUE); }
+          else if(participant.modePaiement().equals("VIREMENT")) { found.setModePaiement(ParticipantModePaiement.VIREMENT); }
+          else if(participant.modePaiement().equals("PAYPAL")) { found.setModePaiement(ParticipantModePaiement.PAYPAL); }
+          else if(participant.modePaiement().equals("ESPECES")) { found.setModePaiement(ParticipantModePaiement.ESPECES); }
+          else { found.setModePaiement(ParticipantModePaiement.AUTRE); }
+          
+          try { found.setSommeRecue(new BigDecimal(participant.sommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
+          found.setDateInscription(LocalDateTime.now());
+          found.setArrived(participant.arrived());
+          
+          Participant created = participantRepository.save(found);
+        
+          return ResponseEntity.ok(created);
+        }
+      }
+    }
+       
     return null;
   }
 
   @PutMapping(value = "/update/{id}")
   //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Participant participant) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(id);
     
     if (found != null)
     {
-      found.setRoles(participant.getRoles());
+      found.setRoles(found.getRoles());
       found.setEnabled(true);
 
-      found.setNom(participant.getNom());
-      found.setPrenom(participant.getPrenom());
-      found.setPseudonyme(participant.getPseudonyme());
-      found.setGroupe(participant.getGroupe()); 
-      found.setMotDePasse(participant.getMotDePasse());
-      found.setPasswordExpired(participant.getPasswordExpired());
-      found.setDateExpiration(participant.getDateExpiration());
-      found.setDelaiDeconnexion(participant.getDelaiDeconnexion());
-      found.setAdresse(participant.getAdresse());
-      found.setCodePostal(participant.getCodePostal());
-      found.setVille(participant.getVille());
-      found.setPays(participant.getPays());
-      found.setNumeroTelephone(participant.getNumeroTelephone());
-      found.setEmail(participant.getEmail());
-      found.setStatus(participant.getStatus());
-      found.setWithMachine(participant.getWithMachine().booleanValue());
-      found.setCommentaire(participant.getCommentaire());
-      found.setHereDay1(participant.getHereDay1().booleanValue());
-      found.setHereDay2(participant.getHereDay2().booleanValue());
-      found.setHereDay3(participant.getHereDay3().booleanValue());
-      found.setSleepingOnSite(participant.getSleepingOnSite().booleanValue());
-      found.setUseAmigabus(participant.getUseAmigabus().booleanValue());
-      found.setModePaiement(participant.getModePaiement());
-      found.setDateInscription(participant.getDateInscription());
-      found.setSommeRecue(participant.getSommeRecue());
-      found.setArrived(participant.getArrived().booleanValue());
+      found.setNom(participant.nom());
+      found.setPrenom(participant.prenom());
+      found.setPseudonyme(participant.pseudonyme());
+      found.setGroupe(participant.groupe()); 
+      found.setDelaiDeconnexion(participant.delaiDeconnexion());
+      found.setAdresse(participant.adresse());
+      found.setCodePostal(participant.codePostal());
+      found.setVille(participant.ville());
+      found.setPays(participant.pays());
+      found.setNumeroTelephone(participant.numeroTelephone());
+      found.setEmail(participant.email());
+     
+      if (participant.statut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
+      else if(participant.statut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
+      else if(participant.statut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
+      else if(participant.statut().equals("VIREMENT_PAYPAL")) { found.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
+      else if(participant.statut().equals("ORGA")) { found.setStatut(ParticipantStatut.ORGA); }
+      else if(participant.statut().equals("GUEST")) { found.setStatut(ParticipantStatut.GUEST); }
+      else { found.setStatut(ParticipantStatut.EN_ATTENTE); }
+      
+      found.setWithMachine(participant.withMachine());
+      found.setCommentaire(participant.commentaire());
+      found.setHereDay1(participant.hereDay1());
+      found.setHereDay2(participant.hereDay2());
+      found.setHereDay3(participant.hereDay3());
+      found.setSleepingOnSite(participant.sleepingOnSite());
+      found.setUseAmigabus(participant.useAmigabus());
+       
+      if (participant.modePaiement().equals("CHEQUE")) { found.setModePaiement(ParticipantModePaiement.CHEQUE); }
+      else if(participant.modePaiement().equals("VIREMENT")) { found.setModePaiement(ParticipantModePaiement.VIREMENT); }
+      else if(participant.modePaiement().equals("PAYPAL")) { found.setModePaiement(ParticipantModePaiement.PAYPAL); }
+      else if(participant.modePaiement().equals("ESPECES")) { found.setModePaiement(ParticipantModePaiement.ESPECES); }
+      else { found.setModePaiement(ParticipantModePaiement.AUTRE); }
+      
+      try { found.setSommeRecue(new BigDecimal(participant.sommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
+      found.setArrived(participant.arrived());
       
       Participant updated = participantRepository.save(found);
     
@@ -134,6 +196,7 @@ public class ParticipantController
     if (found != null)
     {
       found.setEnabled(false); 
+      found.setPseudonyme(found.getPseudonyme() + "_" + UUID.randomUUID().toString());
       
       participantRepository.saveAndFlush(found);
 

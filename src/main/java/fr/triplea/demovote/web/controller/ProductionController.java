@@ -120,11 +120,11 @@ public class ProductionController
       fresh.setNumeroProduction(null);
       fresh.setAdresseIP(new Inet(request.getRemoteAddr()));
       
-      if(production.type().equals("EXECUTABLE")) { fresh.setType(ProductionType.EXECUTABLE); }
-      else if(production.type().equals("GRAPHE")) { fresh.setType(ProductionType.GRAPHE); }
-      else if(production.type().equals("MUSIQUE")) { fresh.setType(ProductionType.MUSIQUE); }
-      else if(production.type().equals("VIDEO")) { fresh.setType(ProductionType.VIDEO); }
-      else if(production.type().equals("TOPIC")) { fresh.setType(ProductionType.TOPIC); }
+      if (production.type().equals("EXECUTABLE")) { fresh.setType(ProductionType.EXECUTABLE); }
+      else if (production.type().equals("GRAPHE")) { fresh.setType(ProductionType.GRAPHE); }
+      else if (production.type().equals("MUSIQUE")) { fresh.setType(ProductionType.MUSIQUE); }
+      else if (production.type().equals("VIDEO")) { fresh.setType(ProductionType.VIDEO); }
+      else if (production.type().equals("TOPIC")) { fresh.setType(ProductionType.TOPIC); }
       else { fresh.setType(ProductionType.AUTRE); }
         
       fresh.setTitre(production.titre());
@@ -168,11 +168,11 @@ public class ProductionController
         
         found.setAdresseIP(new Inet(request.getRemoteAddr()));
         
-        if(production.type().equals("EXECUTABLE")) { found.setType(ProductionType.EXECUTABLE); }
-        else if(production.type().equals("GRAPHE")) { found.setType(ProductionType.GRAPHE); }
-        else if(production.type().equals("MUSIQUE")) { found.setType(ProductionType.MUSIQUE); }
-        else if(production.type().equals("VIDEO")) { found.setType(ProductionType.VIDEO); }
-        else if(production.type().equals("TOPIC")) { found.setType(ProductionType.TOPIC); }
+        if (production.type().equals("EXECUTABLE")) { found.setType(ProductionType.EXECUTABLE); }
+        else if (production.type().equals("GRAPHE")) { found.setType(ProductionType.GRAPHE); }
+        else if (production.type().equals("MUSIQUE")) { found.setType(ProductionType.MUSIQUE); }
+        else if (production.type().equals("VIDEO")) { found.setType(ProductionType.VIDEO); }
+        else if (production.type().equals("TOPIC")) { found.setType(ProductionType.TOPIC); }
         else { found.setType(ProductionType.AUTRE); }
        
         found.setTitre(production.titre());

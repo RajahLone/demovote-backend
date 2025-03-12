@@ -46,8 +46,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     
     Privilege listeVariablesPrivilege = addPrivilegeIfMissing("LISTE_VARIABLES");
 
-    Privilege pageAccueilPrivilege = addPrivilegeIfMissing("PAGE_ACCUEIL");
-
     Privilege donneesPersonnellesPrivilege = addPrivilegeIfMissing("PAGE_DONNEES_PERSONNELLES");
 
     Privilege listeParticipantsPrivilege = addPrivilegeIfMissing("LISTE_PARTICIPANTS");
@@ -66,13 +64,10 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 
     Privilege pageMessageriePrivilege = addPrivilegeIfMissing("PAGE_MESSAGERIE");
 
-    Privilege pagePlanningPrivilege = addPrivilegeIfMissing("PAGE_PLANNING");
-
-    Privilege pageCamerasPrivilege = addPrivilegeIfMissing("PAGE_CAMERAS");    
-    
+   
     List<Privilege> adminPrivileges = Arrays.asList(listeVariablesPrivilege, modificationMotsDePasses, listeCategoriesPrivilege, listePresentationsPrivilege, listeProductionsPrivilegeAdmin);
     List<Privilege> orgaPrivileges = Arrays.asList(listeParticipantsPrivilege);
-    List<Privilege> userPrivileges = Arrays.asList(pageAccueilPrivilege, donneesPersonnellesPrivilege, pageMessageriePrivilege, pagePlanningPrivilege, pageCamerasPrivilege, listeProductionsPrivilegeUser, pageVoterPrivilege, pageResultatsPrivilege);
+    List<Privilege> userPrivileges = Arrays.asList(donneesPersonnellesPrivilege, pageMessageriePrivilege, listeProductionsPrivilegeUser, pageVoterPrivilege, pageResultatsPrivilege);
    
     Role adminRole = addRoleIfMissing("Administrateur", adminPrivileges);
     Role orgaRole = addRoleIfMissing("Organisateur", orgaPrivileges);
@@ -151,8 +146,10 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addVariableIfMissing("Résultats", "POINTS_POSITION_09", "0");
     addVariableIfMissing("Résultats", "POINTS_POSITION_10", "0");
     
-    addVariableIfMissing("Messages", "PAGE_ACCUEIL", "<span class=\"texte\">Bienvenue dans l''intranet alchimique : <ul><li>messagerie locale</li><li>uploads et vote pour la démoparty</li><li>planning</li><li>webcams</li><li>etc</li></ul></span>");
-    addVariableIfMissing("Messages", "PAGE_MENU", "<span style=\"color:red;display:none;visibility:hidden;\">La deadline est décrétée !</span>");
+    addVariableIfMissing("Messages", "ACCUEIL_ERREUR", "message d'erreur paramétrable côté backend.");
+    addVariableIfMissing("Messages", "ACCUEIL_ALERTE", "message d'alerte paramétrable côté backend.  ");
+    addVariableIfMissing("Messages", "ACCUEIL_INFORMATION", "message d'information paramétrable côté backend.  ");
+    addVariableIfMissing("Messages", "ACCUEIL_AUTRE", "message neutre paramétrable côté backend.  ");
 
     addVariableIfMissing("Caméras", "RECUPERATION_ACTIVE", "TRUE");
     addVariableIfMissing("Caméras", "RECUPERATION_IMAGE_1", "https://www.triplea.fr/alchimie/images/webcams/hirezcam.jpg");
@@ -172,7 +169,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     if (privilege == null) 
     {
       privilege = new Privilege();
+      
       privilege.setLibelle(libelle);
+      
       privilege = privilegeRepository.save(privilege);
     }
     
@@ -184,22 +183,27 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   {
     Role role = roleRepository.findByLibelle(libelle);
     
-    if (role == null) { role = new Role(); role.setLibelle(libelle); }
-    
-    role.setPrivileges(privileges);
-    role = roleRepository.save(role);
-    
+    if (role == null) 
+    { 
+      role = new Role(); 
+      
+      role.setLibelle(libelle); 
+      role.setPrivileges(privileges);
+
+      role = roleRepository.save(role);
+    }
+     
     return role;
   }
 
   @Transactional
   public void addVariableIfMissing(final String type, final String code, final String valeur) 
   {
-    Variable variable = variableRepository.findByTypeAndCode(type, code);
+    String str = variableRepository.findByTypeAndCode(type, code);
     
-    if (variable == null) 
+    if (str == null) 
     { 
-      variable = new Variable(); 
+      Variable variable = new Variable(); 
 
       variable.setType(type);
       variable.setCode(code);
