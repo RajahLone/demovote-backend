@@ -10,11 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.dao.PrivilegeRepository;
 import fr.triplea.demovote.persistence.dao.RoleRepository;
 import fr.triplea.demovote.persistence.dao.VariableRepository;
 import fr.triplea.demovote.persistence.model.Participant;
-import fr.triplea.demovote.persistence.model.Privilege;
 import fr.triplea.demovote.persistence.model.Role;
 import fr.triplea.demovote.persistence.model.Variable;
 
@@ -33,9 +31,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   private RoleRepository roleRepository;
 
   @Autowired
-  private PrivilegeRepository privilegeRepository;
-
-  @Autowired
   private VariableRepository variableRepository;
 
   @Override
@@ -44,73 +39,45 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   {
     if (initialise) { return; } 
     
-    Privilege listeVariablesPrivilege = addPrivilegeIfMissing("LISTE_VARIABLES");
-
-    Privilege donneesPersonnellesPrivilege = addPrivilegeIfMissing("PAGE_DONNEES_PERSONNELLES");
-
-    Privilege listeParticipantsPrivilege = addPrivilegeIfMissing("LISTE_PARTICIPANTS");
-    Privilege modificationMotsDePasses = addPrivilegeIfMissing("MODIFICATION_MOTS_DE_PASSES");
-
-    Privilege listeProductionsPrivilegeAdmin = addPrivilegeIfMissing("LISTE_PRODUCTIONS_ADMIN");
-    Privilege listeProductionsPrivilegeUser = addPrivilegeIfMissing("LISTE_PRODUCTIONS_USER");
-    
-    Privilege listeCategoriesPrivilege = addPrivilegeIfMissing("LISTE_CATEGORIES");
-
-    Privilege listePresentationsPrivilege = addPrivilegeIfMissing("LISTE_PRESENTATIONS");
-
-    Privilege pageVoterPrivilege = addPrivilegeIfMissing("PAGE_VOTER");
-
-    Privilege pageResultatsPrivilege = addPrivilegeIfMissing("PAGE_RESULTATS");
-
-    Privilege pageMessageriePrivilege = addPrivilegeIfMissing("PAGE_MESSAGERIE");
-
-   
-    List<Privilege> adminPrivileges = Arrays.asList(listeVariablesPrivilege, modificationMotsDePasses, listeCategoriesPrivilege, listePresentationsPrivilege, listeProductionsPrivilegeAdmin);
-    List<Privilege> orgaPrivileges = Arrays.asList(listeParticipantsPrivilege);
-    List<Privilege> userPrivileges = Arrays.asList(donneesPersonnellesPrivilege, pageMessageriePrivilege, listeProductionsPrivilegeUser, pageVoterPrivilege, pageResultatsPrivilege);
-   
-    Role adminRole = addRoleIfMissing("Administrateur", adminPrivileges);
-    Role orgaRole = addRoleIfMissing("Organisateur", orgaPrivileges);
-    Role userRole = addRoleIfMissing("Participant", userPrivileges);
+    Role adminRole = addRoleIfMissing("Administrateur");
+    Role orgaRole = addRoleIfMissing("Organisateur");
+    Role userRole = addRoleIfMissing("Participant");
     
     
     List<Participant> participants = participantRepository.findAll();
     
     for (Participant participant : participants)
     {
+      boolean changed = false;
+      
       List<Role> roles = participant.getRoles();
       
       if (roles == null) 
       { 
-        participant.setRoles(Arrays.asList(userRole)); 
-        participantRepository.saveAndFlush(participant);
+        roles = Arrays.asList(userRole);
+        changed = true;
       } 
       else 
       { 
         if (!roles.contains(userRole)) 
         { 
-          participant.setRoles(roles); 
-          participantRepository.saveAndFlush(participant);
+          roles.add(userRole);
+          changed = true;
         }
       }
       
       if (participant.getEmail().equalsIgnoreCase(CreateDefaultValues.EMAIL_ADMIN))
       {
-        if (!roles.contains(adminRole)) 
-        { 
-          roles.add(adminRole);
-          participant.setRoles(roles); 
-          participantRepository.saveAndFlush(participant);
-        }
-        if (!roles.contains(orgaRole)) 
-        { 
-          roles.add(orgaRole);
-          participant.setRoles(roles); 
-          participantRepository.saveAndFlush(participant);
-        }
+        if (!roles.contains(adminRole)) { roles.add(adminRole); changed = true; }
+        if (!roles.contains(orgaRole)) { roles.add(orgaRole); changed = true; }
+      }
+      
+      if (changed)
+      {
+        participant.setRoles(roles); 
+        participantRepository.saveAndFlush(participant);
       }
     }
-
     
     addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris");
     addVariableIfMissing("Application", "LIBELLE_COURT_JOUR1", "Ven1");
@@ -162,24 +129,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   }
 
   @Transactional
-  public Privilege addPrivilegeIfMissing(final String libelle) 
-  {
-    Privilege privilege = privilegeRepository.findByLibelle(libelle);
-    
-    if (privilege == null) 
-    {
-      privilege = new Privilege();
-      
-      privilege.setLibelle(libelle);
-      
-      privilege = privilegeRepository.save(privilege);
-    }
-    
-    return privilege;
-  }
-
-  @Transactional
-  public Role addRoleIfMissing(final String libelle, final List<Privilege> privileges) 
+  public Role addRoleIfMissing(final String libelle) 
   {
     Role role = roleRepository.findByLibelle(libelle);
     
@@ -188,7 +138,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       role = new Role(); 
       
       role.setLibelle(libelle); 
-      role.setPrivileges(privileges);
 
       role = roleRepository.save(role);
     }

@@ -16,8 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -50,12 +48,6 @@ public class Role
   @Column(length = 64, nullable = false)
   private String libelle;
 
-  @ManyToMany
-  @JoinTable(name = "roles_privileges", 
-             joinColumns = @JoinColumn(name = "numero_role", referencedColumnName = "numero_role"), 
-             inverseJoinColumns = @JoinColumn(name = "numero_privilege", referencedColumnName = "numero_privilege"))
-  private List<Privilege> privileges;
-
   @ManyToMany(mappedBy = "roles")
   private List<Participant> participants;
 
@@ -84,10 +76,7 @@ public class Role
   
   public void setLibelle(String str) { if (str != null) { this.libelle = StringUtils.truncate(str, 64); } }
   public String getLibelle() { return this.libelle; }
-
-  public List<Privilege> getPrivileges() { return this.privileges; }
-  public void setPrivileges(final List<Privilege> privileges) { this.privileges = privileges; }
-  
+ 
   public List<Participant> getParticipants() { return participants; }
   public void setUsers(final List<Participant> participants) { this.participants = participants; }
 

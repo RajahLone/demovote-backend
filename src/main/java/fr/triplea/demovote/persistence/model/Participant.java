@@ -302,30 +302,6 @@ public class Participant
     return _roles.containsAll(roles);
   }
 
-  @Transient
-  public boolean hasAnyPrivileges(String... privileges) { return hasAnyPrivileges(Arrays.asList(privileges)); }
-
-  @Transient
-  public boolean hasAnyPrivileges(List<String> privileges) 
-  {
-    Set<String> _privileges = this.getRoles().stream().flatMap(s -> s.getPrivileges().stream()).map(Privilege::getLibelle).collect(Collectors.toSet());
-      
-    Sets.SetView<String> intersection = Sets.intersection(_privileges, Sets.newHashSet(privileges));
-    
-    return !intersection.isEmpty();
-  }
-
-  @Transient
-  public boolean hasPrivileges(String... privileges) { return hasPrivileges(Arrays.asList(privileges)); }
-
-  @Transient
-  public boolean hasPrivileges(List<String> privileges) 
-  {
-    Set<String> _privileges = this.getRoles().stream().flatMap(s -> s.getPrivileges().stream()).map(Privilege::getLibelle).collect(Collectors.toSet());
-    
-    return _privileges.containsAll(privileges);
-  }
-
   
   @Override
   public int hashCode() 

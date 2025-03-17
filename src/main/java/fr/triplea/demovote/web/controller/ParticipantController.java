@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +31,7 @@ import fr.triplea.demovote.persistence.model.ParticipantStatut;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/demovote-api/v1/participant")
+@RequestMapping("/participant")
 public class ParticipantController 
 {
 
@@ -41,7 +41,7 @@ public class ParticipantController
   
 
   @GetMapping(value = "/list")
-  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
   public List<ParticipantList> getList() 
   { 
     return participantRepository.getList(); 
@@ -49,14 +49,14 @@ public class ParticipantController
 
   
   @GetMapping(value = "/option-list")
-  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
   public List<ParticipantOptionList> getOptionList() 
   { 
     return participantRepository.getOptionList(); 
   }
 
   @GetMapping(value = "/form/{id}")
-  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
   public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id) 
   { 
     ParticipantTransfer p = participantRepository.searchById(id);
@@ -67,7 +67,7 @@ public class ParticipantController
   }
 
   @PostMapping(value = "/create")
-  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
   public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(0);
@@ -133,7 +133,7 @@ public class ParticipantController
   }
 
   @PutMapping(value = "/update/{id}")
-  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
   public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(id);
@@ -189,7 +189,7 @@ public class ParticipantController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  //@PreAuthorize("hasRole('LISTE_PARTICIPANTS')")
+  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
   public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id) 
   { 
     Participant found = participantRepository.getReferenceById(id);

@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +25,7 @@ import fr.triplea.demovote.persistence.model.Variable;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/demovote-api/v1/variable")
+@RequestMapping("/variable")
 public class VariableController 
 {
 
@@ -34,7 +34,7 @@ public class VariableController
 
 
   @GetMapping(value = "/list")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  @PreAuthorize("hasAuthority('Administrateur')")
   public List<Variable> getList(@RequestParam(required = false) String type) 
   { 
     if (type == null) { return variableRepository.findAll(); }
@@ -45,14 +45,14 @@ public class VariableController
   }
   
   @GetMapping(value = "/option-list")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  @PreAuthorize("hasAuthority('Administrateur')")
   public List<VariableTypeOptionList> getOptionList() 
   { 
     return variableRepository.getTypes(); 
   }
  
   @GetMapping(value = "/form/{id}")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  @PreAuthorize("hasAuthority('Administrateur')")
   public ResponseEntity<Variable> getForm(@PathVariable int id) 
   { 
     Variable v = variableRepository.findById(id);
@@ -63,7 +63,7 @@ public class VariableController
   }
 
   @PostMapping(value = "/create")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  @PreAuthorize("hasAuthority('Administrateur')")
   public Variable create(@RequestBody(required = true) Variable variable) 
   { 
     Variable found = variableRepository.findById(0);
@@ -76,7 +76,7 @@ public class VariableController
   }
  
   @PutMapping(value = "/update/{id}")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  @PreAuthorize("hasAuthority('Administrateur')")
   public ResponseEntity<Variable> update(@PathVariable int id, @RequestBody(required = true) Variable variable) 
   { 
     Variable found = variableRepository.findById(id);
@@ -97,7 +97,7 @@ public class VariableController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
+  @PreAuthorize("hasAuthority('Administrateur')")
   public ResponseEntity<Map<String, Boolean>> deleteVariable(@PathVariable int id) 
   { 
     Variable found = variableRepository.findById(id);

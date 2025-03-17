@@ -14,7 +14,7 @@ import fr.triplea.demovote.persistence.dto.MessagesTransfer;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/demovote-api/v1/divers")
+@RequestMapping("/divers")
 public class DiversController 
 {
 
@@ -22,7 +22,6 @@ public class DiversController
   private VariableRepository variableRepository;
  
   @GetMapping(value = "/welcome")
-  //@PreAuthorize("hasRole('LISTE_VARIABLES')")
   public ResponseEntity<MessagesTransfer> getWelcomeMessage() 
   { 
     MessagesTransfer mt = new MessagesTransfer();

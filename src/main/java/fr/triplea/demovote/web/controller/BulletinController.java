@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +26,7 @@ import fr.triplea.demovote.persistence.model.Production;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/demovote-api/v1/urne")
+@RequestMapping("/urne")
 public class BulletinController 
 {
 
@@ -43,7 +43,7 @@ public class BulletinController
   private ProductionRepository productionRepository;
 
   @PostMapping(value = "/create")
-  //@PreAuthorize("hasRole('PAGE_VOTER')")
+  @PreAuthorize("hasAuthority('Participant')")
   public ResponseEntity<Object> add(@RequestParam(required = true) int cat_id, @RequestParam(required = true) int part_id, @RequestParam(required = true) int prod_id) 
   { 
     Bulletin bul = bulletinRepository.findByCategorieAndParticipant(cat_id, part_id);
@@ -127,7 +127,7 @@ public class BulletinController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  //@PreAuthorize("hasRole('PAGE_VOTER')")
+  @PreAuthorize("hasAuthority('Participant')")
   public ResponseEntity<Map<String, Boolean>> remove(@PathVariable int id) 
   { 
     if (id > 0) { bulletinRepository.deleteById(id); }
