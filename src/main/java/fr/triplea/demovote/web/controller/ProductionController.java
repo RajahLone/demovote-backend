@@ -53,7 +53,7 @@ public class ProductionController
 
   
   @GetMapping(value = "/list")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<Production> getList(@RequestParam(required = false) String type) 
   { 
     List<ProductionShort> prods = productionRepository.findAllWithoutArchive();
@@ -66,7 +66,7 @@ public class ProductionController
   }
 
   @GetMapping(value = "/file/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   @ResponseBody
   public ResponseEntity<Resource> getFile(@PathVariable int id) 
   {
@@ -87,7 +87,7 @@ public class ProductionController
   }
 
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Production> getForm(@PathVariable int id)
   { 
     ProductionShort p = productionRepository.findByIdWithoutArchive(id);
@@ -98,7 +98,7 @@ public class ProductionController
   }
 
   @GetMapping(value = "/formfile/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ProductionFile> getFormFile(@PathVariable int id)
   { 
     ProductionFile p = productionRepository.findByIdForUpload(id);
@@ -109,7 +109,7 @@ public class ProductionController
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
   { 
     Participant participant = participantRepository.findById(production.numeroParticipant());
@@ -119,7 +119,7 @@ public class ProductionController
       Production fresh = new Production();
             
       fresh.setNumeroProduction(null);
-      fresh.setAdresseIP(new Inet(request.getRemoteAddr()));
+      fresh.setAdresseIP(new Inet(this.getClientIP(request)));
       
       if (production.type().equals("EXECUTABLE")) { fresh.setType(ProductionType.EXECUTABLE); }
       else if (production.type().equals("GRAPHE")) { fresh.setType(ProductionType.GRAPHE); }
@@ -153,7 +153,7 @@ public class ProductionController
   }
  
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> update(@PathVariable int id, @RequestBody(required = true) ProductionUpdate production) 
   { 
     Production found = productionRepository.findById(id);
@@ -167,7 +167,7 @@ public class ProductionController
         found.setParticipant(participant);
         found.setEnabled(true);
         
-        found.setAdresseIP(new Inet(request.getRemoteAddr()));
+        found.setAdresseIP(new Inet(this.getClientIP(request)));
         
         if (production.type().equals("EXECUTABLE")) { found.setType(ProductionType.EXECUTABLE); }
         else if (production.type().equals("GRAPHE")) { found.setType(ProductionType.GRAPHE); }
@@ -198,7 +198,7 @@ public class ProductionController
   }
   
   @PutMapping(value = "/upload/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production) 
   { 
     Production found = productionRepository.findById(id);
@@ -235,7 +235,7 @@ public class ProductionController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> disableProduction(@PathVariable int id) 
   { 
     Production found = productionRepository.getReferenceById(id);
@@ -253,6 +253,16 @@ public class ProductionController
     }      
     
     return ResponseEntity.notFound().build(); 
+  }
+
+  
+  private final String getClientIP(HttpServletRequest request) 
+  {
+    final String h = request.getHeader("X-Forwarded-For");
+    
+    if (h != null) { if (!(h.isBlank())) { if (!(h.contains(request.getRemoteAddr()))) { return h.split(",")[0]; } } } 
+    
+    return request.getRemoteAddr();
   }
 
 }

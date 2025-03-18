@@ -31,14 +31,14 @@ public class CategorieController
 
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<Categorie> getList() 
   { 
     return categorieRepository.findAll(); 
   }
 
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Categorie> getForm(@PathVariable int id)
   { 
     Categorie c = categorieRepository.findById(id);
@@ -49,7 +49,7 @@ public class CategorieController
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public Categorie create(@RequestBody(required = true) Categorie categorie) 
   { 
     Categorie found = categorieRepository.findById(0);
@@ -62,7 +62,7 @@ public class CategorieController
   }
 
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Categorie categorie) 
   { 
     Categorie found = categorieRepository.findById(id);
@@ -88,7 +88,7 @@ public class CategorieController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> disableCategorie(@PathVariable int id) 
   { 
     Categorie c = categorieRepository.getReferenceById(id);

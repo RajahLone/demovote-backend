@@ -1,6 +1,6 @@
 package fr.triplea.demovote.persistence.dto;
 
-public class LoginTransfer
+public class UserCredentials
 {
   
   private String username;
@@ -10,14 +10,6 @@ public class LoginTransfer
   private String password;
   public void setPassword(String s) { this.password = new String(s); }
   public String getPassword() { return this.password; }
-  
-  private String token;
-  public void setToken(String s) { this.token = new String(s); }
-  public String getToken() { return this.token; }
-    
-  private Integer id;
-  public void setId(int i) { this.id = i; }
-  public Integer getId() { return this.id; }
   
   private String nom;
   public void setNom(String s) { this.nom = new String(s); }
@@ -30,7 +22,9 @@ public class LoginTransfer
   private String role;
   public void setRole(String s) { this.role = new String(s); }
   public String getRole() { return this.role; }
+  public boolean hasRole() { if (this.role != null) { if (!(this.role.isBlank())) { return true; }} return false; }
 
+  public UserCredentials() {}
   
   @Override
   public String toString() 

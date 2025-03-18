@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,11 +38,14 @@ public class ParticipantController
 
   @Autowired
   private ParticipantRepository participantRepository;
+  
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
   
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public List<ParticipantList> getList() 
   { 
     return participantRepository.getList(); 
@@ -49,14 +53,14 @@ public class ParticipantController
 
   
   @GetMapping(value = "/option-list")
-  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public List<ParticipantOptionList> getOptionList() 
   { 
     return participantRepository.getOptionList(); 
   }
 
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id) 
   { 
     ParticipantTransfer p = participantRepository.searchById(id);
@@ -67,7 +71,7 @@ public class ParticipantController
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(0);
@@ -85,8 +89,12 @@ public class ParticipantController
 
           found.setNom(participant.nom());
           found.setPrenom(participant.prenom());
+          
           found.setPseudonyme(participant.pseudonyme());
-          found.setMotDePasse(participant.motDePasse());
+ 
+          final String mdp = participant.motDePasse();
+          if (mdp != null) { if (!(mdp.isBlank())) { found.setMotDePasse(passwordEncoder.encode(mdp.trim())); } } 
+          
           found.setGroupe(participant.groupe()); 
           found.setDelaiDeconnexion(participant.delaiDeconnexion());
           found.setAdresse(participant.adresse());
@@ -95,7 +103,7 @@ public class ParticipantController
           found.setPays(participant.pays());
           found.setNumeroTelephone(participant.numeroTelephone());
           found.setEmail(participant.email());
-         
+                   
           if (participant.statut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
           else if(participant.statut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
           else if(participant.statut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
@@ -122,6 +130,8 @@ public class ParticipantController
           found.setDateInscription(LocalDateTime.now());
           found.setArrived(participant.arrived());
           
+          // TODO: set roles
+          
           Participant created = participantRepository.save(found);
         
           return ResponseEntity.ok(created);
@@ -133,7 +143,7 @@ public class ParticipantController
   }
 
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(id);
@@ -145,7 +155,12 @@ public class ParticipantController
 
       found.setNom(participant.nom());
       found.setPrenom(participant.prenom());
+      
       found.setPseudonyme(participant.pseudonyme());
+
+      final String mdp = participant.motDePasse();
+      if (mdp != null) { if (!(mdp.isBlank())) { found.setMotDePasse(passwordEncoder.encode(mdp.trim())); } } 
+
       found.setGroupe(participant.groupe()); 
       found.setDelaiDeconnexion(participant.delaiDeconnexion());
       found.setAdresse(participant.adresse());
@@ -180,6 +195,9 @@ public class ParticipantController
       try { found.setSommeRecue(new BigDecimal(participant.sommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
       found.setArrived(participant.arrived());
       
+      // TODO: modify password in session
+      // TODO: modify roles
+
       Participant updated = participantRepository.save(found);
     
       return ResponseEntity.ok(updated);
@@ -189,7 +207,7 @@ public class ParticipantController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasAnyAuthority('Participant', 'Organisateur')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id) 
   { 
     Participant found = participantRepository.getReferenceById(id);

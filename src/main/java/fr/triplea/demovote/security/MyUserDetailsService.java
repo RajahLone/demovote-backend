@@ -38,7 +38,7 @@ public class MyUserDetailsService implements UserDetailsService
 
       Set<GrantedAuthority> authorities = participant.getRoles().stream().map((role) -> new SimpleGrantedAuthority(role.getLibelle())).collect(Collectors.toSet());
 
-      return new org.springframework.security.core.userdetails.User(participant.getEmail(), participant.getMotDePasse(), authorities);
+      return new org.springframework.security.core.userdetails.User(participant.getPseudonyme(), participant.getMotDePasse(), authorities);
     } 
     catch (final Exception e) { throw new RuntimeException(e); }
    }

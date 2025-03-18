@@ -34,7 +34,7 @@ public class VariableController
 
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<Variable> getList(@RequestParam(required = false) String type) 
   { 
     if (type == null) { return variableRepository.findAll(); }
@@ -45,14 +45,14 @@ public class VariableController
   }
   
   @GetMapping(value = "/option-list")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<VariableTypeOptionList> getOptionList() 
   { 
     return variableRepository.getTypes(); 
   }
  
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Variable> getForm(@PathVariable int id) 
   { 
     Variable v = variableRepository.findById(id);
@@ -63,7 +63,7 @@ public class VariableController
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public Variable create(@RequestBody(required = true) Variable variable) 
   { 
     Variable found = variableRepository.findById(0);
@@ -76,7 +76,7 @@ public class VariableController
   }
  
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Variable> update(@PathVariable int id, @RequestBody(required = true) Variable variable) 
   { 
     Variable found = variableRepository.findById(id);
@@ -97,7 +97,7 @@ public class VariableController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> deleteVariable(@PathVariable int id) 
   { 
     Variable found = variableRepository.findById(id);

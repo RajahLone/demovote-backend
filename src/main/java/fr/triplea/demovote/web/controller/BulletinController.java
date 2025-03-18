@@ -43,7 +43,7 @@ public class BulletinController
   private ProductionRepository productionRepository;
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAuthority('Participant')")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Object> add(@RequestParam(required = true) int cat_id, @RequestParam(required = true) int part_id, @RequestParam(required = true) int prod_id) 
   { 
     Bulletin bul = bulletinRepository.findByCategorieAndParticipant(cat_id, part_id);
@@ -127,7 +127,7 @@ public class BulletinController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasAuthority('Participant')")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Map<String, Boolean>> remove(@PathVariable int id) 
   { 
     if (id > 0) { bulletinRepository.deleteById(id); }

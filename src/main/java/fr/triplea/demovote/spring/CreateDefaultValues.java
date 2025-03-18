@@ -39,9 +39,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   {
     if (initialise) { return; } 
     
-    Role adminRole = addRoleIfMissing("Administrateur");
-    Role orgaRole = addRoleIfMissing("Organisateur");
-    Role userRole = addRoleIfMissing("Participant");
+    Role adminRole = addRoleIfMissing("ROLE_ADMIN");
+    Role orgaRole = addRoleIfMissing("ROLE_ORGA");
+    Role userRole = addRoleIfMissing("ROLE_USER");
     
     
     List<Participant> participants = participantRepository.findAll();

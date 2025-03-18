@@ -29,14 +29,14 @@ public class PreferenceController
 
   
   @PostMapping(value = "/list")
-  @PreAuthorize("hasAuthority('Participant')")
+  @PreAuthorize("hasRole('USER')")
   public List<Preference> get(@RequestParam(required = true) Participant numParticipant, @RequestParam(required = false) int numTraitement) 
   { 
     return preferenceRepository.findByParticipantAndTraitement(numParticipant, numTraitement); 
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAuthority('Participant')")
+  @PreAuthorize("hasRole('USER')")
   public Preference create(@RequestBody(required = true) Preference preference) 
   { 
     Preference found = preferenceRepository.findById(0);
@@ -47,7 +47,7 @@ public class PreferenceController
   }
 
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasAuthority('Participant')")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Preference> update(@PathVariable int id, @RequestBody(required = true) Preference preference) 
   { 
     Preference found = preferenceRepository.findById(id);

@@ -76,6 +76,8 @@ public class Role
   
   public void setLibelle(String str) { if (str != null) { this.libelle = StringUtils.truncate(str, 64); } }
   public String getLibelle() { return this.libelle; }
+  @Transient
+  public boolean isRole(String s) { if (this.libelle != null) { if (this.libelle.equals("ROLE_" + s)) { return true; } } return false; }
  
   public List<Participant> getParticipants() { return participants; }
   public void setUsers(final List<Participant> participants) { this.participants = participants; }

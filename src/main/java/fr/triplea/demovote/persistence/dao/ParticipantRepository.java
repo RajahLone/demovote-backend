@@ -74,6 +74,38 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants_roles AS rp INNER JOIN vote.participants AS p ON rp.numero_participant = p.numero_participant INNER JOIN vote.roles AS r ON rp.numero_role = r.numero_role WHERE p.flag_actif IS TRUE AND r.flag_actif IS TRUE AND rp.numero_role = :role ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
   List<Participant> findByRole(@Param("role") Role role);
 
+  @NativeQuery("SELECT DISTINCT "
+      + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
+      + "TO_CHAR(p.date_modification, 'DD/MM/YYYY HH24:MI:SS') as date_modification, "
+      + "p.numero_participant, "
+      + "p.nom, "
+      + "p.prenom, "
+      + "p.pseudonyme, "
+      + "'' AS mot_de_passe, "
+      + "p.groupe, "
+      + "p.delai_deconnexion, "
+      + "p.adresse, "
+      + "p.code_postal, "
+      + "p.ville, "
+      + "p.pays, "
+      + "p.numero_telephone, "
+      + "p.email, "
+      + "p.statut, "
+      + "p.flag_machine, "
+      + "p.commentaire, "
+      + "p.flag_jour1, "
+      + "p.flag_jour2, "
+      + "p.flag_jour3, "
+      + "p.flag_dodo_sur_place, "
+      + "p.flag_amigabus, "
+      + "p.mode_paiement, "
+      + "TO_CHAR(p.date_inscription, 'DD/MM/YYYY HH24:MI:SS') as date_inscription, "
+      + "CAST(p.somme_recue AS VARCHAR) AS somme_recue, "
+      + "p.flag_arrive "
+      + "FROM vote.participants AS p "
+      + "WHERE p.pseudonyme = :pseudo AND p.flag_actif IS TRUE ")
+  ParticipantTransfer searchByPseudonyme(@Param("pseudo") String pseudonyme);
+
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_actif IS TRUE AND p.pseudonyme = :pseudo ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
   Participant findByPseudonyme(@Param("pseudo") String pseudonyme);
   

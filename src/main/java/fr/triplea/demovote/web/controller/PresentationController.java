@@ -23,7 +23,7 @@ public class PresentationController
   private PresentationRepository presentationRepository;
  
   @GetMapping(value = "/list")
-  @PreAuthorize("hasAuthority('Administrateur')")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<Presentation> getList() 
   {
     return presentationRepository.findAll(); 

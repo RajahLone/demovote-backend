@@ -1,10 +1,11 @@
 package fr.triplea.demovote.spring;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
@@ -12,62 +13,40 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.rememberme.InMemoryTokenRepositoryImpl;
-
-import fr.triplea.demovote.security.MyRememberMeServices;
-import fr.triplea.demovote.security.MyUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@ComponentScan("fr.triplea.demovote.security")
 public class SecurityConfig
 {
+ 
 
-  @Autowired
-  private MyUserDetailsService userDetailsService;
-  
   @Bean
-  AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception { return authConfig.getAuthenticationManager(); }
+  AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception { return authenticationConfiguration.getAuthenticationManager(); }
 
-  
   @Bean
+  PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(11); }
+
+  @Bean
+  SessionRegistry sessionRegistry() { return new SessionRegistryImpl(); }
+
+   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception 
   {
     http.csrf((csrf) -> csrf.disable());
     
     http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-      .requestMatchers("/auth/**").permitAll()
-      .requestMatchers("/divers/**").permitAll()
-      .requestMatchers("/account/**").hasAuthority("Participant")
-      .requestMatchers("/preference/**").hasAuthority("Participant")
-      .requestMatchers("/message/**").hasAuthority("Participant")
-      .requestMatchers("/urne/**").hasAuthority("Participant")
-      .requestMatchers("/resultats/**").hasAuthority("Participant")
-      .requestMatchers("/variable/**").hasAuthority("Administrateur")
-      .requestMatchers("/categorie/**").hasAuthority("Administrateur")
-      .requestMatchers("/participant/**").hasAnyAuthority("Administrateur", "Organisateur")
-      .requestMatchers("/production/**").hasAuthority("Administrateur")
-      .requestMatchers("/presentation/**").hasAuthority("Administrateur")
+      .requestMatchers("/divers/**", "/sign/**").permitAll()
+      .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")
+      .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").hasRole("ADMIN")
+      .requestMatchers("/participant/**").hasAnyRole("ADMIN", "ORGA")
       .anyRequest().authenticated()
     );
 
     http.sessionManagement((sessionManagement) -> sessionManagement.maximumSessions(2).sessionRegistry(sessionRegistry()));
 
-    http.rememberMe((remember) -> remember.rememberMeServices(rememberMeServices()));
-
     return http.build();
   }
-
-  @Bean
-  MyRememberMeServices rememberMeServices() 
-  {
-    MyRememberMeServices rememberMeServices = new MyRememberMeServices("Alr34dy", userDetailsService, new InMemoryTokenRepositoryImpl());
-    return rememberMeServices;
-  }
-
-  @Bean
-  SessionRegistry sessionRegistry() { return new SessionRegistryImpl(); }
-
-  @Bean
-  PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(11); }
 
 }
