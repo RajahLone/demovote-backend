@@ -1,8 +1,9 @@
 package fr.triplea.demovote.web.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,8 @@ import fr.triplea.demovote.persistence.model.Participant;
 @RequestMapping("/account")
 public class AccountController 
 {
+  @SuppressWarnings("unused") 
+  private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
 
   @Autowired
   private ParticipantRepository participantRepository;
@@ -32,7 +35,6 @@ public class AccountController
 
 
   @GetMapping(value = "/form")
-  @PreAuthorize("hasAnyRole('USER')")
   public ResponseEntity<ParticipantTransfer> getForm() 
   { 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -43,12 +45,11 @@ public class AccountController
       
       if (found != null) { return ResponseEntity.ok(found); }
     }
-    
+   
     return ResponseEntity.notFound().build();
   }
  
   @PutMapping(value = "/update")
-  @PreAuthorize("hasAnyRole('USER')")
   public ResponseEntity<Object> update(@RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

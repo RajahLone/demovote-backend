@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import fr.triplea.demovote.persistence.model.Role;
 
+
 public interface RoleRepository extends JpaRepository<Role, Integer> 
 {
 

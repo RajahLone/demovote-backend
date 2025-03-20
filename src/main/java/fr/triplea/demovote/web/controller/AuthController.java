@@ -6,11 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +20,7 @@ import fr.triplea.demovote.persistence.dao.ParticipantRepository;
 import fr.triplea.demovote.persistence.dto.UserCredentials;
 import fr.triplea.demovote.persistence.model.Participant;
 import fr.triplea.demovote.persistence.model.Role;
+import fr.triplea.demovote.security.MyUserDetailsService;
 
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -28,16 +28,14 @@ import fr.triplea.demovote.persistence.model.Role;
 @RequestMapping("/sign")
 public class AuthController 
 {
+  @SuppressWarnings("unused") 
   private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
   
   @Autowired
-  private AuthenticationManager authenticationManager;
+  private MyUserDetailsService myUserDetailsService;
 
   @Autowired
   private ParticipantRepository participantRepository;
-  
-  @Autowired
-  private PasswordEncoder passwordEncoder;
 
 
   @PostMapping(value = "/in")
@@ -52,40 +50,27 @@ public class AuthController
     
     if (found != null)
     { 
-      logger.info("compte trouvé, passhash=" + found.getMotDePasse());
-      
-      logger.info("pass=" + passwordEncoder.encode(pass));
-      
-      if (passwordEncoder.matches(pass, found.getMotDePasse()))
-      {
-        logger.info("mot de passe ok");
+      UserDetails userDetails = myUserDetailsService.loadUserByUsername(usrn);
 
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(usrn, found.getMotDePasse());
- 
-        //Authentication auth = authenticationManager.authenticate(token); <-- // TODO : doesn't work
+      Authentication authentication= new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()) ; 
+      
+      SecurityContextHolder.getContext().setAuthentication(authentication); // TODO : à fixer, le security-context ne converse pas l'authentification
+                  
+      uc = new UserCredentials();
+      
+      uc.setUsername(usrn);
+      uc.setPassword("<success@auth>");
+      uc.setNom(found.getNom());
+      uc.setPrenom(found.getPrenom());
+
+      List<Role> roles = found.getRoles();
        
-        //logger.info("auth");
+      if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
+      if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
+      if (!(uc.hasRole())) { uc.setRole("USER"); }
 
-        //SecurityContextHolder.getContext().setAuthentication(auth);
-        
-        //logger.info("in scholder");
-        
-        uc = new UserCredentials();
-        
-        uc.setUsername(usrn);
-        uc.setPassword("<success@auth>");
-        uc.setNom(found.getNom());
-        uc.setPrenom(found.getPrenom());
-
-        List<Role> roles = found.getRoles();
-         
-        if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
-        if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
-        if (!(uc.hasRole())) { uc.setRole("USER"); }
-
-        return ResponseEntity.ok(uc);
-      }      
-    }
+      return ResponseEntity.ok(uc);
+     }
     
     uc = new UserCredentials();
     

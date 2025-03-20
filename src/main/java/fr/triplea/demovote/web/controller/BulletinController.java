@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +42,6 @@ public class BulletinController
   private ProductionRepository productionRepository;
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Object> add(@RequestParam(required = true) int cat_id, @RequestParam(required = true) int part_id, @RequestParam(required = true) int prod_id) 
   { 
     Bulletin bul = bulletinRepository.findByCategorieAndParticipant(cat_id, part_id);
@@ -127,7 +125,6 @@ public class BulletinController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Map<String, Boolean>> remove(@PathVariable int id) 
   { 
     if (id > 0) { bulletinRepository.deleteById(id); }

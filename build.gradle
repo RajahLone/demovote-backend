@@ -26,6 +26,7 @@ dependencies {
   implementation 'com.google.guava:guava:33.4.0-jre'
   implementation 'com.twelvemonkeys.imageio:imageio-core:3.12.0'
   implementation 'net.coobird:thumbnailator:0.4.20'
+	implementation 'org.json:json:20250107'
 	
   runtimeOnly 'org.postgresql:postgresql'
 

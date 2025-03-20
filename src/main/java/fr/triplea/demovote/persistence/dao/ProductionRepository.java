@@ -11,6 +11,7 @@ import fr.triplea.demovote.persistence.dto.ProductionShort;
 import fr.triplea.demovote.persistence.model.Participant;
 import fr.triplea.demovote.persistence.model.Production;
 
+
 public interface ProductionRepository extends JpaRepository<Production, Integer> 
 {
 

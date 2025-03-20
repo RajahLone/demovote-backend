@@ -9,7 +9,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,7 +44,6 @@ public class ParticipantController
   
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public List<ParticipantList> getList() 
   { 
     return participantRepository.getList(); 
@@ -53,14 +51,12 @@ public class ParticipantController
 
   
   @GetMapping(value = "/option-list")
-  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public List<ParticipantOptionList> getOptionList() 
   { 
     return participantRepository.getOptionList(); 
   }
 
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id) 
   { 
     ParticipantTransfer p = participantRepository.searchById(id);
@@ -71,7 +67,6 @@ public class ParticipantController
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(0);
@@ -143,7 +138,6 @@ public class ParticipantController
   }
 
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(id);
@@ -207,7 +201,6 @@ public class ParticipantController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'ORGA')")
   public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id) 
   { 
     Participant found = participantRepository.getReferenceById(id);

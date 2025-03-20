@@ -1,4 +1,4 @@
-package fr.triplea.demovote.spring;
+package fr.triplea.demovote;
 
 import java.util.Arrays;
 import java.util.List;

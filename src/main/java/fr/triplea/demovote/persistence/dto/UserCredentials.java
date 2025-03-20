@@ -1,5 +1,7 @@
 package fr.triplea.demovote.persistence.dto;
 
+import org.json.JSONObject;
+
 public class UserCredentials
 {
   
@@ -25,6 +27,19 @@ public class UserCredentials
   public boolean hasRole() { if (this.role != null) { if (!(this.role.isBlank())) { return true; }} return false; }
 
   public UserCredentials() {}
+  
+  public String toJSONString()
+  {
+    JSONObject jo = new JSONObject();
+    
+    jo.put("username", this.username);
+    jo.put("password", this.password);
+    jo.put("nom", this.nom);
+    jo.put("prenom", this.prenom);
+    jo.put("role", hasRole() ? this.role : null);
+
+    return jo.toString();
+  }
   
   @Override
   public String toString() 

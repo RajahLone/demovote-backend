@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import fr.triplea.demovote.persistence.dto.VariableTypeOptionList;
 import fr.triplea.demovote.persistence.model.Variable;
 
+
 public interface VariableRepository extends JpaRepository<Variable, Integer> 
 {
   
