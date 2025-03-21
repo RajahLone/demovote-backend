@@ -9,12 +9,12 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.dao.RoleRepository;
-import fr.triplea.demovote.persistence.dao.VariableRepository;
-import fr.triplea.demovote.persistence.model.Participant;
-import fr.triplea.demovote.persistence.model.Role;
-import fr.triplea.demovote.persistence.model.Variable;
+import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dao.RoleRepository;
+import fr.triplea.demovote.dao.VariableRepository;
+import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.Role;
+import fr.triplea.demovote.model.Variable;
 
 @Component
 public class CreateDefaultValues implements ApplicationListener<ContextRefreshedEvent>

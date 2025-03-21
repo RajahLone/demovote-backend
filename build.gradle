@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
 	id 'war'
-	id 'org.springframework.boot' version '3.4.3'
+	id 'org.springframework.boot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -27,7 +27,10 @@ dependencies {
   implementation 'com.twelvemonkeys.imageio:imageio-core:3.12.0'
   implementation 'net.coobird:thumbnailator:0.4.20'
 	implementation 'org.json:json:20250107'
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+  runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
   runtimeOnly 'org.postgresql:postgresql'
 
   providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'

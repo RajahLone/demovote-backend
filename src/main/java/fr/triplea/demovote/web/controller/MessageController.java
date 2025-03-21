@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.demovote.persistence.dao.MessageRepository;
-import fr.triplea.demovote.persistence.model.Message;
+import fr.triplea.demovote.dao.MessageRepository;
+import fr.triplea.demovote.model.Message;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController

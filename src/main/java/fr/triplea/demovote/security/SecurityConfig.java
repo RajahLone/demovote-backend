@@ -8,21 +8,23 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 
 @Configuration
-@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig
 {
  
-  // TODO: CSRF-TOKEN, filtrage anti-XSS, filtrage anti-SQL-injection, Header FrameOptions, etc
+  // TODO: JWT, CSRF-TOKEN, filtrage anti-XSS, filtrage anti-SQL-injection, Header FrameOptions, etc
   
   @Autowired
   private MyUserDetailsService myUserDetailsService;
@@ -45,12 +47,23 @@ public class SecurityConfig
   }
   
   @Bean
+  public SecurityContextRepository securityContextRepository() 
+  {
+    return new DelegatingSecurityContextRepository(new RequestAttributeSecurityContextRepository(), new HttpSessionSecurityContextRepository());
+  }
+
+  @Bean
   public SessionRegistry sessionRegistry() { return new SessionRegistryImpl(); }
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception 
+  public JwtTokenFilter jwtTokenFilter() { return new JwtTokenFilter(); }
+  
+  Class<? extends UsernamePasswordAuthenticationFilter> clazz = UsernamePasswordAuthenticationFilter.class;
+
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception 
   {
-    http.csrf((csrf) -> csrf.disable())
+    http.csrf(csrf -> csrf.disable())
         .authenticationProvider(authenticationProvider())
         .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
           .requestMatchers("/divers/**", "/sign/**").permitAll()
@@ -59,11 +72,12 @@ public class SecurityConfig
           .requestMatchers("/participant/**").permitAll() //.hasRole("ORGA")
           .anyRequest().authenticated()
           )
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS).maximumSessions(1).sessionRegistry(sessionRegistry())
+        .addFilterBefore(jwtTokenFilter(), clazz)
+        .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository).requireExplicitSave(false))
+        .headers(headers -> headers.frameOptions(customize -> customize.disable()))
+        .sessionManagement(session -> session.maximumSessions(2).sessionRegistry(sessionRegistry())
         );
-
-    //http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class); // TODO: JWT token
-    
+        
     return http.build();
   }
 

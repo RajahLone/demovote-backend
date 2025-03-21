@@ -23,15 +23,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.dao.ProductionRepository;
-import fr.triplea.demovote.persistence.dto.ProductionTransfer;
-import fr.triplea.demovote.persistence.dto.ProductionFile;
-import fr.triplea.demovote.persistence.dto.ProductionShort;
-import fr.triplea.demovote.persistence.dto.ProductionUpdate;
-import fr.triplea.demovote.persistence.model.Participant;
-import fr.triplea.demovote.persistence.model.Production;
-import fr.triplea.demovote.persistence.model.ProductionType;
+import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dao.ProductionRepository;
+import fr.triplea.demovote.dto.ProductionFile;
+import fr.triplea.demovote.dto.ProductionShort;
+import fr.triplea.demovote.dto.ProductionTransfer;
+import fr.triplea.demovote.dto.ProductionUpdate;
+import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.Production;
+import fr.triplea.demovote.model.ProductionType;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import jakarta.servlet.http.HttpServletRequest;
 

@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.dto.ParticipantTransfer;
-import fr.triplea.demovote.persistence.model.Participant;
+import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dto.ParticipantTransfer;
+import fr.triplea.demovote.model.Participant;
 
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -25,7 +24,7 @@ import fr.triplea.demovote.persistence.model.Participant;
 public class AccountController 
 {
   @SuppressWarnings("unused") 
-  private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
 
   @Autowired
   private ParticipantRepository participantRepository;
@@ -33,12 +32,10 @@ public class AccountController
   @Autowired
   private PasswordEncoder passwordEncoder;
 
-
+  
   @GetMapping(value = "/form")
-  public ResponseEntity<ParticipantTransfer> getForm() 
-  { 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    
+  public ResponseEntity<ParticipantTransfer> getForm(final Authentication authentication) 
+  {         
     if (authentication != null)
     {
       ParticipantTransfer found = participantRepository.searchByPseudonyme(authentication.getName());
@@ -50,10 +47,8 @@ public class AccountController
   }
  
   @PutMapping(value = "/update")
-  public ResponseEntity<Object> update(@RequestBody(required = true) ParticipantTransfer participant) 
+  public ResponseEntity<Object> update(@RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication) 
   { 
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    
     if (authentication != null)
     {
       Participant found = participantRepository.findByPseudonyme(authentication.getName());

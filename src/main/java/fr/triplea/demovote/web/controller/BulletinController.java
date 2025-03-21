@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.demovote.persistence.dao.BulletinRepository;
-import fr.triplea.demovote.persistence.dao.CategorieRepository;
-import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.dao.ProductionRepository;
-import fr.triplea.demovote.persistence.model.Bulletin;
-import fr.triplea.demovote.persistence.model.Categorie;
-import fr.triplea.demovote.persistence.model.Participant;
-import fr.triplea.demovote.persistence.model.Production;
+import fr.triplea.demovote.dao.BulletinRepository;
+import fr.triplea.demovote.dao.CategorieRepository;
+import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dao.ProductionRepository;
+import fr.triplea.demovote.model.Bulletin;
+import fr.triplea.demovote.model.Categorie;
+import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.Production;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController

@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.dto.ParticipantList;
-import fr.triplea.demovote.persistence.dto.ParticipantOptionList;
-import fr.triplea.demovote.persistence.dto.ParticipantTransfer;
-import fr.triplea.demovote.persistence.model.Participant;
-import fr.triplea.demovote.persistence.model.ParticipantModePaiement;
-import fr.triplea.demovote.persistence.model.ParticipantStatut;
+import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dto.ParticipantList;
+import fr.triplea.demovote.dto.ParticipantOptionList;
+import fr.triplea.demovote.dto.ParticipantTransfer;
+import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.ParticipantModePaiement;
+import fr.triplea.demovote.model.ParticipantStatut;
 
 
 @CrossOrigin(origins = "http://localhost:4200")

@@ -1,19 +1,15 @@
 package fr.triplea.demovote.security;
 
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import fr.triplea.demovote.persistence.dao.ParticipantRepository;
-import fr.triplea.demovote.persistence.model.Participant;
+import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.model.MyUserDetails;
+import fr.triplea.demovote.model.Participant;
 
 @Service("userDetailsService")
 @Transactional
@@ -28,7 +24,7 @@ public class MyUserDetailsService implements UserDetailsService
 
   
   @Override
-  public UserDetails loadUserByUsername(final String pseudonyme) throws UsernameNotFoundException 
+  public MyUserDetails loadUserByUsername(final String pseudonyme) throws UsernameNotFoundException 
   {
     try 
     {
@@ -36,9 +32,7 @@ public class MyUserDetailsService implements UserDetailsService
       
       if (participant == null) { throw new UsernameNotFoundException("Pseudonyme non trouvé : " + pseudonyme); }
 
-      Set<GrantedAuthority> authorities = participant.getRoles().stream().map((role) -> new SimpleGrantedAuthority(role.getLibelle())).collect(Collectors.toSet());
-
-      return new org.springframework.security.core.userdetails.User(participant.getPseudonyme(), participant.getMotDePasse(), authorities);
+      return MyUserDetails.createInstance(participant);
     } 
     catch (final Exception e) { throw new RuntimeException(e); }
    }

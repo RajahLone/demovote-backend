@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.demovote.persistence.dao.VariableRepository;
-import fr.triplea.demovote.persistence.dto.VariableTypeOptionList;
-import fr.triplea.demovote.persistence.model.Variable;
+import fr.triplea.demovote.dao.VariableRepository;
+import fr.triplea.demovote.dto.VariableTypeOptionList;
+import fr.triplea.demovote.model.Variable;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
