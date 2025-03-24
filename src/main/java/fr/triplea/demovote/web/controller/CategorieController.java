@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,12 +31,14 @@ public class CategorieController
 
 
   @GetMapping(value = "/list")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<Categorie> getList() 
   { 
     return categorieRepository.findAll(); 
   }
 
   @GetMapping(value = "/form/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Categorie> getForm(@PathVariable int id)
   { 
     Categorie c = categorieRepository.findById(id);
@@ -46,6 +49,7 @@ public class CategorieController
   }
 
   @PostMapping(value = "/create")
+  @PreAuthorize("hasRole('ADMIN')")
   public Categorie create(@RequestBody(required = true) Categorie categorie) 
   { 
     Categorie found = categorieRepository.findById(0);
@@ -58,6 +62,7 @@ public class CategorieController
   }
 
   @PutMapping(value = "/update/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Categorie categorie) 
   { 
     Categorie found = categorieRepository.findById(id);
@@ -83,6 +88,7 @@ public class CategorieController
   }
 
   @DeleteMapping(value = "/delete/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> disableCategorie(@PathVariable int id) 
   { 
     Categorie c = categorieRepository.getReferenceById(id);

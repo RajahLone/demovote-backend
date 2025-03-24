@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +34,7 @@ public class VariableController
 
 
   @GetMapping(value = "/list")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<Variable> getList(@RequestParam(required = false) String type) 
   { 
     if (type == null) { return variableRepository.findAll(); }
@@ -43,12 +45,14 @@ public class VariableController
   }
   
   @GetMapping(value = "/option-list")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<VariableTypeOptionList> getOptionList() 
   { 
     return variableRepository.getTypes(); 
   }
  
   @GetMapping(value = "/form/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Variable> getForm(@PathVariable int id) 
   { 
     Variable v = variableRepository.findById(id);
@@ -59,6 +63,7 @@ public class VariableController
   }
 
   @PostMapping(value = "/create")
+  @PreAuthorize("hasRole('ADMIN')")
   public Variable create(@RequestBody(required = true) Variable variable) 
   { 
     Variable found = variableRepository.findById(0);
@@ -71,6 +76,7 @@ public class VariableController
   }
  
   @PutMapping(value = "/update/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Variable> update(@PathVariable int id, @RequestBody(required = true) Variable variable) 
   { 
     Variable found = variableRepository.findById(id);
@@ -91,6 +97,7 @@ public class VariableController
   }
 
   @DeleteMapping(value = "/delete/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Boolean>> deleteVariable(@PathVariable int id) 
   { 
     Variable found = variableRepository.findById(id);

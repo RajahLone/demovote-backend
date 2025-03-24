@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,12 +29,14 @@ public class PreferenceController
 
   
   @PostMapping(value = "/list")
+  @PreAuthorize("hasRole('USER')")
   public List<Preference> get(@RequestParam(required = true) Participant numParticipant, @RequestParam(required = false) int numTraitement) 
   { 
     return preferenceRepository.findByParticipantAndTraitement(numParticipant, numTraitement); 
   }
 
   @PostMapping(value = "/create")
+  @PreAuthorize("hasRole('USER')")
   public Preference create(@RequestBody(required = true) Preference preference) 
   { 
     Preference found = preferenceRepository.findById(0);
@@ -44,6 +47,7 @@ public class PreferenceController
   }
 
   @PutMapping(value = "/update/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Preference> update(@PathVariable int id, @RequestBody(required = true) Preference preference) 
   { 
     Preference found = preferenceRepository.findById(id);

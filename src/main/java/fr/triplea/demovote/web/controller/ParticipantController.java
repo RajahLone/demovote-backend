@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
@@ -44,19 +46,24 @@ public class ParticipantController
   
 
   @GetMapping(value = "/list")
-  public List<ParticipantList> getList() 
+  @PreAuthorize("hasRole('ORGA')")
+  public List<ParticipantList> getList(@RequestParam("nom") String filtreNom, @RequestParam("statut") int filtreStatut, @RequestParam("arrive") int filtreArrive) 
   { 
-    return participantRepository.getList(); 
+    if (filtreNom != null) { if (filtreNom.isBlank()) { filtreNom = null; } else { filtreNom = filtreNom.trim().toUpperCase(); } }
+    
+    return participantRepository.getList(filtreNom, filtreStatut, filtreArrive);
   }
 
   
   @GetMapping(value = "/option-list")
+  @PreAuthorize("hasRole('ORGA')")
   public List<ParticipantOptionList> getOptionList() 
   { 
     return participantRepository.getOptionList(); 
   }
 
   @GetMapping(value = "/form/{id}")
+  @PreAuthorize("hasRole('ORGA')")
   public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id) 
   { 
     ParticipantTransfer p = participantRepository.searchById(id);
@@ -67,6 +74,7 @@ public class ParticipantController
   }
 
   @PostMapping(value = "/create")
+  @PreAuthorize("hasRole('ORGA')")
   public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(0);
@@ -138,6 +146,7 @@ public class ParticipantController
   }
 
   @PutMapping(value = "/update/{id}")
+  @PreAuthorize("hasRole('ORGA')")
   public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant) 
   { 
     Participant found = participantRepository.findById(id);
@@ -201,6 +210,7 @@ public class ParticipantController
   }
 
   @DeleteMapping(value = "/delete/{id}")
+  @PreAuthorize("hasRole('ORGA')")
   public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id) 
   { 
     Participant found = participantRepository.getReferenceById(id);

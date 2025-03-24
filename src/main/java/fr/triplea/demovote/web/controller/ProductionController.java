@@ -11,6 +11,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +50,7 @@ public class ProductionController
 
  
   @GetMapping(value = "/list")
+  @PreAuthorize("hasRole('USER')")
   public List<Production> getList(@RequestParam(required = false) String type) 
   { 
     List<ProductionShort> prods = productionRepository.findAllWithoutArchive();
@@ -61,6 +63,7 @@ public class ProductionController
   }
 
   @GetMapping(value = "/file/{id}")
+  @PreAuthorize("hasRole('USER')")
   @ResponseBody
   public ResponseEntity<Resource> getFile(@PathVariable int id) 
   {
@@ -81,6 +84,7 @@ public class ProductionController
   }
 
   @GetMapping(value = "/form/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Production> getForm(@PathVariable int id)
   { 
     ProductionShort p = productionRepository.findByIdWithoutArchive(id);
@@ -91,6 +95,7 @@ public class ProductionController
   }
 
   @GetMapping(value = "/formfile/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ProductionFile> getFormFile(@PathVariable int id)
   { 
     ProductionFile p = productionRepository.findByIdForUpload(id);
@@ -101,6 +106,7 @@ public class ProductionController
   }
 
   @PostMapping(value = "/create")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Map<String, Boolean>> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
   { 
     Participant participant = participantRepository.findById(production.numeroParticipant());
@@ -144,6 +150,7 @@ public class ProductionController
   }
  
   @PutMapping(value = "/update/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Map<String, Boolean>> update(HttpServletRequest request, @PathVariable int id, @RequestBody(required = true) ProductionUpdate production) 
   { 
     Production found = productionRepository.findById(id);
@@ -188,6 +195,7 @@ public class ProductionController
   }
   
   @PutMapping(value = "/upload/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Map<String, Boolean>> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production) 
   { 
     Production found = productionRepository.findById(id);
@@ -224,6 +232,7 @@ public class ProductionController
   }
 
   @DeleteMapping(value = "/delete/{id}")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Map<String, Boolean>> disableProduction(@PathVariable int id) 
   { 
     Production found = productionRepository.getReferenceById(id);

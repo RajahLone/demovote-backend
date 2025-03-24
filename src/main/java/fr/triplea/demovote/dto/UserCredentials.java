@@ -25,6 +25,14 @@ public class UserCredentials
   public void setRole(String s) { this.role = new String(s); }
   public String getRole() { return this.role; }
   public boolean hasRole() { if (this.role != null) { if (!(this.role.isBlank())) { return true; }} return false; }
+  
+  private String token;
+  public void setToken(String s) { this.token = new String(s); }
+  public String getToken() { return this.token; }
+  
+  private String erreur;
+  public void setErreur(String s) { this.erreur = new String(s); }
+  public String getErreur() { return this.erreur; }
 
   public UserCredentials() {}
   

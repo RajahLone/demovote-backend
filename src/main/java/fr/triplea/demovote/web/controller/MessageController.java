@@ -3,6 +3,7 @@ package fr.triplea.demovote.web.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ public class MessageController
   
   
   @GetMapping(value = "/list/{id}")
+  @PreAuthorize("hasRole('USER')")
   public List<Message> getList(@PathVariable int id)
   { 
     return messageRepository.findAll(id, id); 

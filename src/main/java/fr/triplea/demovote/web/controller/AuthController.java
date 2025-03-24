@@ -1,19 +1,16 @@
 package fr.triplea.demovote.web.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,14 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.UserCredentials;
-import fr.triplea.demovote.model.MyUserDetails;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Role;
 import fr.triplea.demovote.security.JwtTokenUtil;
 import fr.triplea.demovote.security.MyUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -41,10 +36,10 @@ public class AuthController
   private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
 
   @Autowired
-  private MyUserDetailsService myUserDetailsService;
+  public PasswordEncoder passwordEncoder;
   
   @Autowired
-  private AuthenticationManager authenticationManager;
+  public MyUserDetailsService myUserDetailsService;
   
   @Autowired
   private JwtTokenUtil jwtTokenUtil;
@@ -66,41 +61,49 @@ public class AuthController
     if (found != null)
     { 
       UserDetails userDetails = myUserDetailsService.loadUserByUsername(usrn);
-
-      Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())); 
-      
-      SecurityContextHolder.getContext().setAuthentication(authentication);
     
-      String token = jwtTokenUtil.generateJwtToken(authentication);
-  
-      MyUserDetails userBean = (MyUserDetails) authentication.getPrincipal();    
-    
-      /*
-      List<String> roles = userBean.getAuthorities().stream().map(auth -> auth.getAuthority()).collect(Collectors.toList());
-   
-      AuthResponse authResponse = new AuthResponse();
-      authResponse.setToken(token);
-      authResponse.setRoles(roles);
-      return ResponseEntity.ok(authResponse);
-      */
+      Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()) ; 
       
-      // TODO: add jwtoken in user credentials for frontend
-      
-      uc = new UserCredentials();
-      
-      uc.setUsername(usrn);
-      uc.setPassword("<success@auth>");
-      uc.setNom(found.getNom());
-      uc.setPrenom(found.getPrenom());
+      if (passwordEncoder.matches(pass, userDetails.getPassword()))
+      {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        String token = jwtTokenUtil.generateJwtToken(authentication);
+        
+        // TODO: add jwtoken in user credentials for frontend
+        
+        uc = new UserCredentials();
+        
+        uc.setUsername(usrn);
+        uc.setPassword("<success@auth>");
+        uc.setNom(found.getNom());
+        uc.setPrenom(found.getPrenom());
+        uc.setToken(token);
+        uc.setErreur("");
 
-      List<Role> roles = found.getRoles();
+        List<Role> roles = found.getRoles();
+         
+        if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
+        if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
+        if (!(uc.hasRole())) { uc.setRole("USER"); }
+
+        return ResponseEntity.ok(uc);
+      }
+      else
+      {
+        uc = new UserCredentials();
+        
+        uc.setUsername("");
+        uc.setPassword("");
+        uc.setNom("");
+        uc.setPrenom("");
+        uc.setToken("");
+        uc.setRole("");
+        uc.setErreur("Le mot de passe ne correspond pas à ce participant.");
        
-      if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
-      if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
-      if (!(uc.hasRole())) { uc.setRole("USER"); }
-
-      return ResponseEntity.ok(uc);
-     }
+        return ResponseEntity.ok(uc);
+      }
+    }
     
     uc = new UserCredentials();
     
@@ -108,7 +111,9 @@ public class AuthController
     uc.setPassword("");
     uc.setNom("");
     uc.setPrenom("");
+    uc.setToken("");
     uc.setRole("");
+    uc.setErreur("Participant introuvable avec ce pseudonyme.");
    
     return ResponseEntity.ok(uc);
   }

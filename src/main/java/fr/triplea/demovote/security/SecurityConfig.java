@@ -24,8 +24,9 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 public class SecurityConfig
 {
  
-  // TODO: JWT, CSRF-TOKEN, filtrage anti-XSS, filtrage anti-SQL-injection, Header FrameOptions, etc
-  
+  // TODO: CSRF-TOKEN, filtrage anti-XSS, filtrage anti-SQL-injection, etc
+  // TODO: gérer le 403 au niveau du frontend (en cas d'expiration du JWT)
+
   @Autowired
   private MyUserDetailsService myUserDetailsService;
 
@@ -67,16 +68,16 @@ public class SecurityConfig
         .authenticationProvider(authenticationProvider())
         .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
           .requestMatchers("/divers/**", "/sign/**").permitAll()
-          .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").permitAll() //.hasRole("USER")
-          .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").permitAll() //.hasRole("ADMIN")
-          .requestMatchers("/participant/**").permitAll() //.hasRole("ORGA")
+          .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")
+          .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").hasRole("ADMIN")
+          .requestMatchers("/participant/**").hasRole("ORGA")
           .anyRequest().authenticated()
           )
         .addFilterBefore(jwtTokenFilter(), clazz)
-        .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository).requireExplicitSave(false))
+        .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository).requireExplicitSave(true))
         .headers(headers -> headers.frameOptions(customize -> customize.disable()))
-        .sessionManagement(session -> session.maximumSessions(2).sessionRegistry(sessionRegistry())
-        );
+        .sessionManagement(session -> session.maximumSessions(2).sessionRegistry(sessionRegistry()))
+        ;
         
     return http.build();
   }
