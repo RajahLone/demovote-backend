@@ -47,11 +47,13 @@ public class ParticipantController
 
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('ORGA')")
-  public List<ParticipantList> getList(@RequestParam("nom") String filtreNom, @RequestParam("statut") int filtreStatut, @RequestParam("arrive") int filtreArrive) 
+  public List<ParticipantList> getList(@RequestParam("nom") String filtreNom, @RequestParam("statut") int filtreStatut, @RequestParam("arrive") int filtreArrive, @RequestParam("tri") int tri) 
   { 
     if (filtreNom != null) { if (filtreNom.isBlank()) { filtreNom = null; } else { filtreNom = filtreNom.trim().toUpperCase(); } }
     
-    return participantRepository.getList(filtreNom, filtreStatut, filtreArrive);
+    if (tri == 1) { return participantRepository.getListOrderedByDateInscription(filtreNom, filtreStatut, filtreArrive); }
+    
+    return participantRepository.getListOrderedByNom(filtreNom, filtreStatut, filtreArrive);
   }
 
   

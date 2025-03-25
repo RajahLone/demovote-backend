@@ -1,10 +1,12 @@
 package fr.triplea.demovote.web.controller;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.UserCredentials;
@@ -47,6 +50,12 @@ public class AuthController
   @Autowired
   private ParticipantRepository participantRepository;
 
+  @Autowired
+  private LocaleResolver localeResolver;
+  
+  @Autowired
+  private MessageSource messageSource;
+  
   
   @PostMapping(value = "/in")
   public ResponseEntity<UserCredentials> signIn(@RequestBody UserCredentials uc, HttpServletRequest request, HttpServletResponse response)
@@ -57,6 +66,8 @@ public class AuthController
     if (usrn.isEmpty() || pass.isEmpty()) { return ResponseEntity.notFound().build(); }
     
     Participant found = participantRepository.findByPseudonyme(usrn);
+    
+    Locale locale = localeResolver.resolveLocale(request);
     
     if (found != null)
     { 
@@ -99,7 +110,7 @@ public class AuthController
         uc.setPrenom("");
         uc.setToken("");
         uc.setRole("");
-        uc.setErreur("Le mot de passe ne correspond pas à ce participant.");
+        uc.setErreur(messageSource.getMessage("auth.password.mismatches", null, locale));
        
         return ResponseEntity.ok(uc);
       }
@@ -113,7 +124,7 @@ public class AuthController
     uc.setPrenom("");
     uc.setToken("");
     uc.setRole("");
-    uc.setErreur("Participant introuvable avec ce pseudonyme.");
+    uc.setErreur(messageSource.getMessage("auth.user.notfound", null, locale));
    
     return ResponseEntity.ok(uc);
   }

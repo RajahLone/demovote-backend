@@ -69,7 +69,28 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "AND ((:statut = 0) OR (:statut = 1 AND p.statut = 'EN_ATTENTE'::vote.statut_participant)) "
       + "AND ((:arrive = 0) OR (:arrive = 1 AND p.flag_arrive = FALSE) OR (:arrive = 2 AND p.flag_arrive = TRUE)) "
       + "ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<ParticipantList> getList(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive);
+  List<ParticipantList> getListOrderedByNom(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive);
+
+  @NativeQuery("SELECT DISTINCT "
+      + "p.numero_participant, "
+      + "p.nom, "
+      + "p.prenom, "
+      + "p.pseudonyme, "
+      + "p.groupe, "
+      + "p.email, "
+      + "p.statut, "
+      + "p.flag_jour1, "
+      + "p.flag_jour2, "
+      + "p.flag_jour3, "
+      + "p.flag_dodo_sur_place, "
+      + "p.flag_arrive "
+      + "FROM vote.participants AS p "
+      + "WHERE p.flag_actif IS TRUE "
+      + "AND ((:nom is null) OR (UPPER(p.nom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.prenom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.pseudonyme) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.groupe) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.email) LIKE CONCAT('%', :nom, '%'))) "
+      + "AND ((:statut = 0) OR (:statut = 1 AND p.statut = 'EN_ATTENTE'::vote.statut_participant)) "
+      + "AND ((:arrive = 0) OR (:arrive = 1 AND p.flag_arrive = FALSE) OR (:arrive = 2 AND p.flag_arrive = TRUE)) "
+      + "ORDER BY p.numero_participant ASC ")
+  List<ParticipantList> getListOrderedByDateInscription(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_actif IS TRUE ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
   List<Participant> findAll();

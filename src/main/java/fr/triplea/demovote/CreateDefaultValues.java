@@ -2,6 +2,7 @@ package fr.triplea.demovote;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -38,7 +39,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   public void onApplicationEvent(ContextRefreshedEvent event) 
   {
     if (initialise) { return; } 
-    
+
+    Locale.setDefault(Locale.ENGLISH);
+      
     Role adminRole = addRoleIfMissing("ROLE_ADMIN");
     Role orgaRole = addRoleIfMissing("ROLE_ORGA");
     Role userRole = addRoleIfMissing("ROLE_USER");

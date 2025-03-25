@@ -3,6 +3,7 @@ package fr.triplea.demovote.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -15,17 +16,32 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 
 @Configuration
+@EnableWebMvc
 @EnableMethodSecurity
 public class SecurityConfig
 {
  
-  // TODO: CSRF-TOKEN, filtrage anti-XSS, filtrage anti-SQL-injection, etc
-  // TODO: gérer le 403 au niveau du frontend (en cas d'expiration du JWT)
+  // TODO: CSRF-TOKEN
+  // TODO: gérer le 403 au niveau du frontend (en cas d'expiration du JWT -> refreshToken)
+
+  @Bean
+  public ResourceBundleMessageSource messageSource() 
+  {
+    var source = new ResourceBundleMessageSource();
+  
+    source.setBasenames("langs/messages");
+    source.setUseCodeAsDefaultMessage(true);
+
+    return source;
+  }
 
   @Autowired
   private MyUserDetailsService myUserDetailsService;
@@ -62,11 +78,14 @@ public class SecurityConfig
   Class<? extends UsernamePasswordAuthenticationFilter> clazz = UsernamePasswordAuthenticationFilter.class;
 
   @Bean
+  public XSSFilter xssFilter() { return new XSSFilter(); }
+   
+  @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception 
   {
     http.csrf(csrf -> csrf.disable())
         .authenticationProvider(authenticationProvider())
-        .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
+        .authorizeHttpRequests((ahreq) -> ahreq
           .requestMatchers("/divers/**", "/sign/**").permitAll()
           .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")
           .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").hasRole("ADMIN")
@@ -74,8 +93,15 @@ public class SecurityConfig
           .anyRequest().authenticated()
           )
         .addFilterBefore(jwtTokenFilter(), clazz)
-        .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository).requireExplicitSave(true))
-        .headers(headers -> headers.frameOptions(customize -> customize.disable()))
+        .securityContext(sc -> sc.securityContextRepository(securityContextRepository).requireExplicitSave(true))
+        .headers(headers -> headers
+          .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+          .contentSecurityPolicy(csp -> csp.policyDirectives("script-src 'self'"))
+          .frameOptions(fopt -> fopt.sameOrigin())
+          .cacheControl(cache -> cache.disable())
+          .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).preload(true).maxAgeInSeconds(31536000))
+          .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.SAME_ORIGIN))
+          )
         .sessionManagement(session -> session.maximumSessions(2).sessionRegistry(sessionRegistry()))
         ;
         

@@ -8,18 +8,18 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint 
 {
-  @SuppressWarnings("unused") 
-  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
+  //@SuppressWarnings("unused") 
+  //private static final Logger LOG = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
   
   public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException 
   {
-    //logger.error("Unauthorized access error : " + authException.getMessage());
+    //LOG.error("Unauthorized access error : " + authException.getMessage());
     
     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized Access");
   }
