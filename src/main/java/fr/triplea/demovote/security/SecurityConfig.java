@@ -31,6 +31,7 @@ public class SecurityConfig
  
   // TODO: CSRF-TOKEN
   // TODO: gérer le 403 au niveau du frontend (en cas d'expiration du JWT -> refreshToken)
+  // TODO: déconnexion automatique après timeout
 
   @Bean
   public ResourceBundleMessageSource messageSource() 

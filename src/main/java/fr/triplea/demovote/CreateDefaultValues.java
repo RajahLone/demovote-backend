@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,8 @@ import fr.triplea.demovote.model.Variable;
 public class CreateDefaultValues implements ApplicationListener<ContextRefreshedEvent>
 {
 
-  private final static String EMAIL_ADMIN = "pierre.tonthat@free.fr";
+  @Value("${admin.email.address}")
+  private String adminEmailAddress;
   
   boolean initialise = false;
 
@@ -69,10 +71,13 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
         }
       }
       
-      if (participant.getEmail().equalsIgnoreCase(CreateDefaultValues.EMAIL_ADMIN))
+      if (adminEmailAddress != null)
       {
-        if (!roles.contains(adminRole)) { roles.add(adminRole); changed = true; }
-        if (!roles.contains(orgaRole)) { roles.add(orgaRole); changed = true; }
+        if (participant.getEmail().equalsIgnoreCase(adminEmailAddress))
+        {
+          if (!roles.contains(adminRole)) { roles.add(adminRole); changed = true; }
+          if (!roles.contains(orgaRole)) { roles.add(orgaRole); changed = true; }
+        }
       }
       
       if (changed)

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.dao.VariableRepository;
+import fr.triplea.demovote.dto.JourneesTransfer;
 import fr.triplea.demovote.dto.MessagesTransfer;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -33,5 +34,19 @@ public class DiversController
     return ResponseEntity.ok(mt); 
   }
 
+  @GetMapping(value = "/days")
+  public ResponseEntity<JourneesTransfer> getDaysLabels() 
+  { 
+    JourneesTransfer jt = new JourneesTransfer();
+
+    jt.setJour1Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR1"));
+    jt.setJour1Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR1"));
+    jt.setJour2Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR2"));
+    jt.setJour2Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR2"));
+    jt.setJour3Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR3"));
+    jt.setJour3Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR3"));
+    
+    return ResponseEntity.ok(jt); 
+  }
 
 }

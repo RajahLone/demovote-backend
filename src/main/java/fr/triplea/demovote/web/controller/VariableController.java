@@ -37,9 +37,7 @@ public class VariableController
   @PreAuthorize("hasRole('ADMIN')")
   public List<Variable> getList(@RequestParam(required = false) String type) 
   { 
-    if (type == null) { return variableRepository.findAll(); }
-    else 
-    if (type.isBlank()) { return variableRepository.findAll(); }
+    if (type != null) { if (type.isBlank()) { type = null; } }
  
     return variableRepository.findByType(type); 
   }
