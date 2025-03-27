@@ -14,6 +14,7 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
@@ -33,7 +34,7 @@ public class SecurityConfig
 {
  
   // TODO: CSRF-TOKEN
-  // TODO: HTTPS
+  // TODO: XSS-Filter ne marche plus après l'ajout du CORS-Filter
   // TODO: déconnexion automatique après timeout
 
   @Bean
@@ -79,7 +80,12 @@ public class SecurityConfig
   @Bean
   public JwtTokenFilter jwtTokenFilter() { return new JwtTokenFilter(); }
   
-  Class<? extends UsernamePasswordAuthenticationFilter> clazz = UsernamePasswordAuthenticationFilter.class;
+  Class<? extends UsernamePasswordAuthenticationFilter> upaf_clazz = UsernamePasswordAuthenticationFilter.class;
+
+  @Bean
+  public CorsFilter corsFilter() { return new CorsFilter(); }
+ 
+  Class<? extends ChannelProcessingFilter> cpf_clazz = ChannelProcessingFilter.class;
 
   
   @Bean
@@ -95,7 +101,8 @@ public class SecurityConfig
           .requestMatchers("/participant/**").hasRole("ORGA")
           .anyRequest().authenticated()
           )
-        .addFilterBefore(jwtTokenFilter(), clazz)
+        .addFilterBefore(jwtTokenFilter(), upaf_clazz)
+        .addFilterBefore(corsFilter(), cpf_clazz)
         .securityContext(sc -> sc.securityContextRepository(securityContextRepository).requireExplicitSave(true))
         .headers(headers -> headers
           .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))

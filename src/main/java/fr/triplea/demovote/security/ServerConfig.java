@@ -35,6 +35,7 @@ public class ServerConfig
     };
     
     tomcat.addAdditionalTomcatConnectors(getHttpConnector());
+    
     return tomcat;
   }
 
