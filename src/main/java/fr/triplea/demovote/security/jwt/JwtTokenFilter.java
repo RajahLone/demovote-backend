@@ -2,6 +2,8 @@ package fr.triplea.demovote.security.jwt;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +23,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class JwtTokenFilter extends OncePerRequestFilter
 {
+
+  private final Logger LOG = LoggerFactory.getLogger(JwtTokenFilter.class);
   
   @Autowired
   private JwtTokenUtil jwtTokenUtil;
@@ -28,6 +32,8 @@ public class JwtTokenFilter extends OncePerRequestFilter
   @Autowired
   private MyUserDetailsService userDetailsService;
   
+  public JwtTokenFilter() { LOG.info("JwtTokenFilter init"); }
+
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException 
   {
@@ -63,4 +69,5 @@ public class JwtTokenFilter extends OncePerRequestFilter
     
     return null;
   }
+  
 }

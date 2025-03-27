@@ -5,13 +5,29 @@ import org.apache.catalina.connector.Connector;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import fr.triplea.demovote.security.xss.XssFilter;
+
 @Configuration
 public class ServerConfig 
 {
+
+  @Bean
+  public FilterRegistrationBean<XssFilter> loggingFilterRegistration() 
+  {
+    FilterRegistrationBean<XssFilter> registrationBean = new FilterRegistrationBean<>();
+    
+    registrationBean.setFilter(new XssFilter());
+    registrationBean.addUrlPatterns("/*");
+    registrationBean.setOrder(1); 
+    registrationBean.setName("xssFilter");
+        
+    return registrationBean;
+  }
 
   @Bean
   public ServletWebServerFactory servletContainer() 

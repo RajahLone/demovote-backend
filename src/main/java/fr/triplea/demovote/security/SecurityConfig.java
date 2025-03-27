@@ -34,7 +34,6 @@ public class SecurityConfig
 {
  
   // TODO: CSRF-TOKEN
-  // TODO: XSS-Filter ne marche plus après l'ajout du CORS-Filter
   // TODO: déconnexion automatique après timeout
 
   @Bean

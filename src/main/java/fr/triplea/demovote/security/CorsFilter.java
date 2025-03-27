@@ -4,34 +4,24 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.Order;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebFilter("/*")
-@Order(2)
-public class CorsFilter implements Filter 
+
+public class CorsFilter extends OncePerRequestFilter 
 {
   
   private final Logger LOG = LoggerFactory.getLogger(CorsFilter.class);
 
-  public CorsFilter() { LOG.info("CorsFilter Init"); }
+  public CorsFilter() { LOG.info("CorsFilter init"); }
 
   @Override
-  public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
+  public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException
   {
-
-    HttpServletRequest request = (HttpServletRequest) req;
-    HttpServletResponse response = (HttpServletResponse) res;
-
     response.setHeader("Access-Control-Allow-Origin", "https://localhost:4200");
     response.setHeader("Access-Control-Allow-Credentials", "true");
     response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS, DELETE");
@@ -40,11 +30,8 @@ public class CorsFilter implements Filter
 
     if (request.getMethod().equals("OPTIONS")) { response.setStatus(HttpServletResponse.SC_ACCEPTED); return; }
 
-    chain.doFilter(req, res);
+    filterChain.doFilter(request, response);
   }
-
-  @Override
-  public void init(FilterConfig filterConfig) {}
 
   @Override
   public void destroy() {}
