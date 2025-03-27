@@ -23,7 +23,7 @@ import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.VariableTypeOptionList;
 import fr.triplea.demovote.model.Variable;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/variable")
 public class VariableController 

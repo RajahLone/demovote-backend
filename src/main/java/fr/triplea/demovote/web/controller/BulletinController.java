@@ -24,7 +24,7 @@ import fr.triplea.demovote.model.Categorie;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Production;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/urne")
 public class BulletinController 

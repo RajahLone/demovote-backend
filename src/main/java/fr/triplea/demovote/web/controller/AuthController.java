@@ -21,16 +21,22 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dto.ParticipantTransfer;
+import fr.triplea.demovote.dto.RefreshTokenTransfer;
 import fr.triplea.demovote.dto.UserCredentials;
 import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.RefreshToken;
 import fr.triplea.demovote.model.Role;
-import fr.triplea.demovote.security.JwtTokenUtil;
 import fr.triplea.demovote.security.MyUserDetailsService;
+import fr.triplea.demovote.security.jwt.JwtTokenUtil;
+import fr.triplea.demovote.security.jwt.RefreshTokenException;
+import fr.triplea.demovote.security.jwt.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/sign")
 public class AuthController 
@@ -46,6 +52,9 @@ public class AuthController
   
   @Autowired
   private JwtTokenUtil jwtTokenUtil;
+
+  @Autowired
+  RefreshTokenService refreshTokenService;
 
   @Autowired
   private ParticipantRepository participantRepository;
@@ -81,15 +90,18 @@ public class AuthController
         
         String token = jwtTokenUtil.generateJwtToken(authentication);
         
-        // TODO: add jwtoken in user credentials for frontend
+        refreshTokenService.deleteByNumeroParticipant(found.getNumeroParticipant());
         
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getNumeroParticipant());
+                
         uc = new UserCredentials();
         
         uc.setUsername(usrn);
         uc.setPassword("<success@auth>");
         uc.setNom(found.getNom());
         uc.setPrenom(found.getPrenom());
-        uc.setToken(token);
+        uc.setAccessToken(token);
+        uc.setRefreshToken(refreshToken.getToken());
         uc.setErreur("");
 
         List<Role> roles = found.getRoles();
@@ -108,7 +120,8 @@ public class AuthController
         uc.setPassword("");
         uc.setNom("");
         uc.setPrenom("");
-        uc.setToken("");
+        uc.setAccessToken("");
+        uc.setRefreshToken("");
         uc.setRole("");
         uc.setErreur(messageSource.getMessage("auth.password.mismatches", null, locale));
        
@@ -122,24 +135,56 @@ public class AuthController
     uc.setPassword("");
     uc.setNom("");
     uc.setPrenom("");
-    uc.setToken("");
+    uc.setAccessToken("");
+    uc.setRefreshToken("");
     uc.setRole("");
     uc.setErreur(messageSource.getMessage("auth.user.notfound", null, locale));
    
     return ResponseEntity.ok(uc);
   }
 
-  @PostMapping("/out")
-  public ResponseEntity<UserCredentials> signOut()
+  @PostMapping("/refresh")
+  public ResponseEntity<?> refreshtoken(@Valid @RequestBody RefreshTokenTransfer rtt, HttpServletRequest request) 
   {
-    SecurityContextHolder.clearContext();
+    Locale locale = localeResolver.resolveLocale(request);
+
+    String refreshTokenActif = rtt.getRefreshToken();
+
+    RefreshToken found = refreshTokenService.findByToken(refreshTokenActif);
     
+    if (found == null) { throw new RefreshTokenException(refreshTokenActif, messageSource.getMessage("refreshtoken.notfound", null, locale)); }
+
+    found = refreshTokenService.verifyExpiration(found);
+    
+    if (found == null) { throw new RefreshTokenException(refreshTokenActif, messageSource.getMessage("refreshtoken.expired", null, locale)); }
+
+    Participant participant = found.getParticipant();
+        
+    rtt.setAccessToken(jwtTokenUtil.generateTokenFromPseudonyme(participant.getPseudonyme()));
+    
+    return ResponseEntity.ok(rtt);
+  }
+  
+  @PostMapping("/out")
+  public ResponseEntity<UserCredentials> signOut(final Authentication authentication)
+  {
+    if (authentication != null)
+    {
+      ParticipantTransfer found = participantRepository.searchByPseudonyme(authentication.getName());
+      
+      if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.numeroParticipant()); }
+    }
+
+    SecurityContextHolder.clearContext();
+        
     UserCredentials uc = new UserCredentials();
     
     uc.setUsername("");
     uc.setPassword("");
     uc.setNom("");
     uc.setPrenom("");
+    uc.setAccessToken("");
+    uc.setRefreshToken("");
     uc.setRole("");
 
     return ResponseEntity.ok(uc);

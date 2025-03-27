@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.triplea.demovote.dao.MessageRepository;
 import fr.triplea.demovote.model.Message;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/message")
 public class MessageController 

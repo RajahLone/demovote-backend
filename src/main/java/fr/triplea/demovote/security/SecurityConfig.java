@@ -19,6 +19,9 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import fr.triplea.demovote.security.jwt.JwtTokenFilter;
+
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
@@ -30,7 +33,7 @@ public class SecurityConfig
 {
  
   // TODO: CSRF-TOKEN
-  // TODO: gérer le 403 au niveau du frontend (en cas d'expiration du JWT -> refreshToken)
+  // TODO: HTTPS
   // TODO: déconnexion automatique après timeout
 
   @Bean
@@ -78,13 +81,12 @@ public class SecurityConfig
   
   Class<? extends UsernamePasswordAuthenticationFilter> clazz = UsernamePasswordAuthenticationFilter.class;
 
-  @Bean
-  public XSSFilter xssFilter() { return new XSSFilter(); }
-   
+  
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception 
   {
     http.csrf(csrf -> csrf.disable())
+        .requiresChannel(channel -> channel.anyRequest().requiresSecure())
         .authenticationProvider(authenticationProvider())
         .authorizeHttpRequests((ahreq) -> ahreq
           .requestMatchers("/divers/**", "/sign/**").permitAll()

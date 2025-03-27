@@ -1,6 +1,5 @@
 package fr.triplea.demovote.dto;
 
-import org.json.JSONObject;
 
 public class UserCredentials
 {
@@ -26,29 +25,20 @@ public class UserCredentials
   public String getRole() { return this.role; }
   public boolean hasRole() { if (this.role != null) { if (!(this.role.isBlank())) { return true; }} return false; }
   
-  private String token;
-  public void setToken(String s) { this.token = new String(s); }
-  public String getToken() { return this.token; }
+  private String accessToken;
+  public void setAccessToken(String s) { this.accessToken = new String(s); }
+  public String getAccessToken() { return this.accessToken; }
   
+  private String refreshToken;
+  public void setRefreshToken(String s) { this.refreshToken = new String(s); }
+  public String getRefreshToken() { return this.refreshToken; }
+
   private String erreur;
   public void setErreur(String s) { this.erreur = new String(s); }
   public String getErreur() { return this.erreur; }
 
   public UserCredentials() {}
-  
-  public String toJSONString()
-  {
-    JSONObject jo = new JSONObject();
-    
-    jo.put("username", this.username);
-    jo.put("password", this.password);
-    jo.put("nom", this.nom);
-    jo.put("prenom", this.prenom);
-    jo.put("role", hasRole() ? this.role : null);
-
-    return jo.toString();
-  }
-  
+   
   @Override
   public String toString() 
   {

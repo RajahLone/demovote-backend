@@ -31,7 +31,7 @@ import fr.triplea.demovote.model.ParticipantModePaiement;
 import fr.triplea.demovote.model.ParticipantStatut;
 
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/participant")
 public class ParticipantController 
@@ -47,11 +47,11 @@ public class ParticipantController
 
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('ORGA')")
-  public List<ParticipantList> getList(@RequestParam("nom") String filtreNom, @RequestParam("statut") int filtreStatut, @RequestParam("arrive") int filtreArrive, @RequestParam("tri") int tri) 
+  public List<ParticipantList> getList(@RequestParam("nom") String filtreNom, @RequestParam("statut") int filtreStatut, @RequestParam("arrive") int filtreArrive, @RequestParam("tri") int choixTri) 
   { 
     if (filtreNom != null) { if (filtreNom.isBlank()) { filtreNom = null; } else { filtreNom = filtreNom.trim().toUpperCase(); } }
     
-    if (tri == 1) { return participantRepository.getListOrderedByDateInscription(filtreNom, filtreStatut, filtreArrive); }
+    if (choixTri == 1) { return participantRepository.getListOrderedByDateInscription(filtreNom, filtreStatut, filtreArrive); }
     
     return participantRepository.getListOrderedByNom(filtreNom, filtreStatut, filtreArrive);
   }

@@ -1,4 +1,4 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.jwt;
 
 import java.io.IOException;
 
@@ -9,6 +9,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import fr.triplea.demovote.model.MyUserDetails;
+import fr.triplea.demovote.security.MyUserDetailsService;
 
 import org.springframework.util.StringUtils;
 

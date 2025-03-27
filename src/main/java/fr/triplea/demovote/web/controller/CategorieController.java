@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.model.Categorie;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/categorie")
 public class CategorieController 

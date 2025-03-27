@@ -1,4 +1,4 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.jwt;
 
 import java.io.IOException;
 import org.springframework.security.core.AuthenticationException;

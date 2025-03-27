@@ -18,7 +18,7 @@ import fr.triplea.demovote.dto.ParticipantTransfer;
 import fr.triplea.demovote.model.Participant;
 
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/account")
 public class AccountController 

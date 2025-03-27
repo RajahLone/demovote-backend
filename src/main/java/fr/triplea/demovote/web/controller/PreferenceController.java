@@ -18,7 +18,7 @@ import fr.triplea.demovote.dao.PreferenceRepository;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Preference;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/preference")
 public class PreferenceController 

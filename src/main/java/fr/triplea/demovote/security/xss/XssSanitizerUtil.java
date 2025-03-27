@@ -1,4 +1,4 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.xss;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -12,7 +12,7 @@ import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.JourneesTransfer;
 import fr.triplea.demovote.dto.MessagesTransfer;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/divers")
 public class DiversController 

@@ -1,10 +1,12 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.jwt;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 import javax.crypto.spec.SecretKeySpec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,9 @@ import io.jsonwebtoken.UnsupportedJwtException;
 @Component
 public class JwtTokenUtil 
 {
+  //@SuppressWarnings("unused") 
+  private static final Logger LOG = LoggerFactory.getLogger(JwtTokenUtil.class);
+
   @Value("${jwttoken.secret}")
   private String jwtTokenSecret;
  
@@ -31,16 +36,21 @@ public class JwtTokenUtil
   
   public String generateJwtToken(Authentication authentication) 
   {
-    setSecretKey();
-    
     MyUserDetails userPrincipal = (MyUserDetails)authentication.getPrincipal();
-        
+    
+    return generateTokenFromPseudonyme(userPrincipal.getUsername());
+  }
+  
+  public String generateTokenFromPseudonyme(String pseudonyme) 
+  {
+    setSecretKey();
+
     return Jwts.builder()
-           .subject(userPrincipal.getUsername())
-           .issuedAt(new Date(System.currentTimeMillis()))
-           .expiration(new Date(System.currentTimeMillis() + jwtTokenExpiration))
-           .signWith(secret_key)
-           .compact();
+        .subject(pseudonyme)
+        .issuedAt(new Date(System.currentTimeMillis()))
+        .expiration(new Date(System.currentTimeMillis() + jwtTokenExpiration))
+        .signWith(secret_key)
+        .compact();
   }
   
   public boolean validateJwtToken(String token) 
@@ -53,10 +63,10 @@ public class JwtTokenUtil
      
       return true;
     }
-    catch(UnsupportedJwtException exp) { System.out.println("claimsJws argument does not represent Claims JWS" + exp.getMessage()); }
-    catch(MalformedJwtException exp) { System.out.println("claimsJws string is not a valid JWS" + exp.getMessage()); }
-    catch(ExpiredJwtException exp) { System.out.println("Claims has an expiration time before the method is invoked" + exp.getMessage()); }
-    catch(IllegalArgumentException exp) { System.out.println("claimsJws string is null or empty or only whitespace" + exp.getMessage()); }
+    catch(UnsupportedJwtException exp) { LOG.error("claimsJws argument does not represent Claims JWS" + exp.getMessage()); }
+    catch(MalformedJwtException exp) { LOG.error("claimsJws string is not a valid JWS" + exp.getMessage()); }
+    catch(ExpiredJwtException exp) { LOG.error("Claims has an expiration time before the method is invoked" + exp.getMessage()); }
+    catch(IllegalArgumentException exp) { LOG.error("claimsJws string is null or empty or only whitespace" + exp.getMessage()); }
     
     return false;
   }

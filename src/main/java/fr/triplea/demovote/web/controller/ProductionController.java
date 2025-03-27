@@ -36,7 +36,7 @@ import fr.triplea.demovote.model.ProductionType;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import jakarta.servlet.http.HttpServletRequest;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 @RestController
 @RequestMapping("/production")
 public class ProductionController 

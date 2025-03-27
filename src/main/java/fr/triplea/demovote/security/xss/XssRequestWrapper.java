@@ -1,4 +1,4 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.xss;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
@@ -16,12 +16,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class XSSRequestWrapper extends HttpServletRequestWrapper 
+public class XssRequestWrapper extends HttpServletRequestWrapper 
 {
   //@SuppressWarnings("unused") 
   //private static final Logger LOG = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
-  public XSSRequestWrapper(HttpServletRequest request) { super(request); }
+  public XssRequestWrapper(HttpServletRequest request) { super(request); }
 
   @Override
   public String[] getParameterValues(String parameter) 

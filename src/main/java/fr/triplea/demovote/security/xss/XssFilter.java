@@ -1,4 +1,4 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.xss;
 
 import java.io.IOException;
 
@@ -14,13 +14,13 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @WebFilter("/*")
 @Order(1)
-public class XSSFilter implements Filter 
+public class XssFilter implements Filter 
 {
   
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException 
   {
-    chain.doFilter(new XSSRequestWrapper((HttpServletRequest) request), response);
+    chain.doFilter(new XssRequestWrapper((HttpServletRequest) request), response);
   }
 
 }
