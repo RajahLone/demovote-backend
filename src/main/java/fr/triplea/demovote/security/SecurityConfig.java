@@ -17,11 +17,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
-//import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.header.HeaderWriterFilter;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.security.web.csrf.CsrfFilter;
 
 import fr.triplea.demovote.security.cors.CorsFilter;
 import fr.triplea.demovote.security.csrf.CsrfHeaderFilter;
@@ -37,7 +38,6 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 public class SecurityConfig
 {
  
-  // TODO: CSRF-TOKEN
   // TODO: déconnexion automatique après timeout
 
   @Bean
@@ -90,15 +90,24 @@ public class SecurityConfig
  
   Class<? extends ChannelProcessingFilter> cpf_clazz = ChannelProcessingFilter.class;
 
+  private CsrfTokenRepository csrfTokenRepository() 
+  {
+    HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+    
+    repository.setHeaderName("X-XSRF-TOKEN"); // Angular: "XSRF" et non pas "CSRF"
+    
+    return repository;
+  }
+  
   @Bean
   public CsrfHeaderFilter csrfHeaderFilter() { return new CsrfHeaderFilter(); }
   
-  Class<? extends HeaderWriterFilter> csrfhf_clazz = HeaderWriterFilter.class;
+  Class<? extends CsrfFilter> csrfhf_clazz = CsrfFilter.class;
   
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception 
   {
-    http.csrf(csrf -> csrf.disable())//csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+    http.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository()))
         .requiresChannel(channel -> channel.anyRequest().requiresSecure())
         .authenticationProvider(authenticationProvider())
         .authorizeHttpRequests((ahreq) -> ahreq
@@ -110,7 +119,7 @@ public class SecurityConfig
           )
         .addFilterBefore(jwtTokenFilter(), upaf_clazz)
         .addFilterBefore(corsFilter(), cpf_clazz)
-        //.addFilterBefore(csrfHeaderFilter(), csrfhf_clazz)
+        .addFilterAfter(csrfHeaderFilter(), csrfhf_clazz)
         .securityContext(sc -> sc.securityContextRepository(securityContextRepository).requireExplicitSave(true))
         .headers(headers -> headers
           .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))

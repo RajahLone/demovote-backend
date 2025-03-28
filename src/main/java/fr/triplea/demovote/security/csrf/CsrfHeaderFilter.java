@@ -29,11 +29,9 @@ public class CsrfHeaderFilter extends OncePerRequestFilter
     
     if (csrf != null) 
     {
-      Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
-      LOG.info("cookie=" + cookie.toString());
+      Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN"); // Angular: "XSRF" et non pas "CSRF"
 
       String token = csrf.getToken();
-      LOG.info("token=" + token);
       
       if ((cookie == null) || ((token != null) && !(token.equals(cookie.getValue())))) 
       {
@@ -41,8 +39,6 @@ public class CsrfHeaderFilter extends OncePerRequestFilter
         cookie.setPath("/");
         
         response.addCookie(cookie);
-        LOG.info("response=cookie added");
-
       }
     }
       
