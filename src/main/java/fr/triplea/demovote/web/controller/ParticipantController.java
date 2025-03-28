@@ -136,7 +136,7 @@ public class ParticipantController
           
           Participant created = participantRepository.save(found);
         
-          return ResponseEntity.ok(created);
+          return ResponseEntity.ok(created); // TODO: retourner ici et ailleurs un message court au lieu de la totalité
         }
       }
     }

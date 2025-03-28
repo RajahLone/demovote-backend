@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dto.JourneesTransfer;
 import fr.triplea.demovote.dto.ParticipantTransfer;
 import fr.triplea.demovote.dto.RefreshTokenTransfer;
 import fr.triplea.demovote.dto.UserCredentials;
@@ -63,6 +65,16 @@ public class AuthController
   private MessageSource messageSource;
   
   
+  @GetMapping(value = "/hello")
+  public ResponseEntity<JourneesTransfer> getDaysLabels() 
+  { 
+    JourneesTransfer jt = new JourneesTransfer();
+
+    jt.setJour1Court("Hello");
+     
+    return ResponseEntity.ok(jt); 
+  }
+
   @PostMapping(value = "/in")
   public ResponseEntity<UserCredentials> signIn(@RequestBody UserCredentials uc, HttpServletRequest request, HttpServletResponse response)
   {

@@ -1,4 +1,4 @@
-package fr.triplea.demovote.security;
+package fr.triplea.demovote.security.cors;
 
 import java.io.IOException;
 
