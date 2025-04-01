@@ -1,8 +1,11 @@
 package fr.triplea.demovote.web.controller;
 
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,10 +14,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dto.MessagesTransfer;
+import fr.triplea.demovote.dto.ParticipantRecord;
 import fr.triplea.demovote.dto.ParticipantTransfer;
 import fr.triplea.demovote.model.Participant;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/account")
@@ -29,13 +36,19 @@ public class AccountController
   @Autowired
   private PasswordEncoder passwordEncoder;
 
+  @Autowired
+  private LocaleResolver localeResolver;
+ 
+  @Autowired
+  private MessageSource messageSource;
+
   
   @GetMapping(value = "/form")
-  public ResponseEntity<ParticipantTransfer> getForm(final Authentication authentication) 
+  public ResponseEntity<ParticipantRecord> getForm(final Authentication authentication) 
   {         
     if (authentication != null)
     {
-      ParticipantTransfer found = participantRepository.searchByPseudonyme(authentication.getName());
+      ParticipantRecord found = participantRepository.searchByPseudonyme(authentication.getName());
       
       if (found != null) { return ResponseEntity.ok(found); }
     }
@@ -44,8 +57,10 @@ public class AccountController
   }
  
   @PutMapping(value = "/update")
-  public ResponseEntity<Object> update(@RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication) 
+  public ResponseEntity<Object> update(@RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     if (authentication != null)
     {
       Participant found = participantRepository.findByPseudonyme(authentication.getName());
@@ -54,28 +69,30 @@ public class AccountController
       {
         found.setEnabled(true);
 
-        found.setNom(participant.nom());
-        found.setPrenom(participant.prenom());
+        found.setNom(participant.getNom());
+        found.setPrenom(participant.getPrenom());
         
-        final String mdp = participant.motDePasse();
+        final String mdp = participant.getMotDePasse();
         if (mdp != null) { if (!(mdp.isBlank())) { found.setMotDePasse(passwordEncoder.encode(mdp.trim())); } } 
         
-        found.setGroupe(participant.groupe()); 
-        found.setDelaiDeconnexion(participant.delaiDeconnexion());
-        found.setAdresse(participant.adresse());
-        found.setCodePostal(participant.codePostal());
-        found.setVille(participant.ville());
-        found.setPays(participant.pays());
-        found.setNumeroTelephone(participant.numeroTelephone());
-        found.setEmail(participant.email());
+        found.setGroupe(participant.getGroupe()); 
+        found.setAdresse(participant.getAdresse());
+        found.setCodePostal(participant.getCodePostal());
+        found.setVille(participant.getVille());
+        found.setPays(participant.getPays());
+        found.setNumeroTelephone(participant.getNumeroTelephone());
+        found.setEmail(participant.getEmail());
          
-        found.setCommentaire(participant.commentaire());
+        found.setCommentaire(participant.getCommentaire());
        
         // TODO: modify password in session
         
         participantRepository.save(found);
-      
-        return ResponseEntity.ok(participant);
+       
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setInformation(messageSource.getMessage("participant.updated", null, locale));
+        
+        return ResponseEntity.ok(mt);
       }
     } 
     

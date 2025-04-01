@@ -22,7 +22,7 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.JourneesTransfer;
-import fr.triplea.demovote.dto.ParticipantTransfer;
+import fr.triplea.demovote.dto.ParticipantRecord;
 import fr.triplea.demovote.dto.RefreshTokenTransfer;
 import fr.triplea.demovote.dto.UserCredentials;
 import fr.triplea.demovote.model.Participant;
@@ -33,7 +33,6 @@ import fr.triplea.demovote.security.jwt.JwtTokenUtil;
 import fr.triplea.demovote.security.jwt.RefreshTokenException;
 import fr.triplea.demovote.security.jwt.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -76,17 +75,17 @@ public class AuthController
   }
 
   @PostMapping(value = "/in")
-  public ResponseEntity<UserCredentials> signIn(@RequestBody UserCredentials uc, HttpServletRequest request, HttpServletResponse response)
+  public ResponseEntity<UserCredentials> signIn(@RequestBody UserCredentials uc, HttpServletRequest request)
   {
+    Locale locale = localeResolver.resolveLocale(request);
+
     String usrn = uc.getUsername(); if (usrn == null) { usrn = ""; } else { usrn = usrn.trim(); }
     String pass = uc.getPassword(); if (pass == null) { pass = ""; } else { pass = pass.trim(); }
     
     if (usrn.isEmpty() || pass.isEmpty()) { return ResponseEntity.notFound().build(); }
     
     Participant found = participantRepository.findByPseudonyme(usrn);
-    
-    Locale locale = localeResolver.resolveLocale(request);
-    
+        
     if (found != null)
     { 
       UserDetails userDetails = myUserDetailsService.loadUserByUsername(usrn);
@@ -109,6 +108,7 @@ public class AuthController
         uc.setPassword("<success@auth>");
         uc.setNom(found.getNom());
         uc.setPrenom(found.getPrenom());
+        uc.setDelaiAvantDeconnexion(found.getDelaiDeconnexion());
         uc.setAccessToken(token);
         uc.setRefreshToken(refreshToken.getToken());
         uc.setErreur("");
@@ -129,6 +129,7 @@ public class AuthController
         uc.setPassword("");
         uc.setNom("");
         uc.setPrenom("");
+        uc.setDelaiAvantDeconnexion(15);
         uc.setAccessToken("");
         uc.setRefreshToken("");
         uc.setRole("");
@@ -144,6 +145,7 @@ public class AuthController
     uc.setPassword("");
     uc.setNom("");
     uc.setPrenom("");
+    uc.setDelaiAvantDeconnexion(15);
     uc.setAccessToken("");
     uc.setRefreshToken("");
     uc.setRole("");
@@ -179,7 +181,7 @@ public class AuthController
   {
     if (authentication != null)
     {
-      ParticipantTransfer found = participantRepository.searchByPseudonyme(authentication.getName());
+      ParticipantRecord found = participantRepository.searchByPseudonyme(authentication.getName());
       
       if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.numeroParticipant()); }
     }
@@ -192,6 +194,7 @@ public class AuthController
     uc.setPassword("");
     uc.setNom("");
     uc.setPrenom("");
+    uc.setDelaiAvantDeconnexion(15);
     uc.setAccessToken("");
     uc.setRefreshToken("");
     uc.setRole("");

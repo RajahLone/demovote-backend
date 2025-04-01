@@ -1,85 +1,119 @@
 package fr.triplea.demovote.dto;
 
-import java.math.BigDecimal;
-
-import fr.triplea.demovote.model.Participant;
-import fr.triplea.demovote.model.ParticipantModePaiement;
-import fr.triplea.demovote.model.ParticipantStatut;
-
-public record ParticipantTransfer
-(
-  String dateCreation,
-  String dateModification,
-  int numeroParticipant,
-  String nom,
-  String prenom,
-  String pseudonyme,
-  String motDePasse,
-  String groupe,
-  int delaiDeconnexion,
-  String adresse,
-  String codePostal,
-  String ville,
-  String pays,
-  String numeroTelephone,
-  String email,
-  String statut,
-  boolean withMachine,
-  String commentaire,
-  boolean hereDay1,
-  boolean hereDay2,
-  boolean hereDay3,
-  boolean sleepingOnSite,
-  boolean useAmigabus,
-  String modePaiement,
-  String dateInscription,
-  String sommeRecue,
-  boolean arrived
-) 
+public class ParticipantTransfer
 {
-  public Participant toParticipant() 
-  {
-    Participant p = new Participant();
-    
-    p.setNom(nom);
-    p.setPrenom(prenom);
-    p.setPseudonyme(pseudonyme);
-    p.setGroupe(groupe); 
-    p.setMotDePasse(motDePasse);
-    p.setDelaiDeconnexion(delaiDeconnexion);
-    p.setAdresse(adresse);
-    p.setCodePostal(codePostal);
-    p.setVille(ville);
-    p.setPays(pays);
-    p.setNumeroTelephone(numeroTelephone);
-    p.setEmail(email);
-   
-    if (statut.equals("PAYE_CHEQUE")) { p.setStatut(ParticipantStatut.PAYE_CHEQUE); }
-    else if(statut.equals("PAYE_ESPECES")) { p.setStatut(ParticipantStatut.PAYE_ESPECES); }
-    else if(statut.equals("VIREMENT_BANCAIRE")) { p.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
-    else if(statut.equals("VIREMENT_PAYPAL")) { p.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
-    else if(statut.equals("ORGA")) { p.setStatut(ParticipantStatut.ORGA); }
-    else if(statut.equals("GUEST")) { p.setStatut(ParticipantStatut.GUEST); }
-    else { p.setStatut(ParticipantStatut.EN_ATTENTE); }
-    
-    p.setWithMachine(withMachine);
-    p.setCommentaire(commentaire);
-    p.setHereDay1(hereDay1);
-    p.setHereDay2(hereDay2);
-    p.setHereDay3(hereDay3);
-    p.setSleepingOnSite(sleepingOnSite);
-    p.setUseAmigabus(useAmigabus);
-     
-    if (modePaiement.equals("CHEQUE")) { p.setModePaiement(ParticipantModePaiement.CHEQUE); }
-    else if(modePaiement.equals("VIREMENT")) { p.setModePaiement(ParticipantModePaiement.VIREMENT); }
-    else if(modePaiement.equals("PAYPAL")) { p.setModePaiement(ParticipantModePaiement.PAYPAL); }
-    else if(modePaiement.equals("ESPECES")) { p.setModePaiement(ParticipantModePaiement.ESPECES); }
-    else { p.setModePaiement(ParticipantModePaiement.AUTRE); }
-    
-    try { p.setSommeRecue(new BigDecimal(sommeRecue)); } catch (Exception e) {}
-    p.setArrived(arrived);
-    
-    return p;
-  }  
+  String dateCreation;
+  String dateModification;
+  int numeroParticipant;
+  String role;
+  String nom;
+  String prenom;
+  String pseudonyme;
+  String motDePasse;
+  String groupe;
+  int delaiDeconnexion;
+  String adresse;
+  String codePostal;
+  String ville;
+  String pays;
+  String numeroTelephone;
+  String email;
+  String statut;
+  boolean withMachine;
+  String commentaire;
+  boolean hereDay1;
+  boolean hereDay2;
+  boolean hereDay3;
+  boolean sleepingOnSite;
+  boolean useAmigabus;
+  String modePaiement;
+  String dateInscription;
+  String sommeRecue;
+  boolean arrived;
+  
+  public String getDateCreation() { return dateCreation; }
+  public void setDateCreation(String dateCreation) { this.dateCreation = dateCreation; }
+  
+  public String getDateModification() { return dateModification; }
+  public void setDateModification(String dateModification) { this.dateModification = dateModification; }
+  
+  public int getNumeroParticipant() { return numeroParticipant; }
+  public void setNumeroParticipant(int numeroParticipant) { this.numeroParticipant = numeroParticipant; }
+  
+  public String getRole() { return role; }
+  public void setRole(String role) { this.role = role; }
+  public boolean hasRole() { if (this.role != null) { if (!(this.role.isBlank())) { return true; }} return false; }
 
+  public String getNom() { return nom; }
+  public void setNom(String nom) { this.nom = nom; }
+  
+  public String getPrenom() { return prenom; }
+  public void setPrenom(String prenom) { this.prenom = prenom; }
+  
+  public String getPseudonyme() { return pseudonyme; }
+  public void setPseudonyme(String pseudonyme) { this.pseudonyme = pseudonyme; }
+  
+  public String getMotDePasse() { return motDePasse; }
+  public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
+  
+  public String getGroupe() { return groupe; }
+  public void setGroupe(String groupe) { this.groupe = groupe; }
+  
+  public int getDelaiDeconnexion() { return delaiDeconnexion; }
+  public void setDelaiDeconnexion(int delaiDeconnexion) { this.delaiDeconnexion = delaiDeconnexion; }
+  
+  public String getAdresse() { return adresse; }
+  public void setAdresse(String adresse) { this.adresse = adresse; }
+  
+  public String getCodePostal() { return codePostal; }
+  public void setCodePostal(String codePostal) { this.codePostal = codePostal; }
+  
+  public String getVille() { return ville; }
+  public void setVille(String ville) { this.ville = ville; }
+  
+  public String getPays() { return pays; }
+  public void setPays(String pays) { this.pays = pays; }
+  
+  public String getNumeroTelephone() { return numeroTelephone; }
+  public void setNumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
+  
+  public String getEmail() { return email; }
+  public void setEmail(String email) { this.email = email; }
+  
+  public String getStatut() { return statut; }
+  public void setStatut(String statut) { this.statut = statut; }
+  
+  public boolean isWithMachine() { return withMachine; }
+  public void setWithMachine(boolean withMachine) { this.withMachine = withMachine; }
+  
+  public String getCommentaire() { return commentaire; }
+  public void setCommentaire(String commentaire) { this.commentaire = commentaire; }
+  
+  public boolean isHereDay1() { return hereDay1; }
+  public void setHereDay1(boolean hereDay1) { this.hereDay1 = hereDay1; }
+  
+  public boolean isHereDay2() { return hereDay2; }
+  public void setHereDay2(boolean hereDay2) { this.hereDay2 = hereDay2; }
+  
+  public boolean isHereDay3() { return hereDay3; }
+  public void setHereDay3(boolean hereDay3) { this.hereDay3 = hereDay3; }
+  
+  public boolean isSleepingOnSite() { return sleepingOnSite; }
+  public void setSleepingOnSite(boolean sleepingOnSite) { this.sleepingOnSite = sleepingOnSite; }
+  
+  public boolean isUseAmigabus() { return useAmigabus; }
+  public void setUseAmigabus(boolean useAmigabus) { this.useAmigabus = useAmigabus; }
+  
+  public String getModePaiement() { return modePaiement; }
+  public void setModePaiement(String modePaiement) { this.modePaiement = modePaiement; }
+  
+  public String getDateInscription() { return dateInscription; }
+  public void setDateInscription(String dateInscription) { this.dateInscription = dateInscription; }
+  
+  public String getSommeRecue() { return sommeRecue; }
+  public void setSommeRecue(String sommeRecue) { this.sommeRecue = sommeRecue; }
+  
+  public boolean isArrived() { return arrived; }
+  public void setArrived(boolean arrived) { this.arrived = arrived; }
+ 
 }

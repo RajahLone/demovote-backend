@@ -1,11 +1,11 @@
 package fr.triplea.demovote.web.controller;
 
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,10 +17,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.VariableRepository;
+import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.VariableTypeOptionList;
 import fr.triplea.demovote.model.Variable;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/variable")
@@ -30,6 +33,11 @@ public class VariableController
   @Autowired
   private VariableRepository variableRepository;
 
+  @Autowired
+  private LocaleResolver localeResolver;
+  
+  @Autowired
+  private MessageSource messageSource;
 
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('ADMIN')")
@@ -60,21 +68,33 @@ public class VariableController
 
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('ADMIN')")
-  public Variable create(@RequestBody(required = true) Variable variable) 
+  public ResponseEntity<Object> create(@RequestBody(required = true) Variable variable, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Variable found = variableRepository.findById(0);
     
     if (found == null) { variable.setNumeroVariable(null); }
     
-    if (variable.hasType() && variable.hasCode()) { return variableRepository.save(variable); }
+    if (variable.hasType() && variable.hasCode()) 
+    { 
+      variableRepository.save(variable); 
+      
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("variable.created", null, locale));
+
+      return ResponseEntity.ok(mt);
+    }
     
     return null;
   }
  
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Variable> update(@PathVariable int id, @RequestBody(required = true) Variable variable) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Variable variable, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Variable found = variableRepository.findById(id);
     
     if (found != null)
@@ -84,9 +104,12 @@ public class VariableController
       found.setValeur(variable.getValeur());
       found.setNotes(variable.getNotes());
       
-      Variable updated = variableRepository.save(found);
-    
-      return ResponseEntity.ok(updated);
+      variableRepository.save(found);
+      
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("variable.updated", null, locale));
+
+      return ResponseEntity.ok(mt);
     }
     
     return ResponseEntity.notFound().build();
@@ -94,18 +117,20 @@ public class VariableController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Boolean>> deleteVariable(@PathVariable int id) 
+  public ResponseEntity<Object> deleteVariable(@PathVariable int id, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Variable found = variableRepository.findById(id);
 
     if (found != null) 
     { 
       variableRepository.deleteById(id); 
       
-      Map<String, Boolean> response = new HashMap<>();
-      response.put("deleted", Boolean.TRUE);
-      
-      return ResponseEntity.ok(response); 
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("variable.deleted", null, locale));
+
+      return ResponseEntity.ok(mt);
     }
     
     return ResponseEntity.notFound().build(); 

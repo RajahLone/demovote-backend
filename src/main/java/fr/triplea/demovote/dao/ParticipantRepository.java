@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
-import fr.triplea.demovote.dto.ParticipantTransfer;
+import fr.triplea.demovote.dto.ParticipantRecord;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Role;
 
@@ -22,6 +22,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
       + "TO_CHAR(p.date_modification, 'DD/MM/YYYY HH24:MI:SS') as date_modification, "
       + "p.numero_participant, "
+      + "'' AS role, "
       + "p.nom, "
       + "p.prenom, "
       + "p.pseudonyme, "
@@ -48,7 +49,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "p.flag_arrive "
       + "FROM vote.participants AS p "
       + "WHERE p.numero_participant = :id AND p.flag_actif IS TRUE ")
-  ParticipantTransfer searchById(@Param("id") int id);
+  ParticipantRecord searchById(@Param("id") int id);
 
   @NativeQuery("SELECT DISTINCT "
       + "p.numero_participant, "
@@ -102,6 +103,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
       + "TO_CHAR(p.date_modification, 'DD/MM/YYYY HH24:MI:SS') as date_modification, "
       + "p.numero_participant, "
+      + "'' AS role, "
       + "p.nom, "
       + "p.prenom, "
       + "p.pseudonyme, "
@@ -128,7 +130,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "p.flag_arrive "
       + "FROM vote.participants AS p "
       + "WHERE p.pseudonyme = :pseudo AND p.flag_actif IS TRUE ")
-  ParticipantTransfer searchByPseudonyme(@Param("pseudo") String pseudonyme);
+  ParticipantRecord searchByPseudonyme(@Param("pseudo") String pseudonyme);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_actif IS TRUE AND p.pseudonyme = :pseudo ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
   Participant findByPseudonyme(@Param("pseudo") String pseudonyme);

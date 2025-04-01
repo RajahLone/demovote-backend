@@ -169,10 +169,12 @@ public class Participant
   public void setDateCreation(LocalDateTime d) { this.dateCreation = d; }
   public void setDateCreation(String s) { this.dateCreation = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.dateCreation; }
+  public boolean hasDateCreation() { return (this.dateCreation != null); }
   
   public void setDateModification(LocalDateTime d) { this.dateModification = d; }
   public void setDateModification(String s) { this.dateModification = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.dateModification; }
+  public boolean hasDateModification() { return (this.dateModification != null); }
   
   public List<Role> getRoles() { return roles; }
   public void setRoles(final List<Role> roles) { this.roles = roles; }
@@ -272,6 +274,7 @@ public class Participant
   
   public void setDateInscription(LocalDateTime d) { this.dateInscription = d; }
   public LocalDateTime getDateInscription() { return this.dateInscription; }
+  public boolean hasDateInscription() { return (this.dateInscription != null); }
   
   public void setSommeRecue(BigDecimal d) { this.sommeRecue = d; }
   public BigDecimal getSommeRecue() { return this.sommeRecue; }

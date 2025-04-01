@@ -25,6 +25,10 @@ public class UserCredentials
   public String getRole() { return this.role; }
   public boolean hasRole() { if (this.role != null) { if (!(this.role.isBlank())) { return true; }} return false; }
   
+  private int delaiAvantDeconnexion;
+  public void setDelaiAvantDeconnexion(int i) { this.delaiAvantDeconnexion = i; }
+  public int getDelaiAvantDeconnexion() { return this.delaiAvantDeconnexion; }
+  
   private String accessToken;
   public void setAccessToken(String s) { this.accessToken = new String(s); }
   public String getAccessToken() { return this.accessToken; }

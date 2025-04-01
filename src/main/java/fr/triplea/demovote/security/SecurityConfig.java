@@ -38,8 +38,6 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 public class SecurityConfig
 {
  
-  // TODO: déconnexion automatique après timeout
-
   @Bean
   public ResourceBundleMessageSource messageSource() 
   {

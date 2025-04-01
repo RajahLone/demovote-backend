@@ -1,10 +1,9 @@
 package fr.triplea.demovote.web.controller;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,15 +12,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.BulletinRepository;
 import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
+import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.model.Bulletin;
 import fr.triplea.demovote.model.Categorie;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Production;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/urne")
@@ -40,10 +42,18 @@ public class BulletinController
   @Autowired
   private ProductionRepository productionRepository;
 
+  @Autowired
+  private LocaleResolver localeResolver;
+  
+  @Autowired
+  private MessageSource messageSource;
+
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> add(@RequestParam(required = true) int cat_id, @RequestParam(required = true) int part_id, @RequestParam(required = true) int prod_id) 
+  public ResponseEntity<Object> add(@RequestParam(required = true) int cat_id, @RequestParam(required = true) int part_id, @RequestParam(required = true) int prod_id, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Bulletin bul = bulletinRepository.findByCategorieAndParticipant(cat_id, part_id);
     
     Categorie cat = categorieRepository.findById(cat_id);
@@ -120,20 +130,25 @@ public class BulletinController
       
       bulletinRepository.saveAndFlush(bul); 
     }
-    
-    return ResponseEntity.status(HttpStatus.CREATED).body(bul);
+   
+    MessagesTransfer mt = new MessagesTransfer();
+    mt.setInformation(messageSource.getMessage("bulletin.inserted", null, locale));
+
+    return ResponseEntity.ok(mt);
   }
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Map<String, Boolean>> remove(@PathVariable int id) 
+  public ResponseEntity<Object> remove(@PathVariable int id, HttpServletRequest request) 
   { 
-    if (id > 0) { bulletinRepository.deleteById(id); }
+    Locale locale = localeResolver.resolveLocale(request);
+
+    if (id > 0) { bulletinRepository.deleteById(id); } 
     
-    Map<String, Boolean> response = new HashMap<>();
-    response.put("deleted", Boolean.TRUE);
-    
-    return ResponseEntity.ok(response); 
+    MessagesTransfer mt = new MessagesTransfer();
+    mt.setInformation(messageSource.getMessage("bulletin.deleted", null, locale));
+
+    return ResponseEntity.ok(mt);
   }
 
 }

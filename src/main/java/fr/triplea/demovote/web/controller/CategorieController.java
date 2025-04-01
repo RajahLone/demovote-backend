@@ -1,10 +1,10 @@
 package fr.triplea.demovote.web.controller;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,9 +15,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.CategorieRepository;
+import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.model.Categorie;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/categorie")
@@ -26,6 +29,12 @@ public class CategorieController
 
   @Autowired
   private CategorieRepository categorieRepository;
+
+  @Autowired
+  private LocaleResolver localeResolver;
+  
+  @Autowired
+  private MessageSource messageSource;
 
 
   @GetMapping(value = "/list")
@@ -48,21 +57,33 @@ public class CategorieController
 
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('ADMIN')")
-  public Categorie create(@RequestBody(required = true) Categorie categorie) 
+  public ResponseEntity<Object> create(@RequestBody(required = true) Categorie categorie, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Categorie found = categorieRepository.findById(0);
     
     if (found == null) { categorie.setNumeroCategorie(null); }
     
-    if (categorie.hasLibelle()) { return categorieRepository.save(categorie); }
+    if (categorie.hasLibelle()) 
+    { 
+      categorieRepository.save(categorie); 
+     
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("categorie.created", null, locale));
+
+      return ResponseEntity.ok(mt);
+    }
 
     return null;
   }
 
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Categorie categorie) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Categorie categorie, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Categorie found = categorieRepository.findById(id);
     
     if (found != null)
@@ -77,9 +98,12 @@ public class CategorieController
       found.setPollable(categorie.isPollable());
       found.setComputed(categorie.isComputed());
 
-      Categorie updated = categorieRepository.save(found); 
-    
-      return ResponseEntity.ok(updated);
+      categorieRepository.save(found); 
+      
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("categorie.updated", null, locale));
+
+      return ResponseEntity.ok(mt);
     }
     
     return ResponseEntity.notFound().build(); 
@@ -87,8 +111,10 @@ public class CategorieController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Boolean>> disableCategorie(@PathVariable int id) 
+  public ResponseEntity<Object> disableCategorie(@PathVariable int id, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Categorie c = categorieRepository.getReferenceById(id);
     
     if (c != null)
@@ -96,11 +122,11 @@ public class CategorieController
       c.setEnabled(false); 
       
       categorieRepository.saveAndFlush(c);
-
-      Map<String, Boolean> response = new HashMap<>();
-      response.put("deleted", Boolean.TRUE);
       
-      return ResponseEntity.ok(response); 
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setAlerte(messageSource.getMessage("categorie.deleted", null, locale));
+
+      return ResponseEntity.ok(mt);
     }      
     
     return ResponseEntity.notFound().build(); 

@@ -2,11 +2,11 @@ package fr.triplea.demovote.web.controller;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -22,9 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
+import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ProductionFile;
 import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.dto.ProductionTransfer;
@@ -46,6 +48,13 @@ public class ProductionController
   @Autowired
   private ParticipantRepository participantRepository;
 
+  @Autowired
+  private LocaleResolver localeResolver;
+  
+  @Autowired
+  private MessageSource messageSource;
+
+  // TODO : externaliser le stockage des fichiers
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
@@ -105,8 +114,10 @@ public class ProductionController
 
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Map<String, Boolean>> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
+  public ResponseEntity<Object> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Participant participant = participantRepository.findById(production.numeroParticipant());
 
     if (participant != null) 
@@ -137,11 +148,11 @@ public class ProductionController
       fresh.setNumeroVersion(production.numeroVersion());
       
       productionRepository.save(fresh);
-
-      Map<String, Boolean> response = new HashMap<>();
-      response.put("created", Boolean.TRUE);
       
-      return ResponseEntity.ok(response); 
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("production.created", null, locale));
+
+      return ResponseEntity.ok(mt);
     }
 
     return ResponseEntity.notFound().build(); 
@@ -149,8 +160,10 @@ public class ProductionController
  
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Map<String, Boolean>> update(HttpServletRequest request, @PathVariable int id, @RequestBody(required = true) ProductionUpdate production) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionUpdate production, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Production found = productionRepository.findById(id);
     
     if (found != null)
@@ -181,11 +194,11 @@ public class ProductionController
         if (production.vignette() != null) { if (!(production.vignette().isBlank())) { found.setVignette(production.vignette()); } }
         
         productionRepository.save(found);
-
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("updated", Boolean.TRUE);
         
-        return ResponseEntity.ok(response); 
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setInformation(messageSource.getMessage("production.updated", null, locale));
+
+        return ResponseEntity.ok(mt);
       }
     }
     
@@ -194,8 +207,10 @@ public class ProductionController
   
   @PutMapping(value = "/upload/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Map<String, Boolean>> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Production found = productionRepository.findById(id);
     
     if (found != null)
@@ -215,11 +230,11 @@ public class ProductionController
               found.setNumeroVersion(found.getNumeroVersion() + 1);
               
               productionRepository.save(found);
+         
+              MessagesTransfer mt = new MessagesTransfer();
+              mt.setInformation(messageSource.getMessage("production.file.updated", null, locale));
 
-              Map<String, Boolean> response = new HashMap<>();
-              response.put("updated", Boolean.TRUE);
-              
-              return ResponseEntity.ok(response); 
+              return ResponseEntity.ok(mt);
             }
           }
         }
@@ -231,8 +246,10 @@ public class ProductionController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Map<String, Boolean>> disableProduction(@PathVariable int id) 
+  public ResponseEntity<Object> disableProduction(@PathVariable int id, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Production found = productionRepository.getReferenceById(id);
     
     if (found != null)
@@ -240,11 +257,11 @@ public class ProductionController
       found.setEnabled(false); 
       
       productionRepository.saveAndFlush(found);
-      
-      Map<String, Boolean> response = new HashMap<>();
-      response.put("deleted", Boolean.TRUE);
-      
-      return ResponseEntity.ok(response); 
+           
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("production.deleted", null, locale));
+
+      return ResponseEntity.ok(mt);
     }      
     
     return ResponseEntity.notFound().build(); 

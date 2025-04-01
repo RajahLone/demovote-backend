@@ -1,13 +1,16 @@
 package fr.triplea.demovote.web.controller;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,14 +23,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
 import fr.triplea.demovote.dto.ParticipantTransfer;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.ParticipantModePaiement;
 import fr.triplea.demovote.model.ParticipantStatut;
+import fr.triplea.demovote.model.Role;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/participant")
@@ -40,6 +47,14 @@ public class ParticipantController
   @Autowired
   private PasswordEncoder passwordEncoder;
 
+  @Autowired
+  private LocaleResolver localeResolver;
+  
+  @Autowired
+  private MessageSource messageSource;
+
+  private final SimpleDateFormat sdt_fr = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
+  private final SimpleDateFormat sdt_en = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss"); 
   
 
   @GetMapping(value = "/list")
@@ -63,80 +78,146 @@ public class ParticipantController
 
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id) 
+  public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id, HttpServletRequest request) 
   { 
-    ParticipantTransfer p = participantRepository.searchById(id);
+    Locale locale = localeResolver.resolveLocale(request);
 
-    if (p != null) { return ResponseEntity.ok(p); }
+    SimpleDateFormat sdt = this.sdt_fr; if (locale == Locale.ENGLISH) { sdt = this.sdt_en; }
+    
+    Participant found = participantRepository.findById(id);
+    
+    
+    if (found != null)
+    {
+      ParticipantTransfer p = new ParticipantTransfer();
+      
+      // TODO: dates
+      
+      //p.setDateCreation(found.hasDateCreation() ? sdt.format(found.getDateCreation()) : "");
+      //p.setDateModification(found.hasDateCreation() ? sdt.format(found.getDateModification()) : ""); 
+      p.setNumeroParticipant(found.getNumeroParticipant());
+      
+      p.setNom(found.getNom());
+      p.setPrenom(found.getPrenom());
+      p.setPseudonyme(found.getPseudonyme());
+      
+      p.setGroupe(found.getGroupe()); 
+      p.setDelaiDeconnexion(found.getDelaiDeconnexion());
+      p.setAdresse(found.getAdresse());
+      p.setCodePostal(found.getCodePostal());
+      p.setVille(found.getVille());
+      p.setPays(found.getPays());
+      p.setNumeroTelephone(found.getNumeroTelephone());
+      p.setEmail(found.getEmail());
+               
+      if (found.getStatut().equals(ParticipantStatut.PAYE_CHEQUE)) { p.setStatut("PAYE_CHEQUE"); }
+      else if(found.getStatut().equals(ParticipantStatut.PAYE_ESPECES)) { p.setStatut("PAYE_ESPECES"); }
+      else if(found.getStatut().equals(ParticipantStatut.VIREMENT_BANCAIRE)) { p.setStatut("VIREMENT_BANCAIRE"); }
+      else if(found.getStatut().equals(ParticipantStatut.VIREMENT_PAYPAL)) { p.setStatut("VIREMENT_PAYPAL"); }
+      else if(found.getStatut().equals(ParticipantStatut.ORGA)) { p.setStatut("ORGA"); }
+      else if(found.getStatut().equals(ParticipantStatut.GUEST)) { p.setStatut("GUEST"); }
+      else { p.setStatut("EN_ATTENTE"); }
+      
+      p.setWithMachine(found.isWithMachine());
+      p.setCommentaire(found.getCommentaire());
+      p.setHereDay1(found.isHereDay1());
+      p.setHereDay2(found.isHereDay2());
+      p.setHereDay3(found.isHereDay3());
+      p.setSleepingOnSite(found.isSleepingOnSite());
+      p.setUseAmigabus(found.isUseAmigabus());
+       
+      if (found.getModePaiement().equals(ParticipantModePaiement.CHEQUE)) { p.setModePaiement("CHEQUE"); }
+      else if(found.getModePaiement().equals(ParticipantModePaiement.VIREMENT)) { p.setModePaiement("VIREMENT"); }
+      else if(found.getModePaiement().equals(ParticipantModePaiement.PAYPAL)) { p.setModePaiement("PAYPAL"); }
+      else if(found.getModePaiement().equals(ParticipantModePaiement.ESPECES)) { p.setModePaiement("ESPECES"); }
+      else { p.setModePaiement("AUTRE"); }
+      
+      try { p.setSommeRecue(found.getSommeRecue().toString()); } catch (Exception e) { p.setSommeRecue("0.00"); }
+      //p.setDateInscription(found.hasDateInscription() ? sdt.format(found.getDateInscription()) : "");
+      p.setArrived(found.isArrived());
+     
+      List<Role> roles = found.getRoles();       
+      
+      if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { p.setRole("ADMIN"); } } }
+      if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { p.setRole("ORGA"); } } }
+      if (!(p.hasRole())) { p.setRole("USER"); } 
+
+     return ResponseEntity.ok(p); 
+    }
     
     return ResponseEntity.notFound().build();
   }
 
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant) 
+  public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Participant found = participantRepository.findById(0);
     
     if (found == null) 
     {
-      if (!(participant.nom().isBlank()))
+      if (!(participant.getNom().isBlank()))
       {
-        if (!(participant.pseudonyme().isBlank()))
+        if (!(participant.getPseudonyme().isBlank()))
         {
           found = new Participant();
           
           found.setRoles(found.getRoles());
           found.setEnabled(true);
 
-          found.setNom(participant.nom());
-          found.setPrenom(participant.prenom());
+          found.setNom(participant.getNom());
+          found.setPrenom(participant.getPrenom());
           
-          found.setPseudonyme(participant.pseudonyme());
+          found.setPseudonyme(participant.getPseudonyme());
  
-          final String mdp = participant.motDePasse();
+          final String mdp = participant.getMotDePasse();
           if (mdp != null) { if (!(mdp.isBlank())) { found.setMotDePasse(passwordEncoder.encode(mdp.trim())); } } 
           
-          found.setGroupe(participant.groupe()); 
-          found.setDelaiDeconnexion(participant.delaiDeconnexion());
-          found.setAdresse(participant.adresse());
-          found.setCodePostal(participant.codePostal());
-          found.setVille(participant.ville());
-          found.setPays(participant.pays());
-          found.setNumeroTelephone(participant.numeroTelephone());
-          found.setEmail(participant.email());
+          found.setGroupe(participant.getGroupe()); 
+          found.setDelaiDeconnexion(participant.getDelaiDeconnexion());
+          found.setAdresse(participant.getAdresse());
+          found.setCodePostal(participant.getCodePostal());
+          found.setVille(participant.getVille());
+          found.setPays(participant.getPays());
+          found.setNumeroTelephone(participant.getNumeroTelephone());
+          found.setEmail(participant.getEmail());
                    
-          if (participant.statut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
-          else if(participant.statut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
-          else if(participant.statut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
-          else if(participant.statut().equals("VIREMENT_PAYPAL")) { found.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
-          else if(participant.statut().equals("ORGA")) { found.setStatut(ParticipantStatut.ORGA); }
-          else if(participant.statut().equals("GUEST")) { found.setStatut(ParticipantStatut.GUEST); }
+          if (participant.getStatut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
+          else if(participant.getStatut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
+          else if(participant.getStatut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
+          else if(participant.getStatut().equals("VIREMENT_PAYPAL")) { found.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
+          else if(participant.getStatut().equals("ORGA")) { found.setStatut(ParticipantStatut.ORGA); }
+          else if(participant.getStatut().equals("GUEST")) { found.setStatut(ParticipantStatut.GUEST); }
           else { found.setStatut(ParticipantStatut.EN_ATTENTE); }
           
-          found.setWithMachine(participant.withMachine());
-          found.setCommentaire(participant.commentaire());
-          found.setHereDay1(participant.hereDay1());
-          found.setHereDay2(participant.hereDay2());
-          found.setHereDay3(participant.hereDay3());
-          found.setSleepingOnSite(participant.sleepingOnSite());
-          found.setUseAmigabus(participant.useAmigabus());
+          found.setWithMachine(participant.isWithMachine());
+          found.setCommentaire(participant.getCommentaire());
+          found.setHereDay1(participant.isHereDay1());
+          found.setHereDay2(participant.isHereDay2());
+          found.setHereDay3(participant.isHereDay3());
+          found.setSleepingOnSite(participant.isSleepingOnSite());
+          found.setUseAmigabus(participant.isUseAmigabus());
            
-          if (participant.modePaiement().equals("CHEQUE")) { found.setModePaiement(ParticipantModePaiement.CHEQUE); }
-          else if(participant.modePaiement().equals("VIREMENT")) { found.setModePaiement(ParticipantModePaiement.VIREMENT); }
-          else if(participant.modePaiement().equals("PAYPAL")) { found.setModePaiement(ParticipantModePaiement.PAYPAL); }
-          else if(participant.modePaiement().equals("ESPECES")) { found.setModePaiement(ParticipantModePaiement.ESPECES); }
+          if (participant.getModePaiement().equals("CHEQUE")) { found.setModePaiement(ParticipantModePaiement.CHEQUE); }
+          else if(participant.getModePaiement().equals("VIREMENT")) { found.setModePaiement(ParticipantModePaiement.VIREMENT); }
+          else if(participant.getModePaiement().equals("PAYPAL")) { found.setModePaiement(ParticipantModePaiement.PAYPAL); }
+          else if(participant.getModePaiement().equals("ESPECES")) { found.setModePaiement(ParticipantModePaiement.ESPECES); }
           else { found.setModePaiement(ParticipantModePaiement.AUTRE); }
           
-          try { found.setSommeRecue(new BigDecimal(participant.sommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
+          try { found.setSommeRecue(new BigDecimal(participant.getSommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
           found.setDateInscription(LocalDateTime.now());
-          found.setArrived(participant.arrived());
+          found.setArrived(participant.isArrived());
           
           // TODO: set roles
           
-          Participant created = participantRepository.save(found);
-        
-          return ResponseEntity.ok(created); // TODO: retourner ici et ailleurs un message court au lieu de la totalité
+          participantRepository.save(found);
+          
+          MessagesTransfer mt = new MessagesTransfer();
+          mt.setInformation(messageSource.getMessage("participant.created", null, locale));
+
+          return ResponseEntity.ok(mt);
         }
       }
     }
@@ -146,8 +227,10 @@ public class ParticipantController
 
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Participant found = participantRepository.findById(id);
     
     if (found != null)
@@ -155,54 +238,57 @@ public class ParticipantController
       found.setRoles(found.getRoles());
       found.setEnabled(true);
 
-      found.setNom(participant.nom());
-      found.setPrenom(participant.prenom());
+      found.setNom(participant.getNom());
+      found.setPrenom(participant.getPrenom());
       
-      found.setPseudonyme(participant.pseudonyme());
+      found.setPseudonyme(participant.getPseudonyme());
 
-      final String mdp = participant.motDePasse();
+      final String mdp = participant.getMotDePasse();
       if (mdp != null) { if (!(mdp.isBlank())) { found.setMotDePasse(passwordEncoder.encode(mdp.trim())); } } 
 
-      found.setGroupe(participant.groupe()); 
-      found.setDelaiDeconnexion(participant.delaiDeconnexion());
-      found.setAdresse(participant.adresse());
-      found.setCodePostal(participant.codePostal());
-      found.setVille(participant.ville());
-      found.setPays(participant.pays());
-      found.setNumeroTelephone(participant.numeroTelephone());
-      found.setEmail(participant.email());
+      found.setGroupe(participant.getGroupe()); 
+      found.setDelaiDeconnexion(participant.getDelaiDeconnexion());
+      found.setAdresse(participant.getAdresse());
+      found.setCodePostal(participant.getCodePostal());
+      found.setVille(participant.getVille());
+      found.setPays(participant.getPays());
+      found.setNumeroTelephone(participant.getNumeroTelephone());
+      found.setEmail(participant.getEmail());
      
-      if (participant.statut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
-      else if(participant.statut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
-      else if(participant.statut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
-      else if(participant.statut().equals("VIREMENT_PAYPAL")) { found.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
-      else if(participant.statut().equals("ORGA")) { found.setStatut(ParticipantStatut.ORGA); }
-      else if(participant.statut().equals("GUEST")) { found.setStatut(ParticipantStatut.GUEST); }
+      if (participant.getStatut().equals("PAYE_CHEQUE")) { found.setStatut(ParticipantStatut.PAYE_CHEQUE); }
+      else if(participant.getStatut().equals("PAYE_ESPECES")) { found.setStatut(ParticipantStatut.PAYE_ESPECES); }
+      else if(participant.getStatut().equals("VIREMENT_BANCAIRE")) { found.setStatut(ParticipantStatut.VIREMENT_BANCAIRE); }
+      else if(participant.getStatut().equals("VIREMENT_PAYPAL")) { found.setStatut(ParticipantStatut.VIREMENT_PAYPAL); }
+      else if(participant.getStatut().equals("ORGA")) { found.setStatut(ParticipantStatut.ORGA); }
+      else if(participant.getStatut().equals("GUEST")) { found.setStatut(ParticipantStatut.GUEST); }
       else { found.setStatut(ParticipantStatut.EN_ATTENTE); }
       
-      found.setWithMachine(participant.withMachine());
-      found.setCommentaire(participant.commentaire());
-      found.setHereDay1(participant.hereDay1());
-      found.setHereDay2(participant.hereDay2());
-      found.setHereDay3(participant.hereDay3());
-      found.setSleepingOnSite(participant.sleepingOnSite());
-      found.setUseAmigabus(participant.useAmigabus());
+      found.setWithMachine(participant.isWithMachine());
+      found.setCommentaire(participant.getCommentaire());
+      found.setHereDay1(participant.isHereDay1());
+      found.setHereDay2(participant.isHereDay2());
+      found.setHereDay3(participant.isHereDay3());
+      found.setSleepingOnSite(participant.isSleepingOnSite());
+      found.setUseAmigabus(participant.isUseAmigabus());
        
-      if (participant.modePaiement().equals("CHEQUE")) { found.setModePaiement(ParticipantModePaiement.CHEQUE); }
-      else if(participant.modePaiement().equals("VIREMENT")) { found.setModePaiement(ParticipantModePaiement.VIREMENT); }
-      else if(participant.modePaiement().equals("PAYPAL")) { found.setModePaiement(ParticipantModePaiement.PAYPAL); }
-      else if(participant.modePaiement().equals("ESPECES")) { found.setModePaiement(ParticipantModePaiement.ESPECES); }
+      if (participant.getModePaiement().equals("CHEQUE")) { found.setModePaiement(ParticipantModePaiement.CHEQUE); }
+      else if(participant.getModePaiement().equals("VIREMENT")) { found.setModePaiement(ParticipantModePaiement.VIREMENT); }
+      else if(participant.getModePaiement().equals("PAYPAL")) { found.setModePaiement(ParticipantModePaiement.PAYPAL); }
+      else if(participant.getModePaiement().equals("ESPECES")) { found.setModePaiement(ParticipantModePaiement.ESPECES); }
       else { found.setModePaiement(ParticipantModePaiement.AUTRE); }
       
-      try { found.setSommeRecue(new BigDecimal(participant.sommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
-      found.setArrived(participant.arrived());
+      try { found.setSommeRecue(new BigDecimal(participant.getSommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
+      found.setArrived(participant.isArrived());
       
       // TODO: modify password in session
       // TODO: modify roles
 
-      Participant updated = participantRepository.save(found);
+      participantRepository.save(found);
+      
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setInformation(messageSource.getMessage("participant.updated", null, locale));
     
-      return ResponseEntity.ok(updated);
+      return ResponseEntity.ok(mt);
     }
     
     return ResponseEntity.notFound().build();
@@ -210,8 +296,10 @@ public class ParticipantController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id) 
+  public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id, HttpServletRequest request) 
   { 
+    Locale locale = localeResolver.resolveLocale(request);
+
     Participant found = participantRepository.getReferenceById(id);
     
     if (found != null)
@@ -224,6 +312,9 @@ public class ParticipantController
       Map<String, Boolean> response = new HashMap<>();
       response.put("deleted", Boolean.TRUE);
       
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setAlerte(messageSource.getMessage("participant.deleted", null, locale));
+
       return ResponseEntity.ok(response); 
     }      
     
