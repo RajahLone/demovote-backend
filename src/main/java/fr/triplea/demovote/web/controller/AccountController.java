@@ -1,5 +1,7 @@
 package fr.triplea.demovote.web.controller;
 
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -18,15 +20,18 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
-import fr.triplea.demovote.dto.ParticipantRecord;
 import fr.triplea.demovote.dto.ParticipantTransfer;
 import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.Role;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/account")
 public class AccountController 
 {
+
+  // TODO : changement du mot de passe
+
   @SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
 
@@ -42,15 +47,65 @@ public class AccountController
   @Autowired
   private MessageSource messageSource;
 
+  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
   
   @GetMapping(value = "/form")
-  public ResponseEntity<ParticipantRecord> getForm(final Authentication authentication) 
+  public ResponseEntity<ParticipantTransfer> getForm(final Authentication authentication, HttpServletRequest request) 
   {         
+    Locale locale = localeResolver.resolveLocale(request);
+
+    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
+
     if (authentication != null)
     {
-      ParticipantRecord found = participantRepository.searchByPseudonyme(authentication.getName());
+      Participant found = participantRepository.findByPseudonyme(authentication.getName());
       
-      if (found != null) { return ResponseEntity.ok(found); }
+      if (found != null) 
+      { 
+        ParticipantTransfer p = new ParticipantTransfer();
+        
+        p.setDateCreation(found.hasDateCreation() ? dtf.format(found.getDateCreation()) : "");
+        p.setDateModification(found.hasDateCreation() ? dtf.format(found.getDateModification()) : ""); 
+        p.setNumeroParticipant(found.getNumeroParticipant());
+        
+        p.setNom(found.getNom());
+        p.setPrenom(found.getPrenom());
+        p.setPseudonyme(found.getPseudonyme());
+        
+        p.setGroupe(found.getGroupe()); 
+        p.setDelaiDeconnexion(15);
+        p.setAdresse(found.getAdresse());
+        p.setCodePostal(found.getCodePostal());
+        p.setVille(found.getVille());
+        p.setPays(found.getPays());
+        p.setNumeroTelephone(found.getNumeroTelephone());
+        p.setEmail(found.getEmail());
+                 
+        p.setStatut("");
+        
+        p.setWithMachine(found.isWithMachine());
+        p.setCommentaire(found.getCommentaire());
+        p.setHereDay1(found.isHereDay1());
+        p.setHereDay2(found.isHereDay2());
+        p.setHereDay3(found.isHereDay3());
+        p.setSleepingOnSite(found.isSleepingOnSite());
+        p.setUseAmigabus(found.isUseAmigabus());
+         
+        p.setModePaiement("");        
+        p.setSommeRecue("");
+        
+        p.setDateInscription(found.hasDateInscription() ? dtf.format(found.getDateInscription()) : "");
+        p.setArrived(found.isArrived());
+       
+        List<Role> roles = found.getRoles();       
+        
+        if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { p.setRole("ADMIN"); } } }
+        if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { p.setRole("ORGA"); } } }
+        if (!(p.hasRole())) { p.setRole("USER"); } 
+
+        return ResponseEntity.ok(p); 
+      }
     }
    
     return ResponseEntity.notFound().build();
@@ -84,9 +139,7 @@ public class AccountController
         found.setEmail(participant.getEmail());
          
         found.setCommentaire(participant.getCommentaire());
-       
-        // TODO: modify password in session
-        
+               
         participantRepository.save(found);
        
         MessagesTransfer mt = new MessagesTransfer();

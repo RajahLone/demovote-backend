@@ -55,6 +55,7 @@ public class ProductionController
   private MessageSource messageSource;
 
   // TODO : externaliser le stockage des fichiers
+  // TODO : verrrouiller gestion au (ROLE_ADMIN) et à (ROLE_USER + uniquement les productions qu'il gère)
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")

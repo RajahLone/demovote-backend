@@ -22,7 +22,6 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.JourneesTransfer;
-import fr.triplea.demovote.dto.ParticipantRecord;
 import fr.triplea.demovote.dto.RefreshTokenTransfer;
 import fr.triplea.demovote.dto.UserCredentials;
 import fr.triplea.demovote.model.Participant;
@@ -181,9 +180,9 @@ public class AuthController
   {
     if (authentication != null)
     {
-      ParticipantRecord found = participantRepository.searchByPseudonyme(authentication.getName());
+      Participant found = participantRepository.findByPseudonyme(authentication.getName());
       
-      if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.numeroParticipant()); }
+      if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.getNumeroParticipant()); }
     }
 
     SecurityContextHolder.clearContext();

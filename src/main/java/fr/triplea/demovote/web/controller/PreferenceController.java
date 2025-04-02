@@ -22,6 +22,8 @@ import fr.triplea.demovote.model.Preference;
 public class PreferenceController 
 {
 
+  // TODO
+
   @Autowired
   private PreferenceRepository preferenceRepository;
 

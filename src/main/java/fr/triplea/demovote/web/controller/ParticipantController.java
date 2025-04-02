@@ -1,18 +1,21 @@
 package fr.triplea.demovote.web.controller;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dao.RoleRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
@@ -42,6 +46,9 @@ public class ParticipantController
 {
 
   @Autowired
+  private RoleRepository roleRepository;
+
+  @Autowired
   private ParticipantRepository participantRepository;
   
   @Autowired
@@ -52,9 +59,6 @@ public class ParticipantController
   
   @Autowired
   private MessageSource messageSource;
-
-  private final SimpleDateFormat sdt_fr = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
-  private final SimpleDateFormat sdt_en = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss"); 
   
 
   @GetMapping(value = "/list")
@@ -76,25 +80,26 @@ public class ParticipantController
     return participantRepository.getOptionList(); 
   }
 
+
+  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
+ 
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ORGA')")
   public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    SimpleDateFormat sdt = this.sdt_fr; if (locale == Locale.ENGLISH) { sdt = this.sdt_en; }
+    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
     
-    Participant found = participantRepository.findById(id);
-    
+    Participant found = participantRepository.findById(id);   
     
     if (found != null)
     {
       ParticipantTransfer p = new ParticipantTransfer();
       
-      // TODO: dates
-      
-      //p.setDateCreation(found.hasDateCreation() ? sdt.format(found.getDateCreation()) : "");
-      //p.setDateModification(found.hasDateCreation() ? sdt.format(found.getDateModification()) : ""); 
+      p.setDateCreation(found.hasDateCreation() ? dtf.format(found.getDateCreation()) : "");
+      p.setDateModification(found.hasDateCreation() ? dtf.format(found.getDateModification()) : ""); 
       p.setNumeroParticipant(found.getNumeroParticipant());
       
       p.setNom(found.getNom());
@@ -133,7 +138,7 @@ public class ParticipantController
       else { p.setModePaiement("AUTRE"); }
       
       try { p.setSommeRecue(found.getSommeRecue().toString()); } catch (Exception e) { p.setSommeRecue("0.00"); }
-      //p.setDateInscription(found.hasDateInscription() ? sdt.format(found.getDateInscription()) : "");
+      p.setDateInscription(found.hasDateInscription() ? dtf.format(found.getDateInscription()) : "");
       p.setArrived(found.isArrived());
      
       List<Role> roles = found.getRoles();       
@@ -142,7 +147,7 @@ public class ParticipantController
       if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { p.setRole("ORGA"); } } }
       if (!(p.hasRole())) { p.setRole("USER"); } 
 
-     return ResponseEntity.ok(p); 
+      return ResponseEntity.ok(p); 
     }
     
     return ResponseEntity.notFound().build();
@@ -150,7 +155,7 @@ public class ParticipantController
 
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant, HttpServletRequest request) 
+  public ResponseEntity<Object> create(@RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -210,8 +215,36 @@ public class ParticipantController
           found.setDateInscription(LocalDateTime.now());
           found.setArrived(participant.isArrived());
           
-          // TODO: set roles
-          
+          Role userRole = roleRepository.findByLibelle("ROLE_USER");
+
+          if (authentication != null)
+          {
+            Role adminRole = roleRepository.findByLibelle("ROLE_ADMIN");
+            Role orgaRole = roleRepository.findByLibelle("ROLE_ORGA");
+           
+            if ((adminRole != null) && (orgaRole != null) && (userRole != null))
+            {
+              List<String> granter_roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+              
+              if (participant.getRole().equals("ADMIN") && granter_roles.contains("ROLE_ADMIN"))
+              {
+                found.setRoles(Arrays.asList(adminRole, orgaRole, userRole));
+              }
+              else if (participant.getRole().equals("ORGA") && granter_roles.contains("ROLE_ORGA"))
+              {
+                found.setRoles(Arrays.asList(orgaRole, userRole));
+              }
+              else
+              {
+                found.setRoles(Arrays.asList(userRole));
+              }
+            }
+          }
+          else
+          {
+            if (userRole != null) { found.setRoles(Arrays.asList(userRole)); }
+          }
+                    
           participantRepository.save(found);
           
           MessagesTransfer mt = new MessagesTransfer();
@@ -227,7 +260,7 @@ public class ParticipantController
 
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -278,10 +311,37 @@ public class ParticipantController
       else { found.setModePaiement(ParticipantModePaiement.AUTRE); }
       
       try { found.setSommeRecue(new BigDecimal(participant.getSommeRecue())); } catch (Exception e) { found.setSommeRecue(new BigDecimal("0.00")); }
-      found.setArrived(participant.isArrived());
+      found.setArrived(participant.isArrived());  
       
-      // TODO: modify password in session
-      // TODO: modify roles
+      Role userRole = roleRepository.findByLibelle("ROLE_USER");
+
+      if (authentication != null)
+      {
+        Role adminRole = roleRepository.findByLibelle("ROLE_ADMIN");
+        Role orgaRole = roleRepository.findByLibelle("ROLE_ORGA");
+       
+        if ((adminRole != null) && (orgaRole != null) && (userRole != null))
+        {
+          List<String> granter_roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+          
+          if (participant.getRole().equals("ADMIN") && granter_roles.contains("ROLE_ADMIN"))
+          {
+            found.setRoles(Arrays.asList(adminRole, orgaRole, userRole));
+          }
+          else if (participant.getRole().equals("ORGA") && granter_roles.contains("ROLE_ORGA"))
+          {
+            found.setRoles(Arrays.asList(orgaRole, userRole));
+          }
+          else
+          {
+            found.setRoles(Arrays.asList(userRole));
+          }
+        }
+      }
+      else
+      {
+        if (userRole != null) { found.setRoles(Arrays.asList(userRole)); }
+      }
 
       participantRepository.save(found);
       
