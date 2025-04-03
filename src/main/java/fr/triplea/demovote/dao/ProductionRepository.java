@@ -37,8 +37,10 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "p.numero_version "
               + "FROM vote.productions AS p "
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
-              + "WHERE p.flag_actif IS TRUE ORDER BY p.titre ASC ")
-  List<ProductionShort> findAllWithoutArchive();
+              + "WHERE p.flag_actif IS TRUE "
+              + "AND ((:numero = 0) OR (:numero = p.numero_participant)) "
+              + "ORDER BY p.titre ASC ")
+  List<ProductionShort> findAllWithoutArchive(@Param("numero") int numeroGestionnaire);
   
   @NativeQuery("SELECT DISTINCT " 
               + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
@@ -64,16 +66,13 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
 
   @NativeQuery("SELECT DISTINCT " 
       + "p.numero_production, "
+      + "p.numero_participant AS numero_gestionnaire, "
       + "p.titre, "
       + "p.nom_archive, "
       + "'' AS archive "
       + "FROM vote.productions AS p "
       + "WHERE p.numero_production = :numeroProduction AND p.flag_actif IS TRUE ")
   ProductionFile findByIdForUpload(@Param("numeroProduction") Integer numeroProduction);
-
-  
-  
-  
   
   @NativeQuery("SELECT DISTINCT " 
       + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "

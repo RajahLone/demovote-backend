@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
+import fr.triplea.demovote.dto.MotDePasseTransfer;
 import fr.triplea.demovote.dto.ParticipantTransfer;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Role;
@@ -29,8 +31,6 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/account")
 public class AccountController 
 {
-
-  // TODO : changement du mot de passe
 
   @SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
@@ -127,9 +127,6 @@ public class AccountController
         found.setNom(participant.getNom());
         found.setPrenom(participant.getPrenom());
         
-        final String mdp = participant.getMotDePasse();
-        if (mdp != null) { if (!(mdp.isBlank())) { found.setMotDePasse(passwordEncoder.encode(mdp.trim())); } } 
-        
         found.setGroupe(participant.getGroupe()); 
         found.setAdresse(participant.getAdresse());
         found.setCodePostal(participant.getCodePostal());
@@ -146,6 +143,58 @@ public class AccountController
         mt.setInformation(messageSource.getMessage("participant.updated", null, locale));
         
         return ResponseEntity.ok(mt);
+      }
+    } 
+    
+    return ResponseEntity.notFound().build();
+  }
+
+  @PostMapping(value = "/newmdp")
+  public ResponseEntity<MotDePasseTransfer> update(@RequestBody(required = true) MotDePasseTransfer mdpt, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    if (authentication != null)
+    {
+      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      
+      if (found != null)
+      {
+        if (mdpt.getUsername().equals(authentication.getName()))
+        {    
+          final String mdp_old = mdpt.getAncien();
+          final String mdp_new = mdpt.getNouveau();
+
+          mdpt.setAncien("");
+          mdpt.setNouveau("");
+
+          if (mdp_old == null) { mdpt.setErreur(messageSource.getMessage("account.password.old.missing", null, locale)); }
+          else
+          if (mdp_old.isBlank()) { mdpt.setErreur(messageSource.getMessage("account.password.old.missing", null, locale)); }
+          else
+          if (mdp_new == null) { mdpt.setErreur(messageSource.getMessage("account.password.new.missing", null, locale)); }
+          else
+          if (mdp_new.isBlank()) { mdpt.setErreur(messageSource.getMessage("account.password.new.missing", null, locale)); }
+          else
+          if (passwordEncoder.matches(mdp_old, found.getMotDePasse()))
+          {
+            found.setMotDePasse(passwordEncoder.encode(mdp_new.trim()));
+            
+            participantRepository.save(found);
+
+            mdpt.setAncien("<success@old>");
+            mdpt.setNouveau("<success@new>");
+            mdpt.setErreur("");
+          }
+          else { mdpt.setErreur(messageSource.getMessage("account.password.old.failed", null, locale)); }
+          
+        }
+        else
+        {
+          mdpt.setErreur(messageSource.getMessage("account.username.unmatched", null, locale));
+        }
+       
+        return ResponseEntity.ok(mdpt);
       }
     } 
     

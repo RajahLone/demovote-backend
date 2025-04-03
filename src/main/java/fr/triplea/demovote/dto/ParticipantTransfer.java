@@ -2,34 +2,35 @@ package fr.triplea.demovote.dto;
 
 public class ParticipantTransfer
 {
-  String dateCreation;
-  String dateModification;
-  int numeroParticipant;
-  String role;
-  String nom;
-  String prenom;
-  String pseudonyme;
-  String motDePasse;
-  String groupe;
-  int delaiDeconnexion;
-  String adresse;
-  String codePostal;
-  String ville;
-  String pays;
-  String numeroTelephone;
-  String email;
-  String statut;
-  boolean withMachine;
-  String commentaire;
-  boolean hereDay1;
-  boolean hereDay2;
-  boolean hereDay3;
-  boolean sleepingOnSite;
-  boolean useAmigabus;
-  String modePaiement;
-  String dateInscription;
-  String sommeRecue;
-  boolean arrived;
+  
+  private String dateCreation;
+  private String dateModification;
+  private int numeroParticipant;
+  private String role;
+  private String nom;
+  private String prenom;
+  private String pseudonyme;
+  private String motDePasse;
+  private String groupe;
+  private int delaiDeconnexion;
+  private String adresse;
+  private String codePostal;
+  private String ville;
+  private String pays;
+  private String numeroTelephone;
+  private String email;
+  private String statut;
+  private boolean withMachine;
+  private String commentaire;
+  private boolean hereDay1;
+  private boolean hereDay2;
+  private boolean hereDay3;
+  private boolean sleepingOnSite;
+  private boolean useAmigabus;
+  private String modePaiement;
+  private String dateInscription;
+  private String sommeRecue;
+  private boolean arrived;
   
   public String getDateCreation() { return dateCreation; }
   public void setDateCreation(String dateCreation) { this.dateCreation = dateCreation; }

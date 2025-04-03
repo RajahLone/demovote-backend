@@ -75,7 +75,7 @@ public class ParticipantController
   
   @GetMapping(value = "/option-list")
   @PreAuthorize("hasRole('ORGA')")
-  public List<ParticipantOptionList> getOptionList() 
+  public List<ParticipantOptionList> getOptionList(final Authentication authentication) 
   { 
     return participantRepository.getOptionList(); 
   }

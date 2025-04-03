@@ -4,6 +4,7 @@ package fr.triplea.demovote.web.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -12,6 +13,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,37 +57,44 @@ public class ProductionController
   private MessageSource messageSource;
 
   // TODO : externaliser le stockage des fichiers
-  // TODO : verrrouiller gestion au (ROLE_ADMIN) et à (ROLE_USER + uniquement les productions qu'il gère)
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
-  public List<Production> getList(@RequestParam(required = false) String type) 
+  public List<Production> getList(@RequestParam(required = false) String type, final Authentication authentication) 
   { 
-    List<ProductionShort> prods = productionRepository.findAllWithoutArchive();
-    
+    List<ProductionShort> prods = productionRepository.findAllWithoutArchive(this.getNumeroUser(authentication));
+     
     List<Production> ret = new ArrayList<Production>();
     
-    for (ProductionShort prod: prods) { ret.add(prod.toProduction()); }
+    if (prods != null) { if (prods.size() > 0) { for (ProductionShort prod: prods) { ret.add(prod.toProduction()); } } }
     
     return ret; 
+    
   }
 
   @GetMapping(value = "/file/{id}")
   @PreAuthorize("hasRole('USER')")
   @ResponseBody
-  public ResponseEntity<Resource> getFile(@PathVariable int id) 
+  public ResponseEntity<Resource> getFile(@PathVariable int id, final Authentication authentication) 
   {
+    // TODO : après résultats affichés, download autorisé pour tous
+    
     Production p = productionRepository.findById(id);
     
     if (p != null) 
     { 
-      Resource r = new ByteArrayResource(p.getArchiveAsBinary());
+      int numeroUser = this.getNumeroUser(authentication);
       
-      return ResponseEntity
-              .ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + p.getNomArchive() + "\"")
-              .header(HttpHeaders.CONTENT_TYPE, "application/zip")
-              .body(r); 
+      if ((numeroUser == 0) || (p.getNumeroGestionnaire() == numeroUser))
+      {
+        Resource r = new ByteArrayResource(p.getArchiveAsBinary());
+        
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + p.getNomArchive() + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, "application/zip")
+                .body(r); 
+      }
     }
     
     return ResponseEntity.notFound().build();
@@ -93,22 +102,38 @@ public class ProductionController
 
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Production> getForm(@PathVariable int id)
+  public ResponseEntity<Production> getForm(@PathVariable int id, final Authentication authentication)
   { 
     ProductionShort p = productionRepository.findByIdWithoutArchive(id);
     
-    if (p != null) { return ResponseEntity.ok(p.toProduction()); }
+    if (p != null) 
+    {
+      int numeroUser = this.getNumeroUser(authentication);
+
+      if ((numeroUser == 0) || (p.numeroGestionnaire() == numeroUser))
+      {
+        return ResponseEntity.ok(p.toProduction()); 
+      }
+    }
     
     return ResponseEntity.notFound().build();
   }
 
   @GetMapping(value = "/formfile/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<ProductionFile> getFormFile(@PathVariable int id)
+  public ResponseEntity<ProductionFile> getFormFile(@PathVariable int id, final Authentication authentication)
   { 
     ProductionFile p = productionRepository.findByIdForUpload(id);
     
-    if (p != null) { return ResponseEntity.ok(p); }
+    if (p != null) 
+    { 
+      int numeroUser = this.getNumeroUser(authentication);
+
+      if ((numeroUser == 0) || (p.numeroGestionnaire() == numeroUser))
+      {
+        return ResponseEntity.ok(p); 
+      }
+    }
     
     return ResponseEntity.notFound().build();
   }
@@ -161,7 +186,7 @@ public class ProductionController
  
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionUpdate production, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionUpdate production, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -169,37 +194,42 @@ public class ProductionController
     
     if (found != null)
     {
-      Participant participant = participantRepository.findById(production.numeroGestionnaire());
-      
-      if (participant != null)
-      {
-        found.setParticipant(participant);
-        found.setEnabled(true);
-        
-        found.setAdresseIP(new Inet(this.getClientIP(request)));
-        
-        if (production.type().equals("EXECUTABLE")) { found.setType(ProductionType.EXECUTABLE); }
-        else if (production.type().equals("GRAPHE")) { found.setType(ProductionType.GRAPHE); }
-        else if (production.type().equals("MUSIQUE")) { found.setType(ProductionType.MUSIQUE); }
-        else if (production.type().equals("VIDEO")) { found.setType(ProductionType.VIDEO); }
-        else if (production.type().equals("TOPIC")) { found.setType(ProductionType.TOPIC); }
-        else { found.setType(ProductionType.AUTRE); }
-       
-        found.setTitre(production.titre());
-        found.setAuteurs(production.auteurs());
-        found.setGroupes(production.groupes());
-        found.setPlateforme(production.plateforme());
-        found.setCommentaire(production.commentaire());
-        found.setInformationsPrivees(production.informationsPrivees());
-    
-        if (production.vignette() != null) { if (!(production.vignette().isBlank())) { found.setVignette(production.vignette()); } }
-        
-        productionRepository.save(found);
-        
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setInformation(messageSource.getMessage("production.updated", null, locale));
+      int numeroUser = this.getNumeroUser(authentication);
 
-        return ResponseEntity.ok(mt);
+      if ((numeroUser == 0) || (production.numeroGestionnaire() == numeroUser))
+      {
+        Participant participant = participantRepository.findById(production.numeroGestionnaire());
+        
+        if (participant != null)
+        {
+          found.setParticipant(participant);
+          found.setEnabled(true);
+          
+          found.setAdresseIP(new Inet(this.getClientIP(request)));
+          
+          if (production.type().equals("EXECUTABLE")) { found.setType(ProductionType.EXECUTABLE); }
+          else if (production.type().equals("GRAPHE")) { found.setType(ProductionType.GRAPHE); }
+          else if (production.type().equals("MUSIQUE")) { found.setType(ProductionType.MUSIQUE); }
+          else if (production.type().equals("VIDEO")) { found.setType(ProductionType.VIDEO); }
+          else if (production.type().equals("TOPIC")) { found.setType(ProductionType.TOPIC); }
+          else { found.setType(ProductionType.AUTRE); }
+         
+          found.setTitre(production.titre());
+          found.setAuteurs(production.auteurs());
+          found.setGroupes(production.groupes());
+          found.setPlateforme(production.plateforme());
+          found.setCommentaire(production.commentaire());
+          found.setInformationsPrivees(production.informationsPrivees());
+      
+          if (production.vignette() != null) { if (!(production.vignette().isBlank())) { found.setVignette(production.vignette()); } }
+          
+          productionRepository.save(found);
+          
+          MessagesTransfer mt = new MessagesTransfer();
+          mt.setInformation(messageSource.getMessage("production.updated", null, locale));
+
+          return ResponseEntity.ok(mt);
+        }
       }
     }
     
@@ -208,7 +238,7 @@ public class ProductionController
   
   @PutMapping(value = "/upload/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -218,24 +248,29 @@ public class ProductionController
     {
       found.setEnabled(true);
       
-      if (production.archive() != null)
-      {
-        if (!(production.archive().isBlank()))
-        {
-          if (production.nomArchive() != null)
-          {
-            if (!(production.nomArchive().isBlank()))
-            {
-              found.setNomArchive(production.nomArchive());
-              found.setArchive(production.archive());
-              found.setNumeroVersion(found.getNumeroVersion() + 1);
-              
-              productionRepository.save(found);
-         
-              MessagesTransfer mt = new MessagesTransfer();
-              mt.setInformation(messageSource.getMessage("production.file.updated", null, locale));
+      int numeroUser = this.getNumeroUser(authentication);
 
-              return ResponseEntity.ok(mt);
+      if ((numeroUser == 0) || (production.numeroGestionnaire() == numeroUser))
+      {
+        if (production.archive() != null)
+        {
+          if (!(production.archive().isBlank()))
+          {
+            if (production.nomArchive() != null)
+            {
+              if (!(production.nomArchive().isBlank()))
+              {
+                found.setNomArchive(production.nomArchive());
+                found.setArchive(production.archive());
+                found.setNumeroVersion(found.getNumeroVersion() + 1);
+                
+                productionRepository.save(found);
+           
+                MessagesTransfer mt = new MessagesTransfer();
+                mt.setInformation(messageSource.getMessage("production.file.updated", null, locale));
+
+                return ResponseEntity.ok(mt);
+              }
             }
           }
         }
@@ -247,7 +282,7 @@ public class ProductionController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> disableProduction(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<Object> disableProduction(@PathVariable int id, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -255,14 +290,19 @@ public class ProductionController
     
     if (found != null)
     {
-      found.setEnabled(false); 
-      
-      productionRepository.saveAndFlush(found);
-           
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("production.deleted", null, locale));
+      int numeroUser = this.getNumeroUser(authentication);
 
-      return ResponseEntity.ok(mt);
+      if ((numeroUser == 0) || (found.getParticipant().getNumeroParticipant() == numeroUser))
+      {
+        found.setEnabled(false); 
+        
+        productionRepository.saveAndFlush(found);
+             
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setInformation(messageSource.getMessage("production.deleted", null, locale));
+
+        return ResponseEntity.ok(mt);
+      }
     }      
     
     return ResponseEntity.notFound().build(); 
@@ -278,4 +318,26 @@ public class ProductionController
     return request.getRemoteAddr();
   }
 
+  /** retourne 0 si ROLE_ADMIN, sinon c'est le numéro identifiant du participant USER */
+  private final int getNumeroUser(Authentication auth)
+  {
+    int numeroParticipant = -1; // -1 pour non trouvé
+    
+    if (auth != null)
+    {
+      Participant found = participantRepository.findByPseudonyme(auth.getName());
+      
+      if (found != null)
+      {
+        numeroParticipant = found.getNumeroParticipant();
+        
+        List<String> roles = auth.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+
+        if (roles.contains("ROLE_ADMIN")) { numeroParticipant = 0; }
+      }
+    }
+    
+    return numeroParticipant;
+  }
+  
 }
