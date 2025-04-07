@@ -109,7 +109,7 @@ public class SecurityConfig
         .requiresChannel(channel -> channel.anyRequest().requiresSecure())
         .authenticationProvider(authenticationProvider())
         .authorizeHttpRequests((ahreq) -> ahreq
-          .requestMatchers("/divers/**", "/sign/**").permitAll()
+          .requestMatchers("/divers/**", "/sign/**", "/webcam/**").permitAll()
           .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")
           .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").hasRole("ADMIN")
           .requestMatchers("/participant/**").hasRole("ORGA")

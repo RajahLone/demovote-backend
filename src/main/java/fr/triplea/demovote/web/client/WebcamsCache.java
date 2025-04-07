@@ -26,16 +26,22 @@ import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dao.WebcamRepository;
 import fr.triplea.demovote.model.Webcam;
 
+@Component
 public class WebcamsCache 
 {
 
   private static final Logger LOG = LoggerFactory.getLogger(WebcamsCache.class);
+  
+  @Value("${webcams.cache.domain}")
+  private String domaineOrigine;
 
   @Autowired
   private VariableRepository variableRepository;
@@ -54,7 +60,7 @@ public class WebcamsCache
     try 
     {
       sslContext = SSLContexts.custom()
-                    .loadTrustMaterial((chain, authType) -> { final X509Certificate cert = chain[0]; return "CN=www.triplea.fr".equalsIgnoreCase(cert.getSubjectX500Principal().getName()); })
+                    .loadTrustMaterial((chain, authType) -> { final X509Certificate cert = chain[0]; return ("CN=" + domaineOrigine).equalsIgnoreCase(cert.getSubjectX500Principal().getName()); })
                     .build();
     } 
     catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) { LOG.error(e.toString()); sslContext = null; }
@@ -114,7 +120,6 @@ public class WebcamsCache
     {
       w = new Webcam();
       w.setId(id);
-      w.setUpdated(true);
       w.setCrc32(c32);
       w.setVue(b);
       
@@ -124,7 +129,6 @@ public class WebcamsCache
     {
       if (w.getCrc32() != c32)
       {
-        w.setUpdated(true);
         w.setCrc32(c32);
         w.setVue(b);
 

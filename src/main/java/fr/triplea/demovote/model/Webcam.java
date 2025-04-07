@@ -25,9 +25,6 @@ public class Webcam
   @Column(name = "id", nullable = false)
   private Integer id;
 
-  @Column(name = "flag_updated")
-  private Boolean updated = true;
-
   @Column
   private Long crc32;
 
@@ -38,17 +35,13 @@ public class Webcam
   public void setId(Integer id) { this.id = id; }
   public Integer getId() { return id; }
 
-
-  public void setUpdated(Boolean updated) { this.updated = updated; }
-  public Boolean isUpdated() { return updated; }
-
   public void setCrc32(Long crc32) { this.crc32 = crc32; }
   public Long getCrc32() { return crc32; }
 
   public void setVue(byte[] vue) { this.vue = vue.clone(); }
   public byte[] getVue() { return vue; }
   @Transient
-  public String getVueSRC() { if (this.vue == null) { return ""; } return "data:image/png;base64," + Base64.getEncoder().encodeToString(this.vue); }
+  public String getVueSRC() { if (this.vue == null) { return ""; } return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(this.vue); }
   
   @Override
   public int hashCode() 
@@ -57,7 +50,7 @@ public class Webcam
     int result = 1;
     
     result = prime * result + Arrays.hashCode(vue);
-    result = prime * result + Objects.hash(crc32, id, updated);
+    result = prime * result + Objects.hash(crc32, id);
     
     return result;
   }
@@ -78,6 +71,6 @@ public class Webcam
   }
   
   @Override
-  public String toString() { return "Webcam [id=" + id + ", updated=" + updated + ", crc32=" + crc32 + "]"; }
+  public String toString() { return "Webcam [id=" + id + ", crc32=" + crc32 + "]"; }
 
 }
