@@ -9,10 +9,12 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import fr.triplea.demovote.security.xss.XssFilter;
 
 @Configuration
+@EnableScheduling
 public class ServerConfig 
 {
 
