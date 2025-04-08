@@ -86,7 +86,7 @@ public class VariableController
       return ResponseEntity.ok(mt);
     }
     
-    return null;
+    return ResponseEntity.notFound().build();
   }
  
   @PutMapping(value = "/update/{id}")

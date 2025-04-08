@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.session.SessionRegistry;
@@ -54,19 +54,16 @@ public class SecurityConfig
 
   @Bean
   public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(11); }
-
+  
   @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception { return configuration.getAuthenticationManager(); }
-
-  @Bean
-  public DaoAuthenticationProvider authenticationProvider() 
+  public AuthenticationManager authenticationManager() throws Exception 
   {
     DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-       
+    
     authProvider.setUserDetailsService(myUserDetailsService);
     authProvider.setPasswordEncoder(passwordEncoder());
-   
-    return authProvider;
+    
+    return new ProviderManager(authProvider);
   }
   
   @Bean
@@ -107,7 +104,7 @@ public class SecurityConfig
   {
     http.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository()))
         .requiresChannel(channel -> channel.anyRequest().requiresSecure())
-        .authenticationProvider(authenticationProvider())
+        .authenticationManager(authenticationManager())
         .authorizeHttpRequests((ahreq) -> ahreq
           .requestMatchers("/divers/**", "/sign/**", "/webcam/**").permitAll()
           .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")

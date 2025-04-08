@@ -255,7 +255,7 @@ public class ParticipantController
       }
     }
        
-    return null;
+    return ResponseEntity.notFound().build();
   }
 
   @PutMapping(value = "/update/{id}")

@@ -63,14 +63,10 @@ public class WebcamController
   {
     if (webcam != null) 
     {
-      LOG.info(webcam.toString());
-      
       Webcam found = webcamRepository.find(webcam.getId()); 
 
       if (found != null)
       {
-        LOG.info(found.toString());
-        
         if (!(found.getCrc32()).equals(webcam.getCrc32()))
         {
           webcam.setCrc32(found.getCrc32());

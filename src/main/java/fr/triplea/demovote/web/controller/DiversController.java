@@ -44,6 +44,9 @@ public class DiversController
     jt.setJour3Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR3"));
     jt.setJour3Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR3"));
     
+    jt.setAmigabus(variableRepository.findByTypeAndCode("Application", "FLAG_AMIGABUS").equalsIgnoreCase("TRUE"));
+    jt.setDodosurplace(variableRepository.findByTypeAndCode("Application", "FLAG_DODOSURPLACE").equalsIgnoreCase("TRUE"));
+    
     return ResponseEntity.ok(jt); 
   }
 

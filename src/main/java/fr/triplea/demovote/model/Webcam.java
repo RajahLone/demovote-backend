@@ -4,14 +4,22 @@ package fr.triplea.demovote.model;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 import java.sql.Types;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,6 +28,11 @@ import jakarta.persistence.Entity;
 @Table(name = "webcams")
 public class Webcam 
 {
+
+  @Temporal(TemporalType.TIMESTAMP)
+  @UpdateTimestamp
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  private LocalDateTime dateModification;
 
   @Id
   @Column(name = "id", nullable = false)
@@ -31,6 +44,16 @@ public class Webcam
   @Lob @JdbcTypeCode(Types.BINARY)
   @Column(name="vue")
   private byte[] vue;
+  
+  
+  public Webcam() { }
+
+  @Transient
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  
+  public void setDateModification(LocalDateTime d) { this.dateModification = d; }
+  public void setDateModification(String s) { this.dateModification = LocalDateTime.parse(s, df); }
+  public LocalDateTime getDateModification() { return this.dateModification; }
 
   public void setId(Integer id) { this.id = id; }
   public Integer getId() { return id; }

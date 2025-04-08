@@ -10,6 +10,7 @@ import fr.triplea.demovote.dto.ProductionFile;
 import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Production;
+import fr.triplea.demovote.model.ProductionType;
 
 
 public interface ProductionRepository extends JpaRepository<Production, Integer> 
@@ -39,8 +40,9 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
               + "WHERE p.flag_actif IS TRUE "
               + "AND ((:numero = 0) OR (:numero = p.numero_participant)) "
+              + "AND ((:type IS NULL) OR (p.type = (:type)::vote.type_production)) "
               + "ORDER BY p.titre ASC ")
-  List<ProductionShort> findAllWithoutArchive(@Param("numero") int numeroGestionnaire);
+  List<ProductionShort> findAllWithoutArchive(@Param("numero") int numeroGestionnaire, @Param("type") String type);
   
   @NativeQuery("SELECT DISTINCT " 
               + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "

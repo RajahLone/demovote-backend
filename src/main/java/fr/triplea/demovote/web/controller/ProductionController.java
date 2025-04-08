@@ -62,7 +62,9 @@ public class ProductionController
   @PreAuthorize("hasRole('USER')")
   public List<Production> getList(@RequestParam(required = false) String type, final Authentication authentication) 
   { 
-    List<ProductionShort> prods = productionRepository.findAllWithoutArchive(this.getNumeroUser(authentication));
+    if (type != null) { if (type.isBlank()) { type = null; } }
+
+    List<ProductionShort> prods = productionRepository.findAllWithoutArchive(this.getNumeroUser(authentication), type);
      
     List<Production> ret = new ArrayList<Production>();
     
