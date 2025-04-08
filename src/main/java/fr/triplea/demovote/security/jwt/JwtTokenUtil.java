@@ -63,10 +63,10 @@ public class JwtTokenUtil
      
       return true;
     }
-    catch(UnsupportedJwtException exp) { LOG.error("claimsJws argument does not represent Claims JWS" + exp.getMessage()); }
-    catch(MalformedJwtException exp) { LOG.error("claimsJws string is not a valid JWS" + exp.getMessage()); }
-    catch(ExpiredJwtException exp) { LOG.error("Claims has an expiration time before the method is invoked" + exp.getMessage()); }
-    catch(IllegalArgumentException exp) { LOG.error("claimsJws string is null or empty or only whitespace" + exp.getMessage()); }
+    catch(UnsupportedJwtException exp) { LOG.error("claimsJws argument does not represent Claims JWS; " + exp.getMessage()); }
+    catch(MalformedJwtException exp) { LOG.error("claimsJws string is not a valid JWS; " + exp.getMessage()); }
+    catch(ExpiredJwtException exp) { /*LOG.info("Claims has an expiration time before the method is invoked; " + exp.getMessage());*/ }
+    catch(IllegalArgumentException exp) { LOG.error("claimsJws string is null or empty or only whitespace; " + exp.getMessage()); }
     
     return false;
   }

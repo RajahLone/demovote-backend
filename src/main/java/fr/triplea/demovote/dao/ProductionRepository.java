@@ -10,7 +10,6 @@ import fr.triplea.demovote.dto.ProductionFile;
 import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Production;
-import fr.triplea.demovote.model.ProductionType;
 
 
 public interface ProductionRepository extends JpaRepository<Production, Integer> 
