@@ -1,5 +1,6 @@
 package fr.triplea.demovote.web.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -9,12 +10,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.dao.MessageRepository;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessageShort;
+import fr.triplea.demovote.dto.PseudonymeOptionList;
 import fr.triplea.demovote.model.Message;
 import fr.triplea.demovote.model.Participant;
 
@@ -34,45 +38,50 @@ public class MessageController
   private ParticipantRepository participantRepository;
  
   
-  @GetMapping(value = "/list")
+  @GetMapping(value = "/nickname-list")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> getList(final Authentication authentication)
+  public List<PseudonymeOptionList> getOptionList(final Authentication authentication) 
   { 
     if (authentication != null)
     {
       Participant found = participantRepository.findByPseudonyme(authentication.getName());
-      
-      if (found != null) 
-      { 
-        return messageRepository.findAll(found.getNumeroParticipant());
+
+      if (found != null)
+      {
+        return participantRepository.getPseudonymeOptionList(found.getNumeroParticipant()); 
       }
     }
     
-    return null; 
+    return new ArrayList<PseudonymeOptionList>();
   }
 
   @GetMapping(value = "/new/{last}")
   @PreAuthorize("hasRole('USER')")
   public List<MessageShort> getNew(@PathVariable int last, final Authentication authentication)
   { 
+    List<MessageShort> mlist = null;
+
     if (authentication != null)
     {
       Participant found = participantRepository.findByPseudonyme(authentication.getName());
       
       if ((found != null) && (last >= 0)) 
-      { 
-        return messageRepository.findNew(found.getNumeroParticipant(), last);
+      {         
+        mlist = messageRepository.findNew(found.getNumeroParticipant(), last);
       }
     }
-    
-    return null; 
+
+    if (mlist == null) { mlist = new ArrayList<MessageShort>(); }
+        
+    return mlist; 
   }
 
-
-  @GetMapping(value = "/add/{last}")
+  @PostMapping(value = "/add/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addMessage(MessageShort message, @PathVariable int last, final Authentication authentication)
+  public List<MessageShort> addMessage(@RequestBody(required = true) MessageShort message, @PathVariable int last, final Authentication authentication)
   { 
+    List<MessageShort> mlist = null;
+
     if ((authentication != null) && (message != null))
     {
       Participant found = participantRepository.findByPseudonyme(authentication.getName());
@@ -98,11 +107,13 @@ public class MessageController
           messageRepository.save(m);
         }
         
-        return messageRepository.findNew(found.getNumeroParticipant(), last);
+        mlist = messageRepository.findNew(found.getNumeroParticipant(), last);
       }
     }
+
+    if (mlist == null) { mlist = new ArrayList<MessageShort>(); }
     
-    return null; 
+    return mlist; 
   }
   
 }

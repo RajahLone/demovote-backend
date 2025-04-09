@@ -77,7 +77,7 @@ public class ParticipantController
   @PreAuthorize("hasRole('ORGA')")
   public List<ParticipantOptionList> getOptionList(final Authentication authentication) 
   { 
-    return participantRepository.getOptionList(); 
+    return participantRepository.getParticipantOptionList(); 
   }
 
 

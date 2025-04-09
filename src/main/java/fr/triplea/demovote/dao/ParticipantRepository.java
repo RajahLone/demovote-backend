@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
+import fr.triplea.demovote.dto.PseudonymeOptionList;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Role;
 
@@ -81,6 +82,9 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
   void delete(Participant participant);
 
   @NativeQuery("SELECT DISTINCT p.numero_participant, p.pseudonyme, p.nom, p.prenom FROM vote.participants AS p WHERE p.flag_actif IS TRUE ORDER BY p.pseudonyme ASC, p.nom ASC, p.prenom ASC ")
-  List<ParticipantOptionList> getOptionList();
+  List<ParticipantOptionList> getParticipantOptionList();
+
+  @NativeQuery("SELECT DISTINCT p.numero_participant, p.pseudonyme FROM vote.participants AS p WHERE (p.flag_actif IS TRUE) AND (p.numero_participant <> :id) AND (LENGTH(p.pseudonyme) > 0) ORDER BY p.pseudonyme ASC ")
+  List<PseudonymeOptionList> getPseudonymeOptionList(@Param("id") int id);
 
 }

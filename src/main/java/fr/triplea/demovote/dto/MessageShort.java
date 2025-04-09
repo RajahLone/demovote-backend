@@ -6,7 +6,8 @@ public record MessageShort
   int numeroMessage,
   String pseudonyme,
   String ligne,
-  int numeroDestinataire
+  int numeroDestinataire,
+  String pseudoDestinataire
 ) 
 {
 }
