@@ -256,6 +256,13 @@ public class Production
   public void setNumeroVersion(int n) { this.numeroVersion = Integer.valueOf(n); }
   public Integer getNumeroVersion() { return this.numeroVersion; }
   
+  @Transient
+  private Integer numeroCategorie = 0;
+  @Transient
+  public void setNumeroCategorie(int n) { this.numeroCategorie = Integer.valueOf(n); }
+  @Transient
+  public Integer getNumeroCategorie() { return this.numeroCategorie; }
+
 
   @Override
   public int hashCode() 

@@ -20,7 +20,8 @@ public record ProductionShort
   String nomGestionnaire,
   String nomArchive,
   byte[] vignette,
-  Integer numeroVersion
+  Integer numeroVersion,
+  Integer numeroCategorie
 ) 
 { 
   public Production toProduction() 
@@ -50,6 +51,7 @@ public record ProductionShort
     p.setNomArchive(nomArchive);
     p.setVignette(vignette);
     p.setNumeroVersion(numeroVersion);
+    p.setNumeroCategorie(numeroCategorie);
     
     return p;
   }  

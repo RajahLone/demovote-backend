@@ -26,8 +26,7 @@ import fr.triplea.demovote.model.Participant;
 @RequestMapping("/chat")
 public class MessageController 
 {
-  // TODO
-
+  
   @SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
 

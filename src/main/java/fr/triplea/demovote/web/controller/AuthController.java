@@ -38,6 +38,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/sign")
 public class AuthController 
 {
+  // TODO: captcha ?
+  
   @SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
 

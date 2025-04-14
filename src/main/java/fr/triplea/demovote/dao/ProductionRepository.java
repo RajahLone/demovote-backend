@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
 import fr.triplea.demovote.dto.ProductionFile;
+import fr.triplea.demovote.dto.ProductionItem;
 import fr.triplea.demovote.dto.ProductionShort;
-import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Production;
 
 
@@ -34,12 +34,13 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "CONCAT(g.pseudonyme, ' = ', g.nom, ' ', g.prenom) AS nom_gestionnaire, "
               + "p.nom_archive, "
               + "p.vignette, "
-              + "p.numero_version "
+              + "p.numero_version,"
+              + "0 AS numero_categorie "
               + "FROM vote.productions AS p "
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
               + "WHERE p.flag_actif IS TRUE "
-              + "AND ((:numero = 0) OR (:numero = p.numero_participant)) "
-              + "AND ((:type IS NULL) OR (p.type = (:type)::vote.type_production)) "
+              + "  AND ((:numero = 0) OR (:numero = p.numero_participant)) "
+              + "  AND ((:type IS NULL) OR (p.type = (:type)::vote.type_production)) "
               + "ORDER BY p.titre ASC ")
   List<ProductionShort> findAllWithoutArchive(@Param("numero") int numeroGestionnaire, @Param("type") String type);
   
@@ -59,10 +60,12 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "CONCAT(g.pseudonyme, ' = ', g.nom, ' ', g.prenom) AS nom_gestionnaire, "
               + "p.nom_archive, "
               + "p.vignette, "
-              + "p.numero_version "
+              + "p.numero_version,"
+              + "0 AS numero_categorie "
               + "FROM vote.productions AS p "
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
-              + "WHERE p.numero_production = :numeroProduction AND p.flag_actif IS TRUE ")
+              + "WHERE p.numero_production = :numeroProduction "
+              + "  AND p.flag_actif IS TRUE ")
   ProductionShort findByIdWithoutArchive(@Param("numeroProduction") Integer numeroProduction);
 
   @NativeQuery("SELECT DISTINCT " 
@@ -72,31 +75,38 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
       + "p.nom_archive, "
       + "'' AS archive "
       + "FROM vote.productions AS p "
-      + "WHERE p.numero_production = :numeroProduction AND p.flag_actif IS TRUE ")
+      + "WHERE p.numero_production = :numeroProduction "
+      + "  AND p.flag_actif IS TRUE ")
   ProductionFile findByIdForUpload(@Param("numeroProduction") Integer numeroProduction);
   
   @NativeQuery("SELECT DISTINCT " 
-      + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
-      + "TO_CHAR(p.date_modification, 'DD/MM/YYYY HH24:MI:SS') as date_modification, "
       + "p.numero_production, "
-      + "CAST(p.adresse_ip AS VARCHAR) AS adresse_ip, "
       + "p.type, "
       + "p.titre, "
       + "p.auteurs, "
       + "p.groupes, "
       + "p.plateforme, "
-      + "p.commentaire, "
-      + "p.informations_privees, "
-      + "p.numero_participant AS numero_gestionnaire, "
-      + "CONCAT(g.pseudonyme, ' = ', g.nom, ' ', g.prenom) AS nom_gestionnaire, "
-      + "p.nom_archive, "
-      + "p.vignette, "
-      + "p.numero_version "
+      + "s.numero_ordre "
       + "FROM vote.productions AS p "
-      + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
-      + "WHERE p.numero_participant = :participant AND p.flag_actif IS TRUE ORDER BY p.titre ASC ")
-  List<ProductionShort> findByParticipantWithoutArchive(@Param("participant") Participant participant);
-  
+      + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+      + "WHERE s.numero_categorie = :numero "
+      + "  AND p.flag_actif IS TRUE "
+      + "ORDER BY s.numero_ordre ASC, p.titre ASC ")
+  List<ProductionItem> findLinked(@Param("numero") int numeroCategorie);
+ 
+  @NativeQuery("SELECT DISTINCT " 
+      + "p.numero_production, "
+      + "p.type, "
+      + "p.titre, "
+      + "p.auteurs, "
+      + "p.groupes, "
+      + "p.plateforme, "
+      + "0 AS numero_ordre "
+      + "FROM vote.productions AS p "
+      + "WHERE p.numero_production IN (SELECT p.numero_production FROM vote.productions AS p WHERE p.flag_actif IS TRUE EXCEPT SELECT s.numero_production FROM vote.presentations AS s) "
+      + "  AND p.flag_actif IS TRUE "
+      + "ORDER BY p.titre ASC ")
+  List<ProductionItem> findUnlinked();
   
   @Override
   void delete(Production production);
