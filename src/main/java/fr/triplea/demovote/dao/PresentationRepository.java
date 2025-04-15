@@ -11,7 +11,7 @@ import fr.triplea.demovote.model.Presentation;
 public interface PresentationRepository extends JpaRepository<Presentation, Integer> 
 {
   
-  @NativeQuery("SELECT DISTINCT MAX(p.numero_ordre) FROM vote.presentations AS p WHERE p.numero_categorie = :numero ")
+  @NativeQuery("SELECT DISTINCT CASE WHEN MAX(p.numero_ordre) IS NULL THEN 0 ELSE MAX(p.numero_ordre) END AS numero_ordre FROM vote.presentations AS p WHERE p.numero_categorie = :numero ")
   Integer countByCategorie(@Param("numero") int numeroCategorie);
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.presentations AS p WHERE p.numero_categorie = :numero_cat AND p.numero_production = :numero_prod ")

@@ -105,6 +105,7 @@ public class AuthController
                 
         uc = new UserCredentials();
         
+        uc.setNumeroParticipant(found.getNumeroParticipant());
         uc.setUsername(usrn);
         uc.setPassword("<success@auth>");
         uc.setNom(found.getNom());
@@ -126,6 +127,7 @@ public class AuthController
       {
         uc = new UserCredentials();
         
+        uc.setNumeroParticipant(0);
         uc.setUsername("");
         uc.setPassword("");
         uc.setNom("");
@@ -142,6 +144,7 @@ public class AuthController
     
     uc = new UserCredentials();
     
+    uc.setNumeroParticipant(0);
     uc.setUsername("");
     uc.setPassword("");
     uc.setNom("");
@@ -191,6 +194,7 @@ public class AuthController
         
     UserCredentials uc = new UserCredentials();
     
+    uc.setNumeroParticipant(0);
     uc.setUsername("");
     uc.setPassword("");
     uc.setNom("");

@@ -4,6 +4,8 @@ package fr.triplea.demovote.dto;
 public class UserCredentials
 {
   
+  private int numeroParticipant;
+
   private String username;
   
   private String password;
@@ -24,6 +26,9 @@ public class UserCredentials
 
   public UserCredentials() {}
    
+  public void setNumeroParticipant(int n) { this.numeroParticipant = n; }
+  public int getNumeroParticipant() { return this.numeroParticipant; }
+
   public void setUsername(String s) { this.username = new String(s); }
   public String getUsername() { return this.username; }
 

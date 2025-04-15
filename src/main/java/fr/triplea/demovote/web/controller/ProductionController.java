@@ -60,18 +60,19 @@ public class ProductionController
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
-  public List<Production> getList(@RequestParam(required = false) String type, final Authentication authentication) 
+  public List<Production> getList(@RequestParam(required = false) String type, @RequestParam(required = false) Integer solo, final Authentication authentication) 
   { 
     if (type != null) { if (type.isBlank()) { type = null; } }
-
-    List<ProductionShort> prods = productionRepository.findAllWithoutArchive(this.getNumeroUser(authentication), type);
+    
+    if (solo != null) { solo = Math.max(0, Math.min(solo, 1)); } else { solo = 0; }  
+    
+    List<ProductionShort> prods = productionRepository.findAllWithoutArchive(this.getNumeroUser(authentication), type, solo);
      
     List<Production> ret = new ArrayList<Production>();
     
     if (prods != null) { if (prods.size() > 0) { for (ProductionShort prod: prods) { ret.add(prod.toProduction()); } } }
     
-    return ret; 
-    
+    return ret;  
   }
 
   @GetMapping(value = "/file/{id}")

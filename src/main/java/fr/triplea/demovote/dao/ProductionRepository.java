@@ -40,9 +40,10 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
               + "WHERE p.flag_actif IS TRUE "
               + "  AND ((:numero = 0) OR (:numero = p.numero_participant)) "
+              + "  AND ((:solo = 0) OR ((:solo = 1) AND p.numero_production NOT IN (SELECT DISTINCT s.numero_production FROM vote.presentations AS s))) "
               + "  AND ((:type IS NULL) OR (p.type = (:type)::vote.type_production)) "
               + "ORDER BY p.titre ASC ")
-  List<ProductionShort> findAllWithoutArchive(@Param("numero") int numeroGestionnaire, @Param("type") String type);
+  List<ProductionShort> findAllWithoutArchive(@Param("numero") int numeroGestionnaire, @Param("type") String type, @Param("solo") int solo);
   
   @NativeQuery("SELECT DISTINCT " 
               + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
@@ -67,6 +68,31 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "WHERE p.numero_production = :numeroProduction "
               + "  AND p.flag_actif IS TRUE ")
   ProductionShort findByIdWithoutArchive(@Param("numeroProduction") Integer numeroProduction);
+  
+  @NativeQuery("SELECT DISTINCT " 
+              + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
+              + "TO_CHAR(p.date_modification, 'DD/MM/YYYY HH24:MI:SS') as date_modification, "
+              + "p.numero_production, "
+              + "CAST(p.adresse_ip AS VARCHAR) AS adresse_ip, "
+              + "p.type, "
+              + "p.titre, "
+              + "p.auteurs, "
+              + "p.groupes, "
+              + "p.plateforme, "
+              + "p.commentaire, "
+              + "p.informations_privees, "
+              + "p.numero_participant AS numero_gestionnaire, "
+              + "CONCAT(g.pseudonyme, ' = ', g.nom, ' ', g.prenom) AS nom_gestionnaire, "
+              + "p.nom_archive, "
+              + "p.vignette, "
+              + "p.numero_version,"
+              + "s.numero_categorie "
+              + "FROM vote.productions AS p "
+              + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
+              + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+              + "WHERE p.flag_actif IS TRUE "
+              + "ORDER BY p.titre ASC ")
+  List<ProductionShort> findLinkedWithoutArchive();
 
   @NativeQuery("SELECT DISTINCT " 
       + "p.numero_production, "

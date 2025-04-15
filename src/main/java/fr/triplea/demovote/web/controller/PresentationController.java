@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +21,7 @@ import fr.triplea.demovote.dao.PresentationRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ProductionItem;
+import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.model.Categorie;
 import fr.triplea.demovote.model.Presentation;
 import fr.triplea.demovote.model.Production;
@@ -32,8 +32,10 @@ import jakarta.servlet.http.HttpServletRequest;
 public class PresentationController 
 {
 
-  // TODO
-
+  // TODO version PDF imprimable pour MrBio (pour la répartition à la remise des lots pendant l'affichage des résultats)
+  // TODO version diaporama pour affichage sur écran de régie
+  // TODO raccourci 'ouvrir / fermer / calculer' les votes
+  
   @Autowired
   private PresentationRepository presentationRepository;
 
@@ -49,10 +51,23 @@ public class PresentationController
   @Autowired
   private MessageSource messageSource;
 
+  @GetMapping(value = "/list-all")
+  @PreAuthorize("hasRole('ADMIN')")
+  public List<Production> getProductionList() 
+  { 
+    List<ProductionShort> prods = productionRepository.findLinkedWithoutArchive();
+     
+    List<Production> ret = new ArrayList<Production>();
+    
+    if (prods != null) { if (prods.size() > 0) { for (ProductionShort prod: prods) { ret.add(prod.toProduction()); } } }
+    
+    return ret;  
+  }
+
   
   @GetMapping(value = "/list-linked/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<ProductionItem> getProductionList(@PathVariable int id) 
+  public List<ProductionItem> getProductionListLinked(@PathVariable int id) 
   {
     List<ProductionItem> prods = productionRepository.findLinked(id); 
     
@@ -63,7 +78,7 @@ public class PresentationController
 
   @GetMapping(value = "/list-unlinked")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<ProductionItem> getProductionList() 
+  public List<ProductionItem> getProductionListUnlinked() 
   {
     List<ProductionItem> prods = productionRepository.findUnlinked();
     
@@ -72,9 +87,9 @@ public class PresentationController
     return prods;
   }
 
-  @PutMapping(value = "/add")
+  @GetMapping(value = "/add")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> addProduction(@RequestParam(required = true) int numeroCategorie, @RequestParam(required = true) int numeroProduction, HttpServletRequest request) 
+  public ResponseEntity<Object> addProduction(@RequestParam("id_cat") int numeroCategorie, @RequestParam("id_prod") int numeroProduction, HttpServletRequest request) 
   {
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -113,9 +128,9 @@ public class PresentationController
     return ResponseEntity.notFound().build(); 
   }
 
-  @PutMapping(value = "/remove")
+  @GetMapping(value = "/remove")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> removeProduction(@RequestParam(required = true) int numeroCategorie, @RequestParam(required = true) int numeroProduction, HttpServletRequest request) 
+  public ResponseEntity<Object> removeProduction(@RequestParam("id_cat") int numeroCategorie, @RequestParam("id_prod") int numeroProduction, HttpServletRequest request) 
   {
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -144,9 +159,9 @@ public class PresentationController
     return ResponseEntity.notFound().build(); 
   }
 
-  @PutMapping(value = "/forward")
+  @GetMapping(value = "/up")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> avancerProduction(@RequestParam(required = true) int numeroCategorie, @RequestParam(required = true) int numeroProduction, HttpServletRequest request) 
+  public ResponseEntity<Object> avancerProduction(@RequestParam("id_cat") int numeroCategorie, @RequestParam("id_prod") int numeroProduction, HttpServletRequest request) 
   {
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -171,7 +186,7 @@ public class PresentationController
             {
               if (presentations.get(i).getProduction().getNumeroProduction().equals(Integer.valueOf(Math.abs(numeroProduction))))
               {
-                if (i > 1) 
+                if (i > 0) 
                 {  
                   numeroOrdrePrev = presentations.get(i - 1).getNumeroOrdre();
                   numeroOrdreNext = presentations.get(i).getNumeroOrdre();
@@ -199,9 +214,9 @@ public class PresentationController
     return ResponseEntity.notFound().build(); 
   }
 
-  @PutMapping(value = "/backward")
+  @GetMapping(value = "/down")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> reculerProduction(@RequestParam(required = true) int numeroCategorie, @RequestParam(required = true) int numeroProduction, HttpServletRequest request) 
+  public ResponseEntity<Object> reculerProduction(@RequestParam("id_cat") int numeroCategorie, @RequestParam("id_prod") int numeroProduction, HttpServletRequest request) 
   {
     Locale locale = localeResolver.resolveLocale(request);
 
