@@ -1,11 +1,18 @@
 package fr.triplea.demovote.web.controller;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
@@ -43,6 +50,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/production")
 public class ProductionController 
 {
+  @SuppressWarnings("unused") 
+  private static final Logger LOG = LoggerFactory.getLogger(ProductionController.class);
 
   @Autowired
   private ProductionRepository productionRepository;
@@ -56,7 +65,6 @@ public class ProductionController
   @Autowired
   private MessageSource messageSource;
 
-  // TODO : externaliser le stockage des fichiers
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
@@ -90,11 +98,28 @@ public class ProductionController
       
       if ((numeroUser == 0) || (p.getNumeroGestionnaire() == numeroUser))
       {
-        Resource r = new ByteArrayResource(p.getArchiveAsBinary());
+        byte[] data = null;
+        
+        File f = new File("../uploads", p.getNomLocal());
+        
+        try 
+        {
+          data = new byte[(int) Math.min(f.length(), Integer.MAX_VALUE)]; //  limitation : 2 Go
+
+          FileInputStream fis = new FileInputStream(f);
+          
+          fis.read(data);
+          fis.close();
+        } 
+        catch (Exception e) { data = new byte[]{}; }
+        
+        
+        Resource r = new ByteArrayResource(data);
         
         return ResponseEntity
                 .ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + p.getNomArchive() + "\"")
+                .header(HttpHeaders.CONTENT_LENGTH, "" + data.length)
                 .header(HttpHeaders.CONTENT_TYPE, "application/zip")
                 .body(r); 
       }
@@ -169,10 +194,28 @@ public class ProductionController
       fresh.setPlateforme(production.plateforme());
       fresh.setCommentaire(production.commentaire());
       fresh.setInformationsPrivees(production.informationsPrivees());
-
       fresh.setParticipant(participant);
-      fresh.setNomArchive(production.nomArchive());
-      fresh.setArchive(production.archive());
+      
+      try 
+      { 
+        String nomLocal = UUID.nameUUIDFromBytes(production.nomArchive().getBytes()).toString() + ".zip";
+        
+        String donnees = production.archive();
+        
+        if (donnees.startsWith("data:") && donnees.contains(",")) { donnees = donnees.split(",")[1]; } 
+
+        File f = new File("../uploads", nomLocal);
+        
+        FileOutputStream fos = new FileOutputStream(f);
+
+        fos.write(Base64.getDecoder().decode(donnees));
+        fos.close();
+        
+        fresh.setNomArchive(production.nomArchive());
+        fresh.setNomLocal(nomLocal);
+      } 
+      catch(Exception e) { LOG.error(e.toString()); fresh.setNomArchive(null); fresh.setNomLocal(null); }
+      
       fresh.setVignette(production.vignette());
       fresh.setNumeroVersion(production.numeroVersion());
       
@@ -263,14 +306,40 @@ public class ProductionController
             {
               if (!(production.nomArchive().isBlank()))
               {
-                found.setNomArchive(production.nomArchive());
-                found.setArchive(production.archive());
-                found.setNumeroVersion(found.getNumeroVersion() + 1);
-                
-                productionRepository.save(found);
-           
                 MessagesTransfer mt = new MessagesTransfer();
-                mt.setInformation(messageSource.getMessage("production.file.updated", null, locale));
+               
+                try 
+                { 
+                  String nomLocal = UUID.nameUUIDFromBytes(production.nomArchive().getBytes()).toString() + ".zip";
+                  
+                  String donnees = production.archive();
+                  
+                  if (donnees.startsWith("data:") && donnees.contains(",")) { donnees = donnees.split(",")[1]; } 
+
+                  File f = new File("../uploads", nomLocal);
+                  
+                  FileOutputStream fos = new FileOutputStream(f);
+
+                  fos.write(Base64.getDecoder().decode(donnees));
+                  fos.close();
+                  
+                  found.setNomArchive(production.nomArchive());
+                  found.setNomLocal(nomLocal);
+                  found.setNumeroVersion(found.getNumeroVersion() + 1);
+                  
+                  mt.setInformation(messageSource.getMessage("production.file.updated", null, locale));
+                } 
+                catch(Exception e) 
+                { 
+                  LOG.error(e.toString()); 
+                  
+                  found.setNomArchive(null); 
+                  found.setNomLocal(null); 
+                  
+                  mt.setErreur(e.toString());
+                }
+
+                productionRepository.save(found);
 
                 return ResponseEntity.ok(mt);
               }

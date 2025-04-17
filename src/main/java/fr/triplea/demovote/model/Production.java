@@ -97,12 +97,11 @@ public class Production
 
   private String informationsPrivees;
 
-  @Column(length = 256)
+  @Column(name="nom_archive", length = 256)
   private String nomArchive;
 
-  @Lob @JdbcTypeCode(Types.BINARY)
-  @Column(name="archive")
-  private byte[] archive;
+  @Column(name="nom_local", length = 256)
+  private String nomLocal;
 
   @Lob @JdbcTypeCode(Types.BINARY)
   @Column(name="vignette")
@@ -209,20 +208,13 @@ public class Production
   public void setNomArchive(String str) { if (str != null) { this.nomArchive = StringUtils.truncate(str, 256); } }
   public String getNomArchive() { return this.nomArchive; }
   
-  public void setArchive(String a) 
-  { 
-    if (a.startsWith("data:") && a.contains(",")) { a = a.split(",")[1]; } 
-  
-    try { this.archive = Base64.getDecoder().decode(a); } catch(Exception e) { this.archive = null; }
-  }
-  @Transient
-  public void setArchive(byte[] a) { this.archive = (a == null) ? null : a.clone(); }
-  public String getArchive() { if (this.archive == null) { return ""; } return "data:application/zip;base64," + Base64.getEncoder().encodeToString(this.archive); }
-  @Transient
-  public byte[] getArchiveAsBinary() { return this.archive; }
-  
+  public void setNomLocal(String str) { if (str != null) { this.nomLocal = StringUtils.truncate(str, 256); } }
+  public String getNomLocal() { return this.nomLocal; }
+
   public void setVignette(String v) 
   { 
+    // TODO : vignette par défaut, selon le type
+    
     String[] s;
     
     if (v.startsWith("data:") && v.contains(",")) 
@@ -314,7 +306,6 @@ public class Production
            .append(", plateforme=").append(plateforme)
            .append(", commentaire=").append(commentaire)
            .append(", nomArchive=").append(nomArchive)
-           .append(", archive=").append("" + archive.length + " bytes")
            .append(", vignette=").append("" + vignette.length + " bytes")
            .append(", version=").append(numeroVersion)
            .append(", créé=").append(dateCreation)

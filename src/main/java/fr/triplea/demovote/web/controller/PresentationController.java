@@ -1,12 +1,22 @@
 package fr.triplea.demovote.web.controller;
 
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +25,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
+import org.vandeseer.easytable.OverflowOnSamePageRepeatableHeaderTableDrawer;
+import org.vandeseer.easytable.settings.HorizontalAlignment;
+import org.vandeseer.easytable.structure.Row;
+import org.vandeseer.easytable.structure.Table;
+import org.vandeseer.easytable.structure.cell.TextCell;
 
 import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.dao.PresentationRepository;
@@ -31,8 +46,10 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/presentation")
 public class PresentationController 
 {
+  @SuppressWarnings("unused") 
+  private static final Logger LOG = LoggerFactory.getLogger(PresentationController.class);
 
-  // TODO version PDF imprimable pour MrBio (pour la répartition à la remise des lots pendant l'affichage des résultats)
+  // TODO préparer média à partir de l'archive uploadée, pour les présentation + flag "préparé" sur chaque production présentée
   // TODO version diaporama pour affichage sur écran de régie
   // TODO raccourci 'ouvrir / fermer / calculer' les votes
   
@@ -64,6 +81,157 @@ public class PresentationController
     return ret;  
   }
 
+  private final static String LETTRES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  @GetMapping(value = "/file")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Resource> getPresentationsVersionPDF(HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    List<Categorie> categories = categorieRepository.findAll();
+    
+    List<ProductionShort> productions = productionRepository.findLinkedWithoutArchive();
+   
+    if ((categories != null) && (productions != null)) 
+    { 
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      
+      try 
+      {
+        PDDocument document = new PDDocument();
+        
+        document.isAllSecurityToBeRemoved();
+
+        float POINTS_PER_INCH = 72;
+        float POINTS_PER_MM = 1 / (10 * 2.54f) * POINTS_PER_INCH;
+
+        PDRectangle A4_paysage = new PDRectangle(297 * POINTS_PER_MM, 210 * POINTS_PER_MM);
+        
+        Table.TableBuilder tb = Table.builder().addColumnsOfWidth(20f, 100f, 100f, 100f, 105f, 190f, 190f).padding(4);
+
+        for (Categorie categorie: categories)
+        {
+          if (categorie.isAvailable())
+          {
+            tb.addRow(createTitleRow(categorie.getLibelle()));
+            tb.addRow(createHeaderRow(locale));
+
+            int nombre = 0;
+            
+            if ((productions.size() > 0)) 
+            { 
+              for (ProductionShort production: productions) 
+              { 
+                if (production.numeroCategorie() == categorie.getNumeroCategorie())
+                {
+                  nombre++;
+                  
+                  tb.addRow(createProductionRow(production, nombre));
+                }
+              } 
+            } 
+            
+            tb.addRow(createTitleRow(categorie.getLibelle() + " : " + nombre + " " + messageSource.getMessage("show.pdf.productions", null, locale)));
+            tb.addRow(createEmptyRow());
+           }
+        }
+
+        OverflowOnSamePageRepeatableHeaderTableDrawer.builder()
+          .table(tb.build())
+          .startX(15f)
+          .startY(A4_paysage.getUpperRightY() - 15f)
+          .lanesPerPage(1)
+          .numberOfRowsToRepeat(0)
+          .spaceInBetween(1)
+          .endY(15f) // note: if not set, table is drawn over the end of the page
+          .build()
+          .draw(() -> document, () -> new PDPage(A4_paysage), 100f);
+
+        document.save(baos);
+        document.close();
+        
+        baos.close();
+      } 
+      catch (Exception e) { LOG.error(e.toString()); }
+       
+      byte[] binaire = baos.toByteArray();
+
+      Resource r = new ByteArrayResource(binaire);
+      
+      return ResponseEntity
+              .ok()
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"presentations.pdf\"")
+              .header(HttpHeaders.CONTENT_LENGTH, "" + binaire.length)
+              .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+              .body(r); 
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+  private Row createTitleRow(String str) 
+  {
+    return Row.builder()
+              .add(TextCell.builder().text(str).colSpan(7).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0.1f).build())
+              .build();
+  }
+  private Row createEmptyRow() 
+  {
+    return Row.builder()
+              .add(TextCell.builder().text(" ").colSpan(7).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0).build())
+              .build();
+  }
+  private Row createHeaderRow(Locale locale) 
+  {
+    return Row.builder()
+              .add(createHeaderCell(""))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.title", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.authors", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.groups", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.manager", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.comments", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.private", null, locale)))
+              .build();
+  }
+  private TextCell createHeaderCell(String str)
+  {
+    return TextCell.builder()
+                   .text(str)
+                   .backgroundColor(Color.GRAY)
+                   .textColor(Color.WHITE)
+                   .horizontalAlignment(HorizontalAlignment.LEFT)
+                   .borderWidth(0.1f)
+                   .fontSize(8)
+                   .build();
+  }
+  private Row createProductionRow(ProductionShort production, int nombre) 
+  {
+    return Row.builder()
+              .add(createCell("#" + (nombre < 27 ? LETTRES.charAt(nombre - 1) : "?")))
+              .add(createCell(production.titre()))
+              .add(createCell(production.auteurs()))
+              .add(createCell(production.groupes()))
+              .add(createCell(production.nomGestionnaire()))
+              .add(createCell(production.commentaire()))
+              .add(createCell(production.informationsPrivees()))
+              .build();
+  }
+  private TextCell createCell(String str)
+  {
+    return TextCell.builder()
+                   .text(str)
+                   .backgroundColor(Color.WHITE)
+                   .textColor(Color.BLACK)
+                   .horizontalAlignment(HorizontalAlignment.LEFT)
+                   .borderWidth(0.1f)
+                   .fontSize(8)
+                   .build();
+  }
+
+  
+  
+  
+  
   
   @GetMapping(value = "/list-linked/{id}")
   @PreAuthorize("hasRole('ADMIN')")
@@ -265,5 +433,5 @@ public class PresentationController
      
     return ResponseEntity.notFound().build(); 
   }
-
+  
 }

@@ -1,14 +1,22 @@
 package fr.triplea.demovote.model;
 
+import java.sql.Types;
+import java.util.Base64;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.springframework.util.StringUtils;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity(name = "vote.presentations")
 @Table(name = "presentations")
@@ -29,6 +37,13 @@ public class Presentation
   private Production production;
   
   private Integer numeroOrdre;
+  
+  @Column(name="media_mime", length = 128)
+  private String mediaMime = "application/octet-stream";
+
+  @Lob @JdbcTypeCode(Types.BINARY)
+  @Column(name="media_data")
+  private byte[] mediaData;
 
   private Integer nombrePoints;
 
@@ -49,6 +64,28 @@ public class Presentation
   
   public void setNumeroOrdre(int n) { this.numeroOrdre = Integer.valueOf(n); }
   public Integer getNumeroOrdre() { return this.numeroOrdre; }
+  
+  public void setMediaMime(String str) { if (str != null) { this.mediaMime = StringUtils.truncate(str, 128); } }
+  public String getMediaMime() { return this.mediaMime; }
+
+  public void setMediaData(String a) 
+  { 
+    if (a.startsWith("data:") && a.contains(",")) { a = a.split(",")[1]; } 
+  
+    try { this.mediaData = Base64.getDecoder().decode(a); } catch(Exception e) { this.mediaData = null; }
+  }
+  @Transient
+  public void setMediaData(byte[] a) { this.mediaData = (a == null) ? null : a.clone(); }
+  public String getMediaData() 
+  { 
+    if (this.mediaData == null) { return ""; } 
+    
+    return "data:" + this.mediaMime + "," + Base64.getEncoder().encodeToString(this.mediaData); 
+  }
+  @Transient
+  public byte[] getMediaDataAsBinary() { return this.mediaData; }
+  @Transient
+  public long getMediaDataSize() { if (this.mediaData == null) { return 0; } return this.mediaData.length; }
   
   public void setNombrePoints(int n) { this.nombrePoints = Integer.valueOf(n); }
   public Integer getNombrePoints() { return this.nombrePoints; }

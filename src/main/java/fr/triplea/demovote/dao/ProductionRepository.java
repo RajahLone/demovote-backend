@@ -35,7 +35,8 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "p.nom_archive, "
               + "p.vignette, "
               + "p.numero_version,"
-              + "0 AS numero_categorie "
+              + "0 AS numero_categorie, "
+              + "0 AS ordre_presentation "
               + "FROM vote.productions AS p "
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
               + "WHERE p.flag_actif IS TRUE "
@@ -62,7 +63,8 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "p.nom_archive, "
               + "p.vignette, "
               + "p.numero_version,"
-              + "0 AS numero_categorie "
+              + "0 AS numero_categorie, "
+              + "0 AS ordre_presentation "
               + "FROM vote.productions AS p "
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
               + "WHERE p.numero_production = :numeroProduction "
@@ -86,13 +88,15 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
               + "p.nom_archive, "
               + "p.vignette, "
               + "p.numero_version,"
-              + "s.numero_categorie "
+              + "s.numero_categorie, "
+              + "((c.numero_ordre * 10000) + s.numero_ordre) AS ordre_presentation "
               + "FROM vote.productions AS p "
               + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
               + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+              + "INNER JOIN vote.categories AS c ON s.numero_categorie = c.numero_categorie "
               + "WHERE p.flag_actif IS TRUE "
-              + "ORDER BY p.titre ASC ")
-  List<ProductionShort> findLinkedWithoutArchive();
+              + "ORDER BY ordre_presentation ASC, p.titre ASC ")
+  List<ProductionShort> findLinkedWithoutArchive(); // TODO ordonner par ordre de présentation
 
   @NativeQuery("SELECT DISTINCT " 
       + "p.numero_production, "

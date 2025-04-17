@@ -21,7 +21,8 @@ public record ProductionShort
   String nomArchive,
   byte[] vignette,
   Integer numeroVersion,
-  Integer numeroCategorie
+  Integer numeroCategorie,
+  Integer ordrePresentation
 ) 
 { 
   public Production toProduction() 
