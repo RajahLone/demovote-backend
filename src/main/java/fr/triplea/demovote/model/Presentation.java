@@ -37,7 +37,10 @@ public class Presentation
   private Production production;
   
   private Integer numeroOrdre;
-  
+ 
+  @Column(name = "flag_media")
+  private Integer etatMedia = 0; // 0 = non traité, 1 = média en place pour présentation, 2 = média externe (trop gros ou exécutable à lancer sur machine spécifique)
+
   @Column(name="media_mime", length = 128)
   private String mediaMime = "application/octet-stream";
 
@@ -64,6 +67,9 @@ public class Presentation
   
   public void setNumeroOrdre(int n) { this.numeroOrdre = Integer.valueOf(n); }
   public Integer getNumeroOrdre() { return this.numeroOrdre; }
+  
+  public void setEtatMedia(int n) { this.etatMedia = Integer.valueOf(n); }
+  public Integer getEtatMedia() { return this.etatMedia; }
   
   public void setMediaMime(String str) { if (str != null) { this.mediaMime = StringUtils.truncate(str, 128); } }
   public String getMediaMime() { return this.mediaMime; }

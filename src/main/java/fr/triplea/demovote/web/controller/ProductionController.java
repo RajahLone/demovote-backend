@@ -88,7 +88,7 @@ public class ProductionController
   @ResponseBody
   public ResponseEntity<Resource> getFile(@PathVariable int id, final Authentication authentication) 
   {
-    // TODO : après résultats affichés, download autorisé pour tous
+    // TODO après résultats affichés, download autorisé pour tous
     
     Production p = productionRepository.findById(id);
     

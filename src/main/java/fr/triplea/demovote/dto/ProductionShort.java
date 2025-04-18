@@ -22,7 +22,8 @@ public record ProductionShort
   byte[] vignette,
   Integer numeroVersion,
   Integer numeroCategorie,
-  Integer ordrePresentation
+  Integer ordrePresentation,
+  Integer etatMedia
 ) 
 { 
   public Production toProduction() 
@@ -53,6 +54,7 @@ public record ProductionShort
     p.setVignette(vignette);
     p.setNumeroVersion(numeroVersion);
     p.setNumeroCategorie(numeroCategorie);
+    p.setEtatMedia(etatMedia);
     
     return p;
   }  

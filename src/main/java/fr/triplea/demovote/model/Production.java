@@ -213,7 +213,7 @@ public class Production
 
   public void setVignette(String v) 
   { 
-    // TODO : vignette par défaut, selon le type
+    // TODO vignette par défaut, selon le type
     
     String[] s;
     
@@ -254,6 +254,13 @@ public class Production
   public void setNumeroCategorie(int n) { this.numeroCategorie = Integer.valueOf(n); }
   @Transient
   public Integer getNumeroCategorie() { return this.numeroCategorie; }
+  
+  @Transient
+  private Integer etatMedia = 0;
+  @Transient
+  public void setEtatMedia(int n) { this.etatMedia = Integer.valueOf(n); }
+  @Transient
+  public Integer getEtatMedia() { return this.etatMedia; }
 
 
   @Override

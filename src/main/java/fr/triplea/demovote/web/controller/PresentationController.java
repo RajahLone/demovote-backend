@@ -51,7 +51,7 @@ public class PresentationController
 
   // TODO préparer média à partir de l'archive uploadée, pour les présentation + flag "préparé" sur chaque production présentée
   // TODO version diaporama pour affichage sur écran de régie
-  // TODO raccourci 'ouvrir / fermer / calculer' les votes
+  // TODO raccourci ouvrir/fermer/calculer les votes
   
   @Autowired
   private PresentationRepository presentationRepository;
