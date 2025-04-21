@@ -1,8 +1,13 @@
 package fr.triplea.demovote.model;
 
+import java.io.ByteArrayInputStream;
 import java.sql.Types;
 import java.util.Base64;
 
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.util.StringUtils;
 
@@ -42,7 +47,7 @@ public class Presentation
   private Integer etatMedia = 0; // 0 = non traité, 1 = média en place pour présentation, 2 = média externe (trop gros ou exécutable à lancer sur machine spécifique)
 
   @Column(name="media_mime", length = 128)
-  private String mediaMime = "application/octet-stream";
+  private String mediaMime;
 
   @Lob @JdbcTypeCode(Types.BINARY)
   @Column(name="media_data")
@@ -74,19 +79,37 @@ public class Presentation
   public void setMediaMime(String str) { if (str != null) { this.mediaMime = StringUtils.truncate(str, 128); } }
   public String getMediaMime() { return this.mediaMime; }
 
-  public void setMediaData(String a) 
+  @Transient
+  public void setMediaData(String a, String n) 
   { 
+    if (a == null) { this.mediaData = null; this.mediaMime = null; return; }
+    
     if (a.startsWith("data:") && a.contains(",")) { a = a.split(",")[1]; } 
   
     try { this.mediaData = Base64.getDecoder().decode(a); } catch(Exception e) { this.mediaData = null; }
+    
+    try 
+    {
+      byte[] debut = new byte[Math.min(this.mediaData.length, 32000)];
+
+      ByteArrayInputStream bais = new ByteArrayInputStream(debut);
+
+      TikaConfig tika = new TikaConfig();
+      
+      Metadata meta = new Metadata();
+      
+      meta.set(TikaCoreProperties.RESOURCE_NAME_KEY, n);
+
+      this.mediaMime = tika.getDetector().detect(TikaInputStream.get(bais), meta).toString();
+    } 
+    catch (Exception e) { this.mediaMime = "application/octet-stream"; }
   }
-  @Transient
   public void setMediaData(byte[] a) { this.mediaData = (a == null) ? null : a.clone(); }
   public String getMediaData() 
   { 
     if (this.mediaData == null) { return ""; } 
     
-    return "data:" + this.mediaMime + "," + Base64.getEncoder().encodeToString(this.mediaData); 
+    return "data:" + this.mediaMime + ";base64," + Base64.getEncoder().encodeToString(this.mediaData); 
   }
   @Transient
   public byte[] getMediaDataAsBinary() { return this.mediaData; }

@@ -16,6 +16,9 @@ public interface PresentationRepository extends JpaRepository<Presentation, Inte
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.presentations AS p WHERE p.numero_categorie = :numero_cat AND p.numero_production = :numero_prod ")
   Presentation findByCategorieAndProduction(@Param("numero_cat") int numeroCategorie, @Param("numero_prod") int numeroProduction);
+
+  @NativeQuery("SELECT DISTINCT p.* FROM vote.presentations AS p WHERE p.numero_production = :numero_prod ")
+  Presentation findByProduction(@Param("numero_prod") int numeroProduction);
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.presentations AS p WHERE p.numero_categorie = :numero ORDER BY p.numero_ordre ASC ")
   List<Presentation> findByCategorie(@Param("numero") int numeroCategorie);

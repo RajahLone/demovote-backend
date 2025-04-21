@@ -21,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +37,7 @@ import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.dao.PresentationRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
+import fr.triplea.demovote.dto.PresentationFile;
 import fr.triplea.demovote.dto.ProductionItem;
 import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.model.Categorie;
@@ -46,10 +49,9 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/presentation")
 public class PresentationController 
 {
-  @SuppressWarnings("unused") 
+  //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(PresentationController.class);
 
-  // TODO préparer média à partir de l'archive uploadée, pour les présentation + flag "préparé" sur chaque production présentée
   // TODO version diaporama pour affichage sur écran de régie
   // TODO raccourci ouvrir/fermer/calculer les votes
   
@@ -434,4 +436,68 @@ public class PresentationController
     return ResponseEntity.notFound().build(); 
   }
   
+  
+  
+
+  @GetMapping(value = "/formfile/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<PresentationFile> getFormFile(@PathVariable int id)
+  { 
+    Presentation found = presentationRepository.findByProduction(id);
+    
+    if (found != null) 
+    { 
+      return ResponseEntity.ok(new PresentationFile(found.getProduction().getNumeroProduction(), found.getEtatMedia(), found.getMediaMime(), found.getMediaData(), "")); 
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+
+  @PutMapping(value = "/upload/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) PresentationFile presentation, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Presentation found = presentationRepository.findByProduction(id);
+    
+    if (found != null)
+    {
+      if (presentation.mediaData() != null)
+      {
+        int etat = presentation.etatMedia();
+        String nom = presentation.mediaName();
+         
+        if (presentation.mediaData() == null) { etat = 0; }
+        
+        MessagesTransfer mt = new MessagesTransfer();
+        
+        switch (etat)
+        {
+        case 1: 
+          found.setEtatMedia(1); 
+          found.setMediaData(presentation.mediaData(), nom);
+          mt.setInformation(messageSource.getMessage("show.file.loaded", null, locale));
+          break;
+        case 2: 
+          found.setEtatMedia(2);
+          found.setMediaData(null, null);
+          mt.setInformation(messageSource.getMessage("show.file.acknowlegded", null, locale));
+          break;
+        default: 
+          found.setEtatMedia(0); 
+          found.setMediaData(null, null);
+          mt.setInformation(messageSource.getMessage("show.file.cleaned", null, locale));
+          break;
+        }
+
+        presentationRepository.save(found);
+
+        return ResponseEntity.ok(mt);
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+
 }

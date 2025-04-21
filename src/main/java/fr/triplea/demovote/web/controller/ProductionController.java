@@ -50,7 +50,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/production")
 public class ProductionController 
 {
-  @SuppressWarnings("unused") 
+  //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(ProductionController.class);
 
   @Autowired
