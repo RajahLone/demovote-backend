@@ -211,17 +211,14 @@ public class Production
   public void setNomLocal(String str) { if (str != null) { this.nomLocal = StringUtils.truncate(str, 256); } }
   public String getNomLocal() { return this.nomLocal; }
 
+  @Transient
   public void setVignette(String v) 
   { 
-    // TODO vignette par défaut, selon le type
-    
+    if (v == null) { this.vignette = null; return; }
+        
     String[] s;
     
-    if (v.startsWith("data:") && v.contains(",")) 
-    { 
-      s = v.split(",");
-      v = s[1]; 
-    } 
+    if (v.startsWith("data:") && v.contains(",")) { s = v.split(","); v = s[1]; } 
     
     try 
     { 

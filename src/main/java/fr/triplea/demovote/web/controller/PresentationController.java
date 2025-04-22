@@ -447,7 +447,7 @@ public class PresentationController
     
     if (found != null) 
     { 
-      return ResponseEntity.ok(new PresentationFile(found.getProduction().getNumeroProduction(), found.getEtatMedia(), found.getMediaMime(), found.getMediaData(), "")); 
+      return ResponseEntity.ok(new PresentationFile(found.getProduction().getNumeroProduction(), found.getEtatMedia(), found.getMimeMedia(), found.getDataMediaAsString(), "")); 
     }
     
     return ResponseEntity.notFound().build();
@@ -476,17 +476,17 @@ public class PresentationController
         {
         case 1: 
           found.setEtatMedia(1); 
-          found.setMediaData(presentation.mediaData(), nom);
+          found.setDataMedia(presentation.mediaData(), nom);
           mt.setInformation(messageSource.getMessage("show.file.loaded", null, locale));
           break;
         case 2: 
           found.setEtatMedia(2);
-          found.setMediaData(null, null);
+          found.setDataMedia(null, null);
           mt.setInformation(messageSource.getMessage("show.file.acknowlegded", null, locale));
           break;
         default: 
           found.setEtatMedia(0); 
-          found.setMediaData(null, null);
+          found.setDataMedia(null, null);
           mt.setInformation(messageSource.getMessage("show.file.cleaned", null, locale));
           break;
         }

@@ -46,12 +46,12 @@ public class Presentation
   @Column(name = "flag_media")
   private Integer etatMedia = 0; // 0 = non traité, 1 = média en place pour présentation, 2 = média externe (trop gros ou exécutable à lancer sur machine spécifique)
 
-  @Column(name="media_mime", length = 128)
-  private String mediaMime;
+  @Column(name="mime_media", length = 128)
+  private String mimeMedia;
 
   @Lob @JdbcTypeCode(Types.BINARY)
-  @Column(name="media_data")
-  private byte[] mediaData;
+  @Column(name="data_media")
+  private byte[] dataMedia;
 
   private Integer nombrePoints;
 
@@ -76,21 +76,23 @@ public class Presentation
   public void setEtatMedia(int n) { this.etatMedia = Integer.valueOf(n); }
   public Integer getEtatMedia() { return this.etatMedia; }
   
-  public void setMediaMime(String str) { if (str != null) { this.mediaMime = StringUtils.truncate(str, 128); } }
-  public String getMediaMime() { return this.mediaMime; }
+  public void setMimeMedia(String str) { if (str != null) { this.mimeMedia = StringUtils.truncate(str, 128); } }
+  public String getMimeMedia() { return this.mimeMedia; }
 
+  public void setDataMedia(byte[] a) { this.dataMedia = (a == null) ? null : a.clone(); }
+  public byte[] getDataMedia() { return this.dataMedia; }
   @Transient
-  public void setMediaData(String a, String n) 
+  public void setDataMedia(String a, String n) 
   { 
-    if (a == null) { this.mediaData = null; this.mediaMime = null; return; }
+    if (a == null) { this.dataMedia = null; this.mimeMedia = null; return; }
     
     if (a.startsWith("data:") && a.contains(",")) { a = a.split(",")[1]; } 
   
-    try { this.mediaData = Base64.getDecoder().decode(a); } catch(Exception e) { this.mediaData = null; }
+    try { this.dataMedia = Base64.getDecoder().decode(a); } catch(Exception e) { this.dataMedia = null; }
     
     try 
     {
-      byte[] debut = new byte[Math.min(this.mediaData.length, 32000)];
+      byte[] debut = new byte[Math.min(this.dataMedia.length, 32000)];
 
       ByteArrayInputStream bais = new ByteArrayInputStream(debut);
 
@@ -100,21 +102,19 @@ public class Presentation
       
       meta.set(TikaCoreProperties.RESOURCE_NAME_KEY, n);
 
-      this.mediaMime = tika.getDetector().detect(TikaInputStream.get(bais), meta).toString();
+      this.mimeMedia = tika.getDetector().detect(TikaInputStream.get(bais), meta).toString();
     } 
-    catch (Exception e) { this.mediaMime = "application/octet-stream"; }
+    catch (Exception e) { this.mimeMedia = "application/octet-stream"; }
   }
-  public void setMediaData(byte[] a) { this.mediaData = (a == null) ? null : a.clone(); }
-  public String getMediaData() 
+  @Transient
+  public String getDataMediaAsString() 
   { 
-    if (this.mediaData == null) { return ""; } 
+    if (this.dataMedia == null) { return ""; } 
     
-    return "data:" + this.mediaMime + ";base64," + Base64.getEncoder().encodeToString(this.mediaData); 
+    return "data:" + this.mimeMedia + ";base64," + Base64.getEncoder().encodeToString(this.dataMedia); 
   }
   @Transient
-  public byte[] getMediaDataAsBinary() { return this.mediaData; }
-  @Transient
-  public long getMediaDataSize() { if (this.mediaData == null) { return 0; } return this.mediaData.length; }
+  public long getDataMediaSize() { if (this.dataMedia == null) { return 0; } return this.dataMedia.length; }
   
   public void setNombrePoints(int n) { this.nombrePoints = Integer.valueOf(n); }
   public Integer getNombrePoints() { return this.nombrePoints; }
