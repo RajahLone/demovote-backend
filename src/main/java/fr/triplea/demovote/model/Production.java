@@ -198,6 +198,8 @@ public class Production
   
   public void setPlateforme(String str) { if (str != null) { this.plateforme = StringUtils.truncate(str, 128); } }
   public String getPlateforme() { return this.plateforme; }
+  @Transient
+  public boolean hasPlateforme() { if (this.plateforme == null) { return false; } return (this.plateforme.length() > 0); }
   
   public void setCommentaire(String str) { this.commentaire = new String(str); }
   public String getCommentaire() { return this.commentaire; }

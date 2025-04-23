@@ -3,6 +3,8 @@ package fr.triplea.demovote.web.controller;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -13,6 +15,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -20,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -231,6 +235,8 @@ public class PresentationController
   }
 
   
+  @Value("classpath:styles/diapos.css")
+  private Resource styleDiaposResource;
   
   @GetMapping(value = "/diapos/{id}")
   @PreAuthorize("hasRole('ADMIN')")
@@ -248,40 +254,25 @@ public class PresentationController
          
       StringBuffer sb = new StringBuffer();
 
-      sb.append("<html>\n");
-      sb.append("<header>\n");
-      
-      // TODO version diaporama en HTML pour affichage sur écran de régie
-
-      /*
-       .diapo_compo_start {  }
-       .diapo_compo_page {  }
-       .diapo_compo_finish {  }
-       .diapo_bouton {  }
-       .diapo_compo {  }
-       .diapo_order {  }
-       .diapo_title {  }
-       .diapo_authors {  }
-       .diapo_comments {  }
-       .diapo_warning {  }
-       .diapo_alert {  }
-       .diapo_image_container {  }
-       .diapo_image_content {  }
-       .diapo_image {  }
-       .diapo_audio_container {  }
-       .diapo_video_container {  }
-      */
-      
-      sb.append("</header>\n");
+      sb.append("<!doctype html>\n");
+      sb.append("<html lang=\"").append(locale.stripExtensions().toString()).append("\">\n");
+      sb.append("<head>\n");
+      sb.append("<title>").append(libelleCategorie).append("</title>\n");
+      sb.append("<style>\n");
+      try { sb.append(StreamUtils.copyToString(styleDiaposResource.getInputStream(), Charset.defaultCharset())); } catch (IOException e) { LOG.error(e.toString()); }
+      sb.append("</style>\n");
+      sb.append("</head>\n\n");
       sb.append("<body>\n");
 
-      sb.append("<div class=\"diapo_compo_start\" id=\"diapo_page_0\">\n");
+      sb.append("<div class=\"diapo_start\" id=\"diapo_page_0\">\n");
       
-        sb.append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_range\">").append(messageSource.getMessage("show.file.starting", null, locale)).append("</div>\n");
 
-        sb.append("<div class=\"diapo_hub\">\n");
-        sb.append("<button class=\"diapo_bouton\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9658;</button>\n");
-        sb.append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_hub\">\n");
+      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" style=\"visibility:hidden;\">&#9665;</button>\n");
+      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_next(0);\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9655;</button>\n");
+      sb.append("\t").append("</div>\n");
       
       sb.append("</div>\n");
 
@@ -292,70 +283,84 @@ public class PresentationController
         Presentation d = presentations.get(i);
         Production p = d.getProduction();
 
-        sb.append("<div class=\"diapo_compo_page\" id=\"diapo_page_" + n + "\">\n");
+        sb.append("<div class=\"diapo_page\" id=\"diapo_page_" + n + "\">\n");
 
-          sb.append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
-          sb.append("<div class=\"diapo_order\">").append("#").append((i < 26) ? LETTRES.charAt(i) : "?").append("</div>\n");
-          sb.append("<div class=\"diapo_title\">").append(p.getTitre()).append("</div>\n");
-          sb.append("<div class=\"diapo_authors\">").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
-          sb.append("<div class=\"diapo_comments\">").append(p.getCommentaire()).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_order\">").append("#").append((i < 26) ? LETTRES.charAt(i) : "?").append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_title\">").append(p.getTitre()).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_authors\">").append(messageSource.getMessage("show.file.by", null, locale)).append(" ").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_comments\">");
+        if (p.hasPlateforme()) { sb.append(messageSource.getMessage("show.file.on", null, locale)).append(" ").append(p.getPlateforme()).append("<br/>"); }
+        sb.append(p.getCommentaire()).append("</div>\n");
 
-        switch (d.getEtatMedia())
+        if (d.getEtatMedia() == 1)
         {
-        case 1:
-          
           if (d.getMimeMedia().startsWith("image/"))
           {
-            sb.append("<div id=\"\" class=\"diapo_image_container\"><div class=\" class=\"diapo_image_content\">");
-            sb.append("<img src=\"").append(d.getDataMediaAsString()).append("\" alt=\"\" class=\"diapo_image\" />");
-            sb.append("</div></div>\n");
+            sb.append("\t").append("<div id=\"diapo_pict_").append(n).append("\" class=\"diapo_image_container\">\n");
+            sb.append("\t").append("\t").append("<div class=\"diapo_image_content\" onClick=\"pict_hide(").append(n).append(");\"><img src=\"").append(d.getDataMediaAsString()).append("\" alt=\"\" class=\"diapo_image\" /></div>\n");
+            sb.append("\t").append("</div>\n");
           }
           else if (d.getMimeMedia().startsWith("audio/"))
           {
-            sb.append("<div id=\"\" class=\"diapo_audio_container\">");
-            sb.append("<audio controls><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</audio>");
-            sb.append("</div>\n");
+            sb.append("\t").append("<div id=\"diapo_file_").append(n).append("\" class=\"diapo_audio_container\">\n");
+            sb.append("\t").append("\t").append("<audio controls><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</audio>\n");
+            sb.append("\t").append("</div>\n");
           }
           else if (d.getMimeMedia().startsWith("video/"))
           {
-            sb.append("<div id=\"\" class=\"diapo_video_container\">");
-            sb.append("<video controls width=\"480\" height=\"240\"><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />");
-            sb.append("</video>");
-            sb.append("</div>\n");
+            sb.append("\t").append("<div id=\"diapo_file_").append(n).append("\" class=\"diapo_video_container\">\n");
+            sb.append("\t").append("\t").append("<video controls width=\"480\" height=\"240\"><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</video>\n");
+            sb.append("\t").append("</div>\n");
           }
-          
-          break;
-        case 2:
-
-          sb.append("<div class=\"diapo_warning\">").append(messageSource.getMessage("show.file.acknowlegded", null, locale)).append("</div>\n");
-
-          break;
-        default:
-
-          sb.append("<div class=\"diapo_alert\">").append(messageSource.getMessage("show.file.missing", null, locale)).append("</div>\n");
-          
-          break;
         }
 
-          sb.append("<div class=\"diapo_hub\">\n");
-          sb.append("<button class=\"diapo_bouton\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9668;</button>\n");
-          sb.append("<button class=\"diapo_bouton\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9658;</button>\n");
-          sb.append("</div>\n");
+        sb.append("\t").append("<div id=\"diapo_ctrl_").append(n).append("\" class=\"diapo_hub\">\n");
+        sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_prev(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9665;</button>\n");
+        sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_next(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9655;</button>\n");
+        if ((d.getEtatMedia() == 1))
+        {
+          if (d.getMimeMedia().startsWith("image/"))
+          {
+            sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"pict_open(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.open", null, locale)).append("\">&#9713;</button>\n");
+          }
+          else
+          {
+            sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"file_open(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.open", null, locale)).append("\">&#9713;</button>\n");
+          }
+        }
+        else if ((d.getEtatMedia() == 2))
+        {
+          sb.append("\t").append("\t").append("<button class=\"diapo_warning\">").append(messageSource.getMessage("show.file.acknowlegded", null, locale)).append("</button>\n");
+        }
+        else
+        {
+          sb.append("\t").append("\t").append("<button class=\"diapo_alert\">").append(messageSource.getMessage("show.file.missing", null, locale)).append("</button>\n");
+        }
+        sb.append("\t").append("</div>\n");
 
-        sb.append("</div>");
+        sb.append("</div>\n");
         n++;
       }
       
-      sb.append("<div class=\"diapo_compo_finish\" id=\"diapo_page_" + n + "\">\n");
+      sb.append("<div class=\"diapo_page\" id=\"diapo_page_" + n + "\">\n");
       
-        sb.append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_range\">").append(messageSource.getMessage("show.file.ending", null, locale)).append("</div>\n");
 
-        sb.append("<div class=\"diapo_hub\">\n");
-        sb.append("<button class=\"diapo_bouton\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9668;</button>\n");
-        sb.append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_hub\">\n");
+      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_prev(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9665;</button>\n");
+      sb.append("\t").append("</div>\n");
       
       sb.append("</div>\n");
 
+      sb.append("<script type=\"text/javascript\">\n");
+      sb.append("function show_prev(num) { var cur = document.getElementById(\"diapo_page_\" + num); var prv = document.getElementById(\"diapo_page_\" + (num - 1)); if (cur) { cur.style.visibility = 'hidden'; cur.style.display = 'none'; } if (prv) { prv.style.visibility = 'visible'; prv.style.display = 'block'; } }\n");
+      sb.append("function show_next(num) { var cur = document.getElementById(\"diapo_page_\" + num); var nxt = document.getElementById(\"diapo_page_\" + (num + 1)); if (cur) { cur.style.visibility = 'hidden'; cur.style.display = 'none'; } if (nxt) { nxt.style.visibility = 'visible'; nxt.style.display = 'block'; } }\n");
+      sb.append("function pict_open(num) { var hub = document.getElementById(\"diapo_ctrl_\" + num); var pic = document.getElementById(\"diapo_pict_\" + num); if (hub) { hub.style.visibility = 'hidden'; hub.style.display = 'none'; } if (pic) { pic.style.visibility = 'visible'; pic.style.display = 'block'; } }\n");
+      sb.append("function pict_hide(num) { var hub = document.getElementById(\"diapo_ctrl_\" + num); var pic = document.getElementById(\"diapo_pict_\" + num); if (hub) { hub.style.visibility = 'visible'; hub.style.display = 'block'; } if (pic) { pic.style.visibility = 'hidden'; pic.style.display = 'none'; } }\n");
+      sb.append("function file_open(num) { var fil = document.getElementById(\"diapo_file_\" + num); if (fil) { if (fil.style.visibility == 'visible') { fil.style.visibility = 'hidden'; fil.style.display = 'none'; } else { fil.style.visibility = 'visible'; fil.style.display = 'block'; } } }\n");
+      sb.append("</script>\n");
       sb.append("</body>\n");
       sb.append("</html>\n");
       
