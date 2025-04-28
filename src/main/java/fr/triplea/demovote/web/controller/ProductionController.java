@@ -4,6 +4,7 @@ package fr.triplea.demovote.web.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
@@ -53,7 +55,7 @@ public class ProductionController
 {
   //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(ProductionController.class);
-
+  
   @Autowired
   private ProductionRepository productionRepository;
 
@@ -347,6 +349,135 @@ public class ProductionController
             }
           }
         }
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+
+  @PostMapping(value = "/upload-chunk/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Object> upload_chunk(@PathVariable int id, @RequestParam String fileName, @RequestParam int chunkIndex, @RequestParam MultipartFile chunkData, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Production found = productionRepository.findById(id);
+    
+    if (found != null)
+    {
+      found.setEnabled(true);
+      
+      int numeroUser = this.getNumeroUser(authentication);
+
+      if ((numeroUser == 0) || (found.getNumeroGestionnaire() == numeroUser))
+      {
+        MessagesTransfer mt = new MessagesTransfer();
+
+        File dir = new File("../uploads-temp/" + fileName);
+        
+        if (!dir.exists()) { dir.mkdirs(); }
+
+        File chunkFile = new File(dir, "chunk_" + chunkIndex);
+        
+        boolean succes = false;
+
+        try 
+        { 
+          FileOutputStream os = new FileOutputStream(chunkFile);
+              
+          os.write(chunkData.getBytes());
+          os.close();
+          
+          succes = true;
+        }
+        catch (Exception e) 
+        { 
+          LOG.error(e.toString());
+          
+          succes = false;
+          
+          chunkFile.delete(); 
+        }
+        
+        if (chunkFile.exists()) { if (chunkFile.length() == chunkData.getSize()) { succes = true;  } }
+        
+        if (succes) { mt.setInformation(messageSource.getMessage("chunk.upload.success", new Object[] { chunkIndex, fileName }, locale)); } 
+               else { mt.setErreur(messageSource.getMessage("chunk.upload.failed", new Object[] { chunkIndex, fileName }, locale)); }
+        
+        return ResponseEntity.ok(mt);
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+  @PostMapping(value = "/merge-chunks/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Object> merge_chunks(@PathVariable int id, @RequestParam String fileName, @RequestParam int lastChunkIndex, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Production found = productionRepository.findById(id);
+    
+    if (found != null)
+    {
+      found.setEnabled(true);
+      
+      int numeroUser = this.getNumeroUser(authentication);
+
+      if ((numeroUser == 0) || (found.getNumeroGestionnaire() == numeroUser))
+      {
+        MessagesTransfer mt = new MessagesTransfer();
+
+        File dir = new File("../uploads-temp/" + fileName);
+        
+        String nomLocal = UUID.nameUUIDFromBytes(fileName.getBytes()).toString() + ".zip";
+
+        File fic = new File("../uploads/" + nomLocal);
+
+        boolean succes = false;
+        
+        LOG.info("dir.listFiles().length=" + dir.listFiles().length);
+        LOG.info("lastChunkIndex=" + lastChunkIndex);
+        
+        // TODO : vérifier nombre chunks, corriger fichier final (hash ?)
+        
+        try 
+        {
+          FileOutputStream os = new FileOutputStream(fic);
+          
+          for (int i = 0; i < dir.listFiles().length; i++)
+          {
+            File chunkFile = new File(dir, "chunk_" + i);
+                        
+            Files.copy(chunkFile.toPath(), os);
+            
+            chunkFile.delete();
+          }
+
+          found.setNomArchive(fileName);
+          found.setNomLocal(nomLocal);
+          found.setNumeroVersion(found.getNumeroVersion() + 1);
+
+          succes = true;
+        }
+        catch(Exception e) 
+        { 
+          LOG.error(e.toString());
+          
+          succes = false; 
+          
+          found.setNomArchive(null); 
+          found.setNomLocal(null); 
+        }
+
+        productionRepository.save(found);
+
+        if (succes) { dir.delete(); }
+        
+        if (succes) { mt.setInformation(messageSource.getMessage("chunk.merged.success", new Object[] { fileName }, locale)); }
+               else { mt.setErreur(messageSource.getMessage("chunk.merged.failed", new Object[] { fileName }, locale)); }
+        
+        return ResponseEntity.ok(mt);
       }
     }
     

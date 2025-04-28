@@ -69,6 +69,8 @@ public class ParticipantController
     
     if (choixTri == 1) { return participantRepository.getListOrderedByDateInscription(filtreNom, filtreStatut, filtreArrive); }
     
+    // TODO pagination pour réduire affichage
+    
     return participantRepository.getListOrderedByNom(filtreNom, filtreStatut, filtreArrive);
   }
 
