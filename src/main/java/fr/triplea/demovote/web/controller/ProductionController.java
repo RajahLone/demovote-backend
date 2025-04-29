@@ -4,14 +4,13 @@ package fr.triplea.demovote.web.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.tika.mime.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,10 +170,8 @@ public class ProductionController
 
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
+  public ResponseEntity<Integer> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
   { 
-    Locale locale = localeResolver.resolveLocale(request);
-
     Participant participant = participantRepository.findById(production.numeroParticipant());
 
     if (participant != null) 
@@ -199,35 +196,15 @@ public class ProductionController
       fresh.setInformationsPrivees(production.informationsPrivees());
       fresh.setParticipant(participant);
       
-      try 
-      { 
-        String nomLocal = UUID.nameUUIDFromBytes(production.nomArchive().getBytes()).toString() + ".zip";
-        
-        String donnees = production.archive();
-        
-        if (donnees.startsWith("data:") && donnees.contains(",")) { donnees = donnees.split(",")[1]; } 
+      fresh.setNomArchive(null); 
+      fresh.setNomLocal(null); 
+      fresh.setNumeroVersion(0);
 
-        File f = new File("../uploads", nomLocal);
-        
-        FileOutputStream fos = new FileOutputStream(f);
-
-        fos.write(Base64.getDecoder().decode(donnees));
-        fos.close();
-        
-        fresh.setNomArchive(production.nomArchive());
-        fresh.setNomLocal(nomLocal);
-      } 
-      catch(Exception e) { LOG.error(e.toString()); fresh.setNomArchive(null); fresh.setNomLocal(null); }
-      
       fresh.setVignette(production.vignette());
-      fresh.setNumeroVersion(production.numeroVersion());
       
       productionRepository.save(fresh);
-      
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("production.created", null, locale));
 
-      return ResponseEntity.ok(mt);
+      return ResponseEntity.ok(Integer.valueOf(fresh.getNumeroProduction()));
     }
 
     return ResponseEntity.notFound().build(); 
@@ -284,76 +261,6 @@ public class ProductionController
     
     return ResponseEntity.notFound().build();
   }
-  
-  @PutMapping(value = "/upload/{id}")
-  @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionFile production, final Authentication authentication, HttpServletRequest request) 
-  { 
-    Locale locale = localeResolver.resolveLocale(request);
-
-    Production found = productionRepository.findById(id);
-    
-    if (found != null)
-    {
-      found.setEnabled(true);
-      
-      int numeroUser = this.getNumeroUser(authentication);
-
-      if ((numeroUser == 0) || (production.numeroGestionnaire() == numeroUser))
-      {
-        if (production.archive() != null)
-        {
-          if (!(production.archive().isBlank()))
-          {
-            if (production.nomArchive() != null)
-            {
-              if (!(production.nomArchive().isBlank()))
-              {
-                MessagesTransfer mt = new MessagesTransfer();
-               
-                try 
-                { 
-                  String nomLocal = UUID.nameUUIDFromBytes(production.nomArchive().getBytes()).toString() + ".zip";
-                  
-                  String donnees = production.archive();
-                  
-                  if (donnees.startsWith("data:") && donnees.contains(",")) { donnees = donnees.split(",")[1]; } 
-
-                  File f = new File("../uploads", nomLocal);
-                  
-                  FileOutputStream fos = new FileOutputStream(f);
-
-                  fos.write(Base64.getDecoder().decode(donnees));
-                  fos.close();
-                  
-                  found.setNomArchive(production.nomArchive());
-                  found.setNomLocal(nomLocal);
-                  found.setNumeroVersion(found.getNumeroVersion() + 1);
-                  
-                  mt.setInformation(messageSource.getMessage("production.file.updated", null, locale));
-                } 
-                catch(Exception e) 
-                { 
-                  LOG.error(e.toString()); 
-                  
-                  found.setNomArchive(null); 
-                  found.setNomLocal(null); 
-                  
-                  mt.setErreur(e.toString());
-                }
-
-                productionRepository.save(found);
-
-                return ResponseEntity.ok(mt);
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    return ResponseEntity.notFound().build();
-  }
 
   @PostMapping(value = "/upload-chunk/{id}")
   @PreAuthorize("hasRole('USER')")
@@ -373,11 +280,13 @@ public class ProductionController
       {
         MessagesTransfer mt = new MessagesTransfer();
 
-        File dir = new File("../uploads-temp/" + fileName);
+        File dir = new File("../uploads-temp/" + id + "-" + fileName);
         
         if (!dir.exists()) { dir.mkdirs(); }
 
         File chunkFile = new File(dir, "chunk_" + chunkIndex);
+        
+        if (chunkFile.exists()) { chunkFile.delete(); }
         
         boolean succes = false;
 
@@ -399,7 +308,7 @@ public class ProductionController
           chunkFile.delete(); 
         }
         
-        if (chunkFile.exists()) { if (chunkFile.length() == chunkData.getSize()) { succes = true;  } }
+        if (chunkFile.exists()) { if (chunkFile.length() == chunkData.getSize()) { succes = true;  } } // TODO : N nouveaux essais si échec ?
         
         if (succes) { mt.setInformation(messageSource.getMessage("chunk.upload.success", new Object[] { chunkIndex, fileName }, locale)); } 
                else { mt.setErreur(messageSource.getMessage("chunk.upload.failed", new Object[] { chunkIndex, fileName }, locale)); }
@@ -428,46 +337,64 @@ public class ProductionController
       {
         MessagesTransfer mt = new MessagesTransfer();
 
-        File dir = new File("../uploads-temp/" + fileName);
+        File dir = new File("../uploads-temp/" + id + "-" + fileName);
         
-        String nomLocal = UUID.nameUUIDFromBytes(fileName.getBytes()).toString() + ".zip";
+        String nomLocal = UUID.nameUUIDFromBytes(("" + id + "-" + fileName).getBytes()).toString() + ".zip";
 
         File fic = new File("../uploads/" + nomLocal);
 
+        if (fic.exists()) { fic.delete(); }
+        
         boolean succes = false;
         
-        LOG.info("dir.listFiles().length=" + dir.listFiles().length);
-        LOG.info("lastChunkIndex=" + lastChunkIndex);
+        int num = dir.listFiles().length;
         
-        // TODO : vérifier nombre chunks, corriger fichier final (hash ?)
+        // TODO : checksum MD5 ?
         
-        try 
+        if (num == lastChunkIndex)
         {
-          FileOutputStream os = new FileOutputStream(fic);
-          
-          for (int i = 0; i < dir.listFiles().length; i++)
+          FileOutputStream os = null;
+
+          try 
           {
-            File chunkFile = new File(dir, "chunk_" + i);
-                        
-            Files.copy(chunkFile.toPath(), os);
+            os = new FileOutputStream(fic);
             
-            chunkFile.delete();
+            for (int i = 0; i < num; i++)
+            {
+              File chk = new File(dir, "chunk_" + i);
+              
+              byte[] bin = FileUtils.readFileToByteArray(chk);
+                            
+              FileOutputStream fos = new FileOutputStream(fic, true);
+              fos.write(bin);
+              fos.flush();
+              fos.close();
+              
+              chk.delete();
+            }
+
+            os.close();
+           
+            found.setNomArchive(fileName);
+            found.setNomLocal(nomLocal);
+            found.setNumeroVersion(found.getNumeroVersion() + 1);
+
+            succes = true;
           }
-
-          found.setNomArchive(fileName);
-          found.setNomLocal(nomLocal);
-          found.setNumeroVersion(found.getNumeroVersion() + 1);
-
-          succes = true;
+          catch(Exception e) 
+          { 
+            LOG.error(e.toString());
+            
+            succes = false; 
+            
+            found.setNomArchive(null); 
+            found.setNomLocal(null); 
+          }
+          finally { try { os.close(); } catch(Exception e) { } }
         }
-        catch(Exception e) 
+        else 
         { 
-          LOG.error(e.toString());
-          
-          succes = false; 
-          
-          found.setNomArchive(null); 
-          found.setNomLocal(null); 
+          LOG.error(messageSource.getMessage("chunk.count.failed", new Object[] { fileName, lastChunkIndex, dir.listFiles().length }, locale)); 
         }
 
         productionRepository.save(found);
@@ -488,6 +415,8 @@ public class ProductionController
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Object> disableProduction(@PathVariable int id, final Authentication authentication, HttpServletRequest request) 
   { 
+    // TODO : à corriger, session apparemment perdue.
+    
     Locale locale = localeResolver.resolveLocale(request);
 
     Production found = productionRepository.getReferenceById(id);
