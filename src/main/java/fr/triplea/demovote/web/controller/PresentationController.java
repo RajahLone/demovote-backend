@@ -57,7 +57,7 @@ public class PresentationController
   //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(PresentationController.class);
 
-  // TODO raccourci ouvrir/fermer/calculer les votes
+  // TODO : raccourci ouvrir/fermer/calculer les votes
   
   @Autowired
   private PresentationRepository presentationRepository;

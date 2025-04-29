@@ -115,7 +115,7 @@ public class CategorieController
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Categorie c = categorieRepository.getReferenceById(id);
+    Categorie c = categorieRepository.findById(id);
     
     if (c != null)
     {

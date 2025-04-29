@@ -4,6 +4,7 @@ package fr.triplea.demovote.web.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -47,6 +48,7 @@ import fr.triplea.demovote.model.Production;
 import fr.triplea.demovote.model.ProductionType;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.xml.bind.DatatypeConverter;
 
 @RestController
 @RequestMapping("/production")
@@ -90,7 +92,7 @@ public class ProductionController
   @ResponseBody
   public ResponseEntity<Resource> getFile(@PathVariable int id, final Authentication authentication) 
   {
-    // TODO après résultats affichés, download autorisé pour tous
+    // TODO : après résultats affichés, download autorisé pour tous
     
     Production p = productionRepository.findById(id);
     
@@ -321,7 +323,7 @@ public class ProductionController
   }
   @PostMapping(value = "/merge-chunks/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> merge_chunks(@PathVariable int id, @RequestParam String fileName, @RequestParam int lastChunkIndex, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> merge_chunks(@PathVariable int id, @RequestParam String fileName, @RequestParam int lastChunkIndex, @RequestParam String checksum, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -349,22 +351,25 @@ public class ProductionController
         
         int num = dir.listFiles().length;
         
-        // TODO : checksum MD5 ?
-        
         if (num == lastChunkIndex)
         {
           FileOutputStream os = null;
-
+          
           try 
           {
-            os = new FileOutputStream(fic);
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.reset();
             
+            os = new FileOutputStream(fic);
+
             for (int i = 0; i < num; i++)
             {
               File chk = new File(dir, "chunk_" + i);
               
               byte[] bin = FileUtils.readFileToByteArray(chk);
                             
+              md.update(bin);
+              
               FileOutputStream fos = new FileOutputStream(fic, true);
               fos.write(bin);
               fos.flush();
@@ -375,11 +380,17 @@ public class ProductionController
 
             os.close();
            
-            found.setNomArchive(fileName);
-            found.setNomLocal(nomLocal);
-            found.setNumeroVersion(found.getNumeroVersion() + 1);
+            String digestat = DatatypeConverter.printHexBinary(md.digest());
+                
+            if (checksum.equalsIgnoreCase(digestat)) 
+            {
+              found.setNomArchive(fileName);
+              found.setNomLocal(nomLocal);
+              found.setNumeroVersion(found.getNumeroVersion() + 1);
 
-            succes = true;
+              succes = true;
+            }
+            else { LOG.error(messageSource.getMessage("chunk.checksum.failed", new Object[] { fileName, checksum, digestat }, locale)); }
           }
           catch(Exception e) 
           { 
@@ -415,11 +426,9 @@ public class ProductionController
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Object> disableProduction(@PathVariable int id, final Authentication authentication, HttpServletRequest request) 
   { 
-    // TODO : à corriger, session apparemment perdue.
-    
     Locale locale = localeResolver.resolveLocale(request);
 
-    Production found = productionRepository.getReferenceById(id);
+    Production found = productionRepository.findById(id);
     
     if (found != null)
     {

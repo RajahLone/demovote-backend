@@ -13,7 +13,7 @@ import fr.triplea.demovote.security.jwt.RefreshTokenException;
 public class GlobalExceptionHandler 
 {
 
-  // TODO en mode production, masquer les requêtes SQL (ne pas donner d'indices sur le schema)
+  // TODO : en mode production, masquer les requêtes SQL (ne pas donner d'indices sur le schema)
   
   @ExceptionHandler(value = RefreshTokenException.class)
   @ResponseStatus(HttpStatus.FORBIDDEN)
