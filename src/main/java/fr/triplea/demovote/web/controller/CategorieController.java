@@ -2,11 +2,13 @@ package fr.triplea.demovote.web.controller;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,12 +16,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.CategorieRepository;
+import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.model.Categorie;
+import fr.triplea.demovote.model.Participant;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -31,6 +36,9 @@ public class CategorieController
   private CategorieRepository categorieRepository;
 
   @Autowired
+  private ParticipantRepository participantRepository;
+
+  @Autowired
   private LocaleResolver localeResolver;
   
   @Autowired
@@ -38,10 +46,10 @@ public class CategorieController
 
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasRole('ADMIN')")
-  public List<Categorie> getList() 
+  @PreAuthorize("hasRole('USER')")
+  public List<Categorie> getList(@RequestParam(required = false) Boolean admin, final Authentication authentication) 
   { 
-    return categorieRepository.findAll(); 
+    return categorieRepository.findAll(this.getNumeroUser(authentication), admin); 
   }
 
   @GetMapping(value = "/form/{id}")
@@ -130,6 +138,28 @@ public class CategorieController
     }      
     
     return ResponseEntity.notFound().build(); 
+  }
+
+  /** retourne 0 si ROLE_ADMIN, sinon c'est le numéro identifiant du participant USER */
+  private final int getNumeroUser(Authentication auth)
+  {
+    int numeroParticipant = -1; // -1 pour non trouvé
+    
+    if (auth != null)
+    {
+      Participant found = participantRepository.findByPseudonyme(auth.getName());
+      
+      if (found != null)
+      {
+        numeroParticipant = found.getNumeroParticipant();
+        
+        List<String> roles = auth.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+
+        if (roles.contains("ROLE_ADMIN")) { numeroParticipant = 0; }
+      }
+    }
+    
+    return numeroParticipant;
   }
 
 }

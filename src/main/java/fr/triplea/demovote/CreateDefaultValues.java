@@ -104,11 +104,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addVariableIfMissing("Catégories", "ETAPE2_SCRUTIN_CLOTURE", "TRUE");
     addVariableIfMissing("Catégories", "ETAPE3_RESULTATS_DEMASQUES", "TRUE");
     
-    addVariableIfMissing("Productions", "APERCU_SONORE_DEBUT", "10");
-    addVariableIfMissing("Productions", "APERCU_SONORE_LONGUEUR", "10");
-    addVariableIfMissing("Productions", "APERCU_IMAGE_TAILLE_MAX", "480");
-    addVariableIfMissing("Productions", "TAILLE_LIMITE_STOCKAGE_BASE", "4");
-    
     addVariableIfMissing("Résultats", "NOMBRE_CHOIX", "3");
     addVariableIfMissing("Résultats", "POINTS_POSITION_01", "3");
     addVariableIfMissing("Résultats", "POINTS_POSITION_02", "2");
