@@ -142,7 +142,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       
       role.setLibelle(libelle); 
 
-      role = roleRepository.save(role);
+      role = roleRepository.saveAndFlush(role);
     }
      
     return role;
@@ -161,7 +161,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       variable.setCode(code);
       variable.setValeur(valeur);
       
-      variableRepository.save(variable);
+      variableRepository.saveAndFlush(variable);
     }
     
   }

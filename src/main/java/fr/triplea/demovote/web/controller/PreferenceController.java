@@ -22,7 +22,7 @@ import fr.triplea.demovote.model.Preference;
 public class PreferenceController 
 {
 
-  // TODO
+  // TODO ?
 
   @Autowired
   private PreferenceRepository preferenceRepository;
@@ -43,7 +43,7 @@ public class PreferenceController
 
     if (found == null) { preference.setNumeroPreference(null); }
     
-    return  preferenceRepository.save(preference);
+    return  preferenceRepository.saveAndFlush(preference);
   }
 
   @PutMapping(value = "/update/{id}")
@@ -58,7 +58,7 @@ public class PreferenceController
       found.setNumeroTraitement(preference.getNumeroTraitement());
       found.setValeurs(preference.getValeurs());
       
-      preferenceRepository.save(found);
+      preferenceRepository.saveAndFlush(found);
     
       return ResponseEntity.ok(found);
     }

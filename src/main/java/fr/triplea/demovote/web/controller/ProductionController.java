@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dao.PresentationRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ProductionFile;
@@ -44,6 +45,7 @@ import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.dto.ProductionTransfer;
 import fr.triplea.demovote.dto.ProductionUpdate;
 import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.Presentation;
 import fr.triplea.demovote.model.Production;
 import fr.triplea.demovote.model.ProductionType;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
@@ -59,6 +61,9 @@ public class ProductionController
   
   @Autowired
   private ProductionRepository productionRepository;
+  
+  @Autowired
+  private PresentationRepository presentationRepository;
 
   @Autowired
   private ParticipantRepository participantRepository;
@@ -204,7 +209,7 @@ public class ProductionController
 
       fresh.setVignette(production.vignette());
       
-      productionRepository.save(fresh);
+      productionRepository.saveAndFlush(fresh);
 
       return ResponseEntity.ok(Integer.valueOf(fresh.getNumeroProduction()));
     }
@@ -251,7 +256,7 @@ public class ProductionController
       
           if (production.vignette() != null) { if (!(production.vignette().isBlank())) { found.setVignette(production.vignette()); } }
           
-          productionRepository.save(found);
+          productionRepository.saveAndFlush(found);
           
           MessagesTransfer mt = new MessagesTransfer();
           mt.setInformation(messageSource.getMessage("production.updated", null, locale));
@@ -408,7 +413,7 @@ public class ProductionController
           LOG.error(messageSource.getMessage("chunk.count.failed", new Object[] { fileName, lastChunkIndex, dir.listFiles().length }, locale)); 
         }
 
-        productionRepository.save(found);
+        productionRepository.saveAndFlush(found);
 
         if (succes) { dir.delete(); }
         
@@ -436,10 +441,16 @@ public class ProductionController
 
       if ((numeroUser == 0) || (found.getParticipant().getNumeroParticipant() == numeroUser))
       {
+        // TODO : pas de suppression logique si présence dans les bulletins
+        
         found.setEnabled(false); 
         
         productionRepository.saveAndFlush(found);
-             
+ 
+        Presentation presente = presentationRepository.findByProduction(id);
+        
+        if (presente != null) { presentationRepository.delete(presente); }
+        
         MessagesTransfer mt = new MessagesTransfer();
         mt.setInformation(messageSource.getMessage("production.deleted", null, locale));
 

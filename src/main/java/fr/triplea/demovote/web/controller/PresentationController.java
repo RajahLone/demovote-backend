@@ -426,7 +426,7 @@ public class PresentationController
           presentation.setNombrePoints(0);
           presentation.setNombrePolePosition(0);
           
-          presentationRepository.save(presentation);
+          presentationRepository.saveAndFlush(presentation);
               
           MessagesTransfer mt = new MessagesTransfer();
           mt.setInformation(messageSource.getMessage("production.linked", null, locale));
@@ -507,6 +507,7 @@ public class PresentationController
                   
                   presentationRepository.save(presentations.get(i - 1));
                   presentationRepository.save(presentations.get(i));
+                  presentationRepository.flush();
                   
                   break;
                 }
@@ -560,6 +561,7 @@ public class PresentationController
                 
                 presentationRepository.save(presentations.get(i));
                 presentationRepository.save(presentations.get(i + 1));
+                presentationRepository.flush();
                 
                 break;
               }
@@ -608,7 +610,9 @@ public class PresentationController
       {
         int etat = presentation.etatMedia();
         String nom = presentation.mediaName();
-         
+        
+        // TODO : réinitialiser l'état si une nouvelle archive a été uploadé au niveau de la production
+        
         if (presentation.mediaData() == null) { etat = 0; }
         
         MessagesTransfer mt = new MessagesTransfer();
@@ -632,7 +636,7 @@ public class PresentationController
           break;
         }
 
-        presentationRepository.save(found);
+        presentationRepository.saveAndFlush(found);
 
         return ResponseEntity.ok(mt);
       }

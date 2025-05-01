@@ -78,7 +78,7 @@ public class VariableController
     
     if (variable.hasType() && variable.hasCode()) 
     { 
-      variableRepository.save(variable); 
+      variableRepository.saveAndFlush(variable); 
       
       MessagesTransfer mt = new MessagesTransfer();
       mt.setInformation(messageSource.getMessage("variable.created", null, locale));
@@ -104,7 +104,7 @@ public class VariableController
       found.setValeur(variable.getValeur());
       found.setNotes(variable.getNotes());
       
-      variableRepository.save(found);
+      variableRepository.saveAndFlush(found);
       
       MessagesTransfer mt = new MessagesTransfer();
       mt.setInformation(messageSource.getMessage("variable.updated", null, locale));

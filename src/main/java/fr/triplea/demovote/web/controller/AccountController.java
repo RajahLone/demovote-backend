@@ -137,7 +137,7 @@ public class AccountController
          
         found.setCommentaire(participant.getCommentaire());
                
-        participantRepository.save(found);
+        participantRepository.saveAndFlush(found);
        
         MessagesTransfer mt = new MessagesTransfer();
         mt.setInformation(messageSource.getMessage("participant.updated", null, locale));
@@ -180,7 +180,7 @@ public class AccountController
           {
             found.setMotDePasse(passwordEncoder.encode(mdp_new.trim()));
             
-            participantRepository.save(found);
+            participantRepository.saveAndFlush(found);
 
             mdpt.setAncien("<success@old>");
             mdpt.setNouveau("<success@new>");

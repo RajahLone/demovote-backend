@@ -103,7 +103,7 @@ public class MessageController
           
           if (destinataire != null) { m.setDestinataire(destinataire); } else { m.setDestinataire(null); }
           
-          messageRepository.save(m);
+          messageRepository.saveAndFlush(m);
         }
         
         mlist = messageRepository.findNew(found.getNumeroParticipant(), last);

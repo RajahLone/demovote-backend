@@ -75,7 +75,7 @@ public class CategorieController
     
     if (categorie.hasLibelle()) 
     { 
-      categorieRepository.save(categorie); 
+      categorieRepository.saveAndFlush(categorie); 
      
       MessagesTransfer mt = new MessagesTransfer();
       mt.setInformation(messageSource.getMessage("categorie.created", null, locale));
@@ -106,7 +106,7 @@ public class CategorieController
       found.setPollable(categorie.isPollable());
       found.setComputed(categorie.isComputed());
 
-      categorieRepository.save(found); 
+      categorieRepository.saveAndFlush(found); 
       
       MessagesTransfer mt = new MessagesTransfer();
       mt.setInformation(messageSource.getMessage("categorie.updated", null, locale));

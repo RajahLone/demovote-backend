@@ -15,8 +15,15 @@ import fr.triplea.demovote.model.Production;
 public interface ProductionRepository extends JpaRepository<Production, Integer> 
 {
 
-  @NativeQuery("SELECT DISTINCT p.* FROM vote.productions AS p WHERE p.numero_production = :id AND p.flag_actif IS TRUE ")
-  Production findById(@Param("id") int id);
+  @NativeQuery("SELECT DISTINCT p.* FROM vote.productions AS p WHERE p.numero_production = :numero AND p.flag_actif IS TRUE ")
+  Production findById(@Param("numero") int numeroProduction);
+
+  @NativeQuery("SELECT DISTINCT "
+             + " p.* "
+             + "FROM vote.presentations AS s "
+             + "INNER JOIN vote.productions AS p ON s.numero_production = p.numero_production "
+             + "WHERE s.numero_production = :numeroProduction AND s.numero_categorie = :numeroCategorie AND p.flag_actif IS TRUE ")
+  Production findByIdLinkedByCategorie(@Param("numeroCategorie") int numeroCategorie, @Param("numeroProduction") int numeroProduction);
   
   @NativeQuery("SELECT DISTINCT " 
               + "TO_CHAR(p.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
@@ -140,6 +147,20 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
       + "  AND p.flag_actif IS TRUE "
       + "ORDER BY p.titre ASC ")
   List<ProductionItem> findUnlinked();
+  
+  @NativeQuery("SELECT DISTINCT " 
+      + "p.numero_production, "
+      + "p.type, "
+      + "p.titre, "
+      + "p.auteurs, "
+      + "p.groupes, "
+      + "p.plateforme, "
+      + "s.numero_ordre "
+      + "FROM vote.productions AS p "
+      + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+      + "WHERE s.numero_production = :production AND s.numero_categorie = :categorie "
+      + "  AND p.flag_actif IS TRUE ")
+  ProductionItem findChosen(@Param("categorie") int numeroCategorie, @Param("production") int numeroProduction);
   
   @Override
   void delete(Production production);

@@ -123,7 +123,7 @@ public class WebcamsCache
       w.setCrc32(c32);
       w.setVue(b);
       
-      webcamRepository.save(w);
+      webcamRepository.saveAndFlush(w);
     }
     else 
     {
@@ -132,7 +132,7 @@ public class WebcamsCache
         w.setCrc32(c32);
         w.setVue(b);
 
-        webcamRepository.save(w);
+        webcamRepository.saveAndFlush(w);
       }
     }
   }

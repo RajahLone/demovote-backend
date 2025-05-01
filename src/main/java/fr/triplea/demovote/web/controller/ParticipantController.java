@@ -247,7 +247,7 @@ public class ParticipantController
             if (userRole != null) { found.setRoles(Arrays.asList(userRole)); }
           }
                     
-          participantRepository.save(found);
+          participantRepository.saveAndFlush(found);
           
           MessagesTransfer mt = new MessagesTransfer();
           mt.setInformation(messageSource.getMessage("participant.created", null, locale));
@@ -345,7 +345,7 @@ public class ParticipantController
         if (userRole != null) { found.setRoles(Arrays.asList(userRole)); }
       }
 
-      participantRepository.save(found);
+      participantRepository.saveAndFlush(found);
       
       MessagesTransfer mt = new MessagesTransfer();
       mt.setInformation(messageSource.getMessage("participant.updated", null, locale));
