@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
+import fr.triplea.demovote.dto.ProductionChoice;
 import fr.triplea.demovote.dto.ProductionFile;
 import fr.triplea.demovote.dto.ProductionItem;
 import fr.triplea.demovote.dto.ProductionShort;
@@ -148,6 +149,7 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
       + "ORDER BY p.titre ASC ")
   List<ProductionItem> findUnlinked();
   
+  
   @NativeQuery("SELECT DISTINCT " 
       + "p.numero_production, "
       + "p.type, "
@@ -155,12 +157,29 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
       + "p.auteurs, "
       + "p.groupes, "
       + "p.plateforme, "
-      + "s.numero_ordre "
+      + "s.numero_ordre, "
+      + "p.vignette "
+      + "FROM vote.productions AS p "
+      + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+      + "WHERE s.numero_categorie = :numero "
+      + "  AND p.flag_actif IS TRUE "
+      + "ORDER BY s.numero_ordre ASC, p.titre ASC ")
+  List<ProductionChoice> findProposed(@Param("numero") int numeroCategorie);
+
+  @NativeQuery("SELECT DISTINCT " 
+      + "p.numero_production, "
+      + "p.type, "
+      + "p.titre, "
+      + "p.auteurs, "
+      + "p.groupes, "
+      + "p.plateforme, "
+      + "s.numero_ordre, "
+      + "p.vignette "
       + "FROM vote.productions AS p "
       + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
       + "WHERE s.numero_production = :production AND s.numero_categorie = :categorie "
       + "  AND p.flag_actif IS TRUE ")
-  ProductionItem findChosen(@Param("categorie") int numeroCategorie, @Param("production") int numeroProduction);
+  ProductionChoice findChosen(@Param("categorie") int numeroCategorie, @Param("production") int numeroProduction);
   
   @Override
   void delete(Production production);

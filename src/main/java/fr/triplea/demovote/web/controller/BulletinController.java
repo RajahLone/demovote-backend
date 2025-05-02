@@ -23,7 +23,7 @@ import fr.triplea.demovote.dao.ProductionRepository;
 import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.BulletinShort;
 import fr.triplea.demovote.dto.MessagesTransfer;
-import fr.triplea.demovote.dto.ProductionItem;
+import fr.triplea.demovote.dto.ProductionChoice;
 import fr.triplea.demovote.model.Bulletin;
 import fr.triplea.demovote.model.Categorie;
 import fr.triplea.demovote.model.Participant;
@@ -119,30 +119,42 @@ public class BulletinController
   }
 
   
-  @GetMapping(value = "/list/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public List<ProductionItem> getChosenList(@PathVariable("id") int numeroCategorie, final Authentication authentication, HttpServletRequest request) 
+  
+  @GetMapping(value = "/list-linked/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public List<ProductionChoice> getProductionListLinked(@PathVariable("id") int numeroCategorie) 
+  {
+    List<ProductionChoice> prods = productionRepository.findProposed(numeroCategorie); 
+    
+    if (prods == null) { prods = new ArrayList<ProductionChoice>(); }
+
+    return prods;
+  }
+
+  @GetMapping(value = "/list-chosen/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public List<ProductionChoice> getChosenList(@PathVariable("id") int numeroCategorie, final Authentication authentication, HttpServletRequest request) 
   {
     int numeroParticipant = this.getNumeroUser(authentication);
     
     BulletinShort bulletin = bulletinRepository.findByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
     
-    List<ProductionItem> prods = new ArrayList<ProductionItem>();
+    List<ProductionChoice> prods = new ArrayList<ProductionChoice>();
 
     if (bulletin != null) 
     { 
       int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
 
-      ProductionItem prod01 = (nombreMax >= 1) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction01()) : null;
-      ProductionItem prod02 = (nombreMax >= 2) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction02()) : null;
-      ProductionItem prod03 = (nombreMax >= 3) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction03()) : null;
-      ProductionItem prod04 = (nombreMax >= 4) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction04()) : null;
-      ProductionItem prod05 = (nombreMax >= 5) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction05()) : null;
-      ProductionItem prod06 = (nombreMax >= 6) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction06()) : null;
-      ProductionItem prod07 = (nombreMax >= 7) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction07()) : null;
-      ProductionItem prod08 = (nombreMax >= 8) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction08()) : null;
-      ProductionItem prod09 = (nombreMax >= 9) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction09()) : null;
-      ProductionItem prod10 = (nombreMax >= 10) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction10()) : null;
+      ProductionChoice prod01 = (nombreMax >= 1) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction01()) : null;
+      ProductionChoice prod02 = (nombreMax >= 2) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction02()) : null;
+      ProductionChoice prod03 = (nombreMax >= 3) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction03()) : null;
+      ProductionChoice prod04 = (nombreMax >= 4) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction04()) : null;
+      ProductionChoice prod05 = (nombreMax >= 5) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction05()) : null;
+      ProductionChoice prod06 = (nombreMax >= 6) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction06()) : null;
+      ProductionChoice prod07 = (nombreMax >= 7) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction07()) : null;
+      ProductionChoice prod08 = (nombreMax >= 8) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction08()) : null;
+      ProductionChoice prod09 = (nombreMax >= 9) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction09()) : null;
+      ProductionChoice prod10 = (nombreMax >= 10) ? productionRepository.findChosen(numeroCategorie, bulletin.getNumeroProduction10()) : null;
       
       if ((prod01 != null) && (nombreMax >= 1)) { prods.add(prod01); }
       if ((prod02 != null) && (nombreMax >= 2)) { prods.add(prod02); }
