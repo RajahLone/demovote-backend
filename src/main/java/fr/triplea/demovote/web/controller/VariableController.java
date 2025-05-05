@@ -57,9 +57,9 @@ public class VariableController
  
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Variable> getForm(@PathVariable int id) 
+  public ResponseEntity<Variable> getForm(@PathVariable("id") int numeroVariable) 
   { 
-    Variable v = variableRepository.findById(id);
+    Variable v = variableRepository.findById(numeroVariable);
     
     if (v != null) { return ResponseEntity.ok(v); } 
     
@@ -91,11 +91,11 @@ public class VariableController
  
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Variable variable, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable("id") int numeroVariable, @RequestBody(required = true) Variable variable, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Variable found = variableRepository.findById(id);
+    Variable found = variableRepository.findById(numeroVariable);
     
     if (found != null)
     {

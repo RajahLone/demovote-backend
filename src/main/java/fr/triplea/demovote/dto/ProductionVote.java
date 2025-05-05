@@ -1,9 +1,7 @@
 package fr.triplea.demovote.dto;
 
-import java.util.Base64;
-
-public class ProductionChoice 
-{
+public class ProductionVote 
+{ 
   
   Integer numeroProduction;
   String type;
@@ -11,10 +9,10 @@ public class ProductionChoice
   String auteurs;
   String groupes;
   String plateforme;
-  Integer numeroOrdre;
-  byte[] vignette;
+  Integer nombrePoints;
+  Integer nombreFirst;
   
-  public ProductionChoice(Integer numeroProduction, String type, String titre, String auteurs, String groupes, String plateforme, Integer numeroOrdre, byte[] vignette)
+  public ProductionVote(Integer numeroProduction, String type, String titre, String auteurs, String groupes, String plateforme, Integer nombrePoints, Integer nombreFirst) 
   {
     this.numeroProduction = numeroProduction;
     this.type = type;
@@ -22,13 +20,13 @@ public class ProductionChoice
     this.auteurs = auteurs;
     this.groupes = groupes;
     this.plateforme = plateforme;
-    this.numeroOrdre = numeroOrdre;
-    this.vignette = vignette;
+    this.nombrePoints = nombrePoints;
+    this.nombreFirst = nombreFirst;
   }
 
   public void setNumeroProduction(Integer numeroProduction) { this.numeroProduction = numeroProduction; }
   public Integer getNumeroProduction() { return numeroProduction; }
-
+  
   public void setType(String type) { this.type = type; }
   public String getType() { return type; }
 
@@ -44,10 +42,12 @@ public class ProductionChoice
   public void setPlateforme(String plateforme) { this.plateforme = plateforme; }
   public String getPlateforme() { return plateforme; }
 
-  public void setNumeroOrdre(Integer numeroOrdre) { this.numeroOrdre = numeroOrdre; }
-  public Integer getNumeroOrdre() { return numeroOrdre; }
+  public void setNombrePoints(Integer nombrePoints) { this.nombrePoints = nombrePoints; }
+  public Integer getNombrePoints() { return nombrePoints; }
+  public void addPoints(Integer points) { this.nombrePoints += points; }
 
-  public void setVignette(byte[] vignette) { this.vignette = vignette; }
-  public String getVignette() { if (this.vignette == null) { return ""; } return "data:image/png;base64," + Base64.getEncoder().encodeToString(this.vignette); }
+  public void setNombreFirst(Integer nombreFirst) { this.nombreFirst = nombreFirst; }
+  public Integer getNombreFirst() { return nombreFirst; }
+  public void setFirst() { this.nombreFirst++; }
   
 }

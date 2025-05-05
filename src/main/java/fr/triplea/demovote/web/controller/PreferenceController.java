@@ -48,9 +48,9 @@ public class PreferenceController
 
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Preference> update(@PathVariable int id, @RequestBody(required = true) Preference preference) 
+  public ResponseEntity<Preference> update(@PathVariable("id") int numeroPreference, @RequestBody(required = true) Preference preference) 
   { 
-    Preference found = preferenceRepository.findById(id);
+    Preference found = preferenceRepository.findById(numeroPreference);
     
     if (found != null)
     {

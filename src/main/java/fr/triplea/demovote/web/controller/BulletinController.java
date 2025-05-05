@@ -1,11 +1,23 @@
 package fr.triplea.demovote.web.controller;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -15,6 +27,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
+import org.vandeseer.easytable.OverflowOnSamePageRepeatableHeaderTableDrawer;
+import org.vandeseer.easytable.settings.HorizontalAlignment;
+import org.vandeseer.easytable.structure.Row;
+import org.vandeseer.easytable.structure.Table;
+import org.vandeseer.easytable.structure.cell.TextCell;
 
 import fr.triplea.demovote.dao.BulletinRepository;
 import fr.triplea.demovote.dao.CategorieRepository;
@@ -24,24 +41,32 @@ import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.BulletinShort;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ProductionChoice;
+import fr.triplea.demovote.dto.ProductionShort;
+import fr.triplea.demovote.dto.ProductionVote;
 import fr.triplea.demovote.model.Bulletin;
 import fr.triplea.demovote.model.Categorie;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Production;
+import fr.triplea.demovote.web.service.BulletinService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/urne")
 public class BulletinController 
 {
+  //@SuppressWarnings("unused") 
+  private static final Logger LOG = LoggerFactory.getLogger(BulletinController.class);
 
-  // TODO : résultats
-  
+  // TODO : page des résultats, résultats PDF pour toutes les catégories + HTML par catégorie
+
   @Autowired
   private VariableRepository variableRepository;
 
   @Autowired
   private BulletinRepository bulletinRepository;
+
+  @Autowired
+  private BulletinService bulletinService;
 
   @Autowired
   private CategorieRepository categorieRepository;
@@ -457,5 +482,290 @@ public class BulletinController
     return numeroParticipant;
   }
 
+  @GetMapping(value = "/file")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Resource> getPresentationsVersionPDF(HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    List<Categorie> categories = categorieRepository.findAll(0, true);
+    
+    List<ProductionShort> productions = productionRepository.findLinkedWithoutArchive();
+   
+    if ((categories != null) && (productions != null)) 
+    { 
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      
+      try 
+      {
+        PDDocument document = new PDDocument();
+        
+        document.isAllSecurityToBeRemoved();
+
+        float POINTS_PER_INCH = 72;
+        float POINTS_PER_MM = 1 / (10 * 2.54f) * POINTS_PER_INCH;
+
+        PDRectangle A4_paysage = new PDRectangle(297 * POINTS_PER_MM, 210 * POINTS_PER_MM);
+        
+        Table.TableBuilder tb = Table.builder().addColumnsOfWidth(20f, 100f, 100f, 100f, 105f, 190f, 190f).padding(4);
+
+        for (Categorie categorie: categories)
+        {
+          if (categorie.isAvailable())
+          {
+            tb.addRow(createTitleRow(categorie.getLibelle()));
+            tb.addRow(createHeaderRow(locale));
+
+            int nombre = 0;
+            
+            if ((productions.size() > 0)) 
+            { 
+              for (ProductionShort production: productions) 
+              { 
+                if (production.numeroCategorie() == categorie.getNumeroCategorie())
+                {
+                  nombre++;
+                  
+                  tb.addRow(createProductionRow(production, nombre));
+                }
+              } 
+            } 
+            
+            tb.addRow(createTitleRow(categorie.getLibelle() + " : " + nombre + " " + messageSource.getMessage("show.pdf.productions", null, locale)));
+            tb.addRow(createEmptyRow());
+           }
+        }
+
+        OverflowOnSamePageRepeatableHeaderTableDrawer.builder()
+          .table(tb.build())
+          .startX(15f)
+          .startY(A4_paysage.getUpperRightY() - 15f)
+          .lanesPerPage(1)
+          .numberOfRowsToRepeat(0)
+          .spaceInBetween(1)
+          .endY(15f) // note: if not set, table is drawn over the end of the page
+          .build()
+          .draw(() -> document, () -> new PDPage(A4_paysage), 100f);
+
+        document.save(baos);
+        document.close();
+        
+        baos.close();
+      } 
+      catch (Exception e) { LOG.error(e.toString()); }
+       
+      byte[] binaire = baos.toByteArray();
+
+      Resource r = new ByteArrayResource(binaire);
+      
+      return ResponseEntity
+              .ok()
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"presentations.pdf\"")
+              .header(HttpHeaders.CONTENT_LENGTH, "" + binaire.length)
+              .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF.toString())
+              .body(r); 
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+  private Row createTitleRow(String str) 
+  {
+    return Row.builder()
+              .add(TextCell.builder().text(str).colSpan(7).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0.1f).build())
+              .build();
+  }
+  private Row createEmptyRow() 
+  {
+    return Row.builder()
+              .add(TextCell.builder().text(" ").colSpan(7).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0).build())
+              .build();
+  }
+  private Row createHeaderRow(Locale locale) 
+  {
+    return Row.builder()
+              .add(createHeaderCell(""))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.title", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.authors", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.groups", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.manager", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.comments", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.private", null, locale)))
+              .build();
+  }
+  private TextCell createHeaderCell(String str)
+  {
+    return TextCell.builder()
+                   .text(str)
+                   .backgroundColor(Color.GRAY)
+                   .textColor(Color.WHITE)
+                   .horizontalAlignment(HorizontalAlignment.LEFT)
+                   .borderWidth(0.1f)
+                   .fontSize(8)
+                   .build();
+  }
+  private Row createProductionRow(ProductionShort production, int nombre) 
+  {
+    return Row.builder()
+              .add(createCell("#" + nombre))
+              .add(createCell(production.titre()))
+              .add(createCell(production.auteurs()))
+              .add(createCell(production.groupes()))
+              .add(createCell(production.nomGestionnaire()))
+              .add(createCell(production.commentaire()))
+              .add(createCell(production.informationsPrivees()))
+              .build();
+  }
+  private TextCell createCell(String str)
+  {
+    return TextCell.builder()
+                   .text(str)
+                   .backgroundColor(Color.WHITE)
+                   .textColor(Color.BLACK)
+                   .horizontalAlignment(HorizontalAlignment.LEFT)
+                   .borderWidth(0.1f)
+                   .fontSize(8)
+                   .build();
+  }
+
+  
+  @Value("classpath:styles/diapos.css")
+  private Resource styleDiaposResource;
+  
+  @GetMapping(value = "/diapos/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<String> getDiaporama(@PathVariable("id") int numeroCategorie, HttpServletRequest request) 
+  {
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Categorie categorie = categorieRepository.findById(numeroCategorie);
+    
+    List<ProductionVote> productions = bulletinService.decompterVotes(numeroCategorie);
+    
+    /*if ((categorie != null) && (presentations != null))
+    {
+      String libelleCategorie = categorie.getLibelle();
+         
+      StringBuffer sb = new StringBuffer();
+
+      sb.append("<!doctype html>\n");
+      sb.append("<html lang=\"").append(locale.stripExtensions().toString()).append("\">\n");
+      sb.append("<head>\n");
+      sb.append("<title>").append(libelleCategorie).append("</title>\n");
+      sb.append("<style>\n");
+      try { sb.append(StreamUtils.copyToString(styleDiaposResource.getInputStream(), Charset.defaultCharset())); } catch (IOException e) { LOG.error(e.toString()); }
+      sb.append("</style>\n");
+      sb.append("</head>\n\n");
+      sb.append("<body>\n");
+
+      sb.append("<div class=\"diapo_start\" id=\"diapo_page_0\">\n");
+      
+      sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_range\">").append(messageSource.getMessage("show.file.starting", null, locale)).append("</div>\n");
+
+      sb.append("\t").append("<div class=\"diapo_hub\">\n");
+      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" style=\"visibility:hidden;\">&#9665;</button>\n");
+      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_next(0);\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9655;</button>\n");
+      sb.append("\t").append("</div>\n");
+      
+      sb.append("</div>\n");
+
+      int n = 1;
+      
+      for (int i = 0; i < presentations.size(); i++)
+      {
+        Presentation d = presentations.get(i);
+        Production p = d.getProduction();
+
+        sb.append("<div class=\"diapo_page\" id=\"diapo_page_" + n + "\">\n");
+
+        sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_order\">").append("#").append("" + (i + 1)).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_title\">").append(p.getTitre()).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_authors\">").append(messageSource.getMessage("show.file.by", null, locale)).append(" ").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
+        sb.append("\t").append("<div class=\"diapo_comments\">");
+        if (p.hasPlateforme()) { sb.append(messageSource.getMessage("show.file.on", null, locale)).append(" ").append(p.getPlateforme()).append("<br/>"); }
+        sb.append(p.getCommentaire()).append("</div>\n");
+
+        if (d.getEtatMedia() == 1)
+        {
+          if (d.getMimeMedia().startsWith("image/"))
+          {
+            sb.append("\t").append("<div id=\"diapo_pict_").append(n).append("\" class=\"diapo_image_container\">\n");
+            sb.append("\t").append("\t").append("<div class=\"diapo_image_content\" onClick=\"pict_hide(").append(n).append(");\"><img src=\"").append(d.getDataMediaAsString()).append("\" alt=\"\" class=\"diapo_image\" /></div>\n");
+            sb.append("\t").append("</div>\n");
+          }
+          else if (d.getMimeMedia().startsWith("audio/"))
+          {
+            sb.append("\t").append("<div id=\"diapo_file_").append(n).append("\" class=\"diapo_audio_container\">\n");
+            sb.append("\t").append("\t").append("<audio controls><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</audio>\n");
+            sb.append("\t").append("</div>\n");
+          }
+          else if (d.getMimeMedia().startsWith("video/"))
+          {
+            sb.append("\t").append("<div id=\"diapo_file_").append(n).append("\" class=\"diapo_video_container\">\n");
+            sb.append("\t").append("\t").append("<video controls width=\"480\" height=\"240\"><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</video>\n");
+            sb.append("\t").append("</div>\n");
+          }
+        }
+
+        sb.append("\t").append("<div id=\"diapo_ctrl_").append(n).append("\" class=\"diapo_hub\">\n");
+        sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_prev(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9665;</button>\n");
+        sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_next(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9655;</button>\n");
+        if ((d.getEtatMedia() == 1))
+        {
+          if (d.getMimeMedia().startsWith("image/"))
+          {
+            sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"pict_open(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.open", null, locale)).append("\">&#9713;</button>\n");
+          }
+          else
+          {
+            sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"file_open(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.open", null, locale)).append("\">&#9713;</button>\n");
+          }
+        }
+        else if ((d.getEtatMedia() == 2))
+        {
+          sb.append("\t").append("\t").append("<button class=\"diapo_warning\">").append(messageSource.getMessage("show.file.acknowlegded", null, locale)).append("</button>\n");
+        }
+        else
+        {
+          sb.append("\t").append("\t").append("<button class=\"diapo_alert\">").append(messageSource.getMessage("show.file.missing", null, locale)).append("</button>\n");
+        }
+        sb.append("\t").append("</div>\n");
+
+        sb.append("</div>\n");
+        n++;
+      }
+      
+      sb.append("<div class=\"diapo_page\" id=\"diapo_page_" + n + "\">\n");
+      
+      sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"diapo_range\">").append(messageSource.getMessage("show.file.ending", null, locale)).append("</div>\n");
+
+      sb.append("\t").append("<div class=\"diapo_hub\">\n");
+      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_prev(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9665;</button>\n");
+      sb.append("\t").append("</div>\n");
+      
+      sb.append("</div>\n");
+
+      sb.append("<script type=\"text/javascript\">\n");
+      sb.append("function show_prev(num) { var cur = document.getElementById(\"diapo_page_\" + num); var prv = document.getElementById(\"diapo_page_\" + (num - 1)); if (cur) { cur.style.visibility = 'hidden'; cur.style.display = 'none'; } if (prv) { prv.style.visibility = 'visible'; prv.style.display = 'block'; } }\n");
+      sb.append("function show_next(num) { var cur = document.getElementById(\"diapo_page_\" + num); var nxt = document.getElementById(\"diapo_page_\" + (num + 1)); if (cur) { cur.style.visibility = 'hidden'; cur.style.display = 'none'; } if (nxt) { nxt.style.visibility = 'visible'; nxt.style.display = 'block'; } }\n");
+      sb.append("function pict_open(num) { var hub = document.getElementById(\"diapo_ctrl_\" + num); var pic = document.getElementById(\"diapo_pict_\" + num); if (hub) { hub.style.visibility = 'hidden'; hub.style.display = 'none'; } if (pic) { pic.style.visibility = 'visible'; pic.style.display = 'block'; } }\n");
+      sb.append("function pict_hide(num) { var hub = document.getElementById(\"diapo_ctrl_\" + num); var pic = document.getElementById(\"diapo_pict_\" + num); if (hub) { hub.style.visibility = 'visible'; hub.style.display = 'block'; } if (pic) { pic.style.visibility = 'hidden'; pic.style.display = 'none'; } }\n");
+      sb.append("function file_open(num) { var fil = document.getElementById(\"diapo_file_\" + num); if (fil) { if (fil.style.visibility == 'visible') { fil.style.visibility = 'hidden'; fil.style.display = 'none'; } else { fil.style.visibility = 'visible'; fil.style.display = 'block'; } } }\n");
+      sb.append("</script>\n");
+      sb.append("</body>\n");
+      sb.append("</html>\n");
+      
+      return ResponseEntity
+              .ok()
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + libelleCategorie +".html\"")
+              .header(HttpHeaders.CONTENT_LENGTH, "" + sb.length())
+              .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML.toString())
+              .body(sb.toString());
+    }*/
+    
+    return ResponseEntity.notFound().build();
+  }  
 
 }

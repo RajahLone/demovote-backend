@@ -238,13 +238,13 @@ public class PresentationController
   
   @GetMapping(value = "/diapos/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<String> getDiaporama(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<String> getDiaporama(@PathVariable("id") int numeroCategorie, HttpServletRequest request) 
   {
     Locale locale = localeResolver.resolveLocale(request);
 
-    Categorie categorie = categorieRepository.findById(id);
+    Categorie categorie = categorieRepository.findById(numeroCategorie);
     
-    List<Presentation> presentations = presentationRepository.findByCategorie(id);
+    List<Presentation> presentations = presentationRepository.findByCategorie(numeroCategorie);
     
     if ((categorie != null) && (presentations != null))
     {
@@ -376,9 +376,9 @@ public class PresentationController
   
   @GetMapping(value = "/list-linked/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<ProductionItem> getProductionListLinked(@PathVariable int id) 
+  public List<ProductionItem> getProductionListLinked(@PathVariable("id") int numeroCategorie) 
   {
-    List<ProductionItem> prods = productionRepository.findLinked(id); 
+    List<ProductionItem> prods = productionRepository.findLinked(numeroCategorie); 
     
     if (prods == null) { prods = new ArrayList<ProductionItem>(); }
 

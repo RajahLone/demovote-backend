@@ -9,6 +9,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
-
+import fr.triplea.demovote.dao.BulletinRepository;
 import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
@@ -31,6 +32,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/categorie")
 public class CategorieController 
 {
+
+    private final BulletinRepository bulletinRepository;
 
   @Autowired
   private CategorieRepository categorieRepository;
@@ -45,6 +48,11 @@ public class CategorieController
   private MessageSource messageSource;
 
 
+    CategorieController(BulletinRepository bulletinRepository) {
+        this.bulletinRepository = bulletinRepository;
+    }
+
+
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
   public List<Categorie> getList(@RequestParam(required = false) Boolean admin, final Authentication authentication) 
@@ -54,9 +62,9 @@ public class CategorieController
 
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Categorie> getForm(@PathVariable int id)
+  public ResponseEntity<Categorie> getForm(@PathVariable("id") int numeroCategorie)
   { 
-    Categorie c = categorieRepository.findById(id);
+    Categorie c = categorieRepository.findById(numeroCategorie);
     
     if (c != null) { return ResponseEntity.ok(c); }
     
@@ -88,11 +96,11 @@ public class CategorieController
 
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) Categorie categorie, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable("id") int numeroCategorie, @RequestBody(required = true) Categorie categorie, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Categorie found = categorieRepository.findById(id);
+    Categorie found = categorieRepository.findById(numeroCategorie);
     
     if (found != null)
     {
@@ -119,11 +127,11 @@ public class CategorieController
 
   @GetMapping(value = "/open-poll/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> openPoll(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<Object> openPoll(@PathVariable("id") int numeroCategorie, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Categorie c = categorieRepository.findById(id);
+    Categorie c = categorieRepository.findById(numeroCategorie);
     
     if (c != null)
     {
@@ -142,7 +150,44 @@ public class CategorieController
 
   @GetMapping(value = "/close-polls")
   @PreAuthorize("hasRole('ADMIN')")
+  @Transactional
   public ResponseEntity<Object> closePolls(HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    List<Categorie> categories = categorieRepository.findAll(0, true);
+    
+    if (categories != null)
+    {
+      if (categories.size() > 0)
+      {
+        bulletinRepository.cleanAll();    // supprime les enregistrements sans choix
+        bulletinRepository.validateAll(); // validation automatique de tous les choix
+        
+        for (int i = 0; i < categories.size(); i++)
+        {
+          Categorie c = categories.get(i);
+          
+          c.setPollable(false);
+          c.setComputed(true);
+          
+          categorieRepository.saveAndFlush(c);
+        }
+ 
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setAlerte(messageSource.getMessage("categories.poll.closed", null, locale));
+
+        return ResponseEntity.ok(mt);
+      }
+    }
+    
+    return ResponseEntity.notFound().build(); 
+  }
+
+
+  @GetMapping(value = "/show-results")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Object> showResults(HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -156,17 +201,13 @@ public class CategorieController
         {
           Categorie c = categories.get(i);
           
-          c.setPollable(false);
-          
-          // TODO : valider les votes, dépouiller les votes et calculer les résultats pour chaque catégorie
-          
-          c.setComputed(true);
-          
+          c.setDisplayable(true);
+           
           categorieRepository.saveAndFlush(c);
         }
 
         MessagesTransfer mt = new MessagesTransfer();
-        mt.setAlerte(messageSource.getMessage("categorie.polls.closed", null, locale));
+        mt.setAlerte(messageSource.getMessage("categories.poll.displayed", null, locale));
 
         return ResponseEntity.ok(mt);
       }
@@ -177,11 +218,11 @@ public class CategorieController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> disableCategorie(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<Object> disableCategorie(@PathVariable("id") int numeroCategorie, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Categorie c = categorieRepository.findById(id);
+    Categorie c = categorieRepository.findById(numeroCategorie);
     
     if (c != null)
     {

@@ -88,13 +88,13 @@ public class ParticipantController
  
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<ParticipantTransfer> getForm(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<ParticipantTransfer> getForm(@PathVariable("id") int numeroParticipant, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
     DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
     
-    Participant found = participantRepository.findById(id);   
+    Participant found = participantRepository.findById(numeroParticipant);   
     
     if (found != null)
     {
@@ -262,11 +262,11 @@ public class ParticipantController
 
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable("id") int numeroParticipant, @RequestBody(required = true) ParticipantTransfer participant, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Participant found = participantRepository.findById(id);
+    Participant found = participantRepository.findById(numeroParticipant);
     
     if (found != null)
     {
@@ -358,11 +358,11 @@ public class ParticipantController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<Map<String, Boolean>> disableParticipant(@PathVariable("id") int numeroParticipant, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Participant found = participantRepository.findById(id);
+    Participant found = participantRepository.findById(numeroParticipant);
     
     if (found != null)
     {

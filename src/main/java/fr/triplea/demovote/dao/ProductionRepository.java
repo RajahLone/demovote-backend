@@ -10,6 +10,7 @@ import fr.triplea.demovote.dto.ProductionChoice;
 import fr.triplea.demovote.dto.ProductionFile;
 import fr.triplea.demovote.dto.ProductionItem;
 import fr.triplea.demovote.dto.ProductionShort;
+import fr.triplea.demovote.dto.ProductionVote;
 import fr.triplea.demovote.model.Production;
 
 
@@ -181,6 +182,23 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
       + "  AND p.flag_actif IS TRUE ")
   ProductionChoice findChosen(@Param("categorie") int numeroCategorie, @Param("production") int numeroProduction);
   
+  
+  @NativeQuery("SELECT DISTINCT " 
+      + "p.numero_production, "
+      + "p.type, "
+      + "p.titre, "
+      + "p.auteurs, "
+      + "p.groupes, "
+      + "p.plateforme, "
+      + "0 AS nombre_points,"
+      + "0 AS nombre_first "
+      + "FROM vote.productions AS p "
+      + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+      + "WHERE s.numero_categorie = :numero "
+      + "  AND p.flag_actif IS TRUE "
+      + "ORDER BY s.numero_ordre ASC, p.titre ASC ")
+  List<ProductionVote> findForCalculation(@Param("numero") int numeroCategorie);
+ 
   @Override
   void delete(Production production);
   

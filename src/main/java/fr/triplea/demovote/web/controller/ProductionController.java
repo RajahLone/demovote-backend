@@ -99,11 +99,11 @@ public class ProductionController
   @GetMapping(value = "/file/{id}")
   @PreAuthorize("hasRole('USER')")
   @ResponseBody
-  public ResponseEntity<Resource> getFile(@PathVariable int id, final Authentication authentication) 
+  public ResponseEntity<Resource> getFile(@PathVariable("id") int numeroProduction, final Authentication authentication) 
   {
     // TODO : après résultats affichés, download autorisé pour tous
     
-    Production p = productionRepository.findById(id);
+    Production p = productionRepository.findById(numeroProduction);
     
     if (p != null) 
     { 
@@ -143,9 +143,9 @@ public class ProductionController
 
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Production> getForm(@PathVariable int id, final Authentication authentication)
+  public ResponseEntity<Production> getForm(@PathVariable("id") int numeroProduction, final Authentication authentication)
   { 
-    ProductionShort p = productionRepository.findByIdWithoutArchive(id);
+    ProductionShort p = productionRepository.findByIdWithoutArchive(numeroProduction);
     
     if (p != null) 
     {
@@ -162,9 +162,9 @@ public class ProductionController
 
   @GetMapping(value = "/formfile/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<ProductionFile> getFormFile(@PathVariable int id, final Authentication authentication)
+  public ResponseEntity<ProductionFile> getFormFile(@PathVariable("id") int numeroProduction, final Authentication authentication)
   { 
-    ProductionFile p = productionRepository.findByIdForUpload(id);
+    ProductionFile p = productionRepository.findByIdForUpload(numeroProduction);
     
     if (p != null) 
     { 
@@ -223,11 +223,11 @@ public class ProductionController
  
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) ProductionUpdate production, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable("id") int numeroProduction, @RequestBody(required = true) ProductionUpdate production, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Production found = productionRepository.findById(id);
+    Production found = productionRepository.findById(numeroProduction);
     
     if (found != null)
     {
@@ -275,11 +275,11 @@ public class ProductionController
 
   @PostMapping(value = "/upload-chunk/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> upload_chunk(@PathVariable int id, @RequestParam String fileName, @RequestParam int chunkIndex, @RequestParam MultipartFile chunkData, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> upload_chunk(@PathVariable("id") int numeroProduction, @RequestParam String fileName, @RequestParam int chunkIndex, @RequestParam MultipartFile chunkData, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Production found = productionRepository.findById(id);
+    Production found = productionRepository.findById(numeroProduction);
     
     if (found != null)
     {
@@ -291,7 +291,7 @@ public class ProductionController
       {
         MessagesTransfer mt = new MessagesTransfer();
 
-        File dir = new File("../uploads-temp/" + id + "-" + fileName);
+        File dir = new File("../uploads-temp/" + numeroProduction + "-" + fileName);
         
         if (!dir.exists()) { dir.mkdirs(); }
 
@@ -445,11 +445,11 @@ public class ProductionController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> disableProduction(@PathVariable int id, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> disableProduction(@PathVariable("id") int numeroProduction, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Production found = productionRepository.findById(id);
+    Production found = productionRepository.findById(numeroProduction);
     
     if (found != null)
     {
@@ -457,7 +457,7 @@ public class ProductionController
 
       if ((numeroUser == 0) || (found.getParticipant().getNumeroParticipant() == numeroUser))
       {
-        boolean absence = (bulletinRepository.countIfProductionVoted(id) == 0);
+        boolean absence = (bulletinRepository.countIfProductionVoted(numeroProduction) == 0);
         
         if (absence)
         {
@@ -465,7 +465,7 @@ public class ProductionController
           
           productionRepository.saveAndFlush(found);
    
-          Presentation presente = presentationRepository.findByProduction(id);
+          Presentation presente = presentationRepository.findByProduction(numeroProduction);
           
           if (presente != null) { presentationRepository.delete(presente); }
           
