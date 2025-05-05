@@ -22,7 +22,7 @@ import fr.triplea.demovote.model.Preference;
 public class PreferenceController 
 {
 
-  // TODO ?
+  // TODO : préférences éventuelles, thèmes, accessibilité ?
 
   @Autowired
   private PreferenceRepository preferenceRepository;

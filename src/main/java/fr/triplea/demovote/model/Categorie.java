@@ -105,7 +105,7 @@ public class Categorie
   public void setNumeroOrdre(int o) { this.numeroOrdre = Integer.valueOf(o); }
   public Integer getNumeroOrdre() { return this.numeroOrdre; }
   
-  public void setAvaiable(boolean b) { this.available = Boolean.valueOf(b); }
+  public void setAvailable(boolean b) { this.available = Boolean.valueOf(b); }
   public Boolean getAvailable() { return this.available; }
   @Transient
   public boolean isAvailable() { return (getAvailable().booleanValue()); }

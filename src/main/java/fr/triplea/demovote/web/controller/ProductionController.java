@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 
+import fr.triplea.demovote.dao.BulletinRepository;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dao.PresentationRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
@@ -67,6 +68,9 @@ public class ProductionController
 
   @Autowired
   private ParticipantRepository participantRepository;
+
+  @Autowired
+  private BulletinRepository bulletinRepository;
 
   @Autowired
   private LocaleResolver localeResolver;
@@ -328,11 +332,11 @@ public class ProductionController
   }
   @PostMapping(value = "/merge-chunks/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> merge_chunks(@PathVariable int id, @RequestParam String fileName, @RequestParam int lastChunkIndex, @RequestParam String checksum, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> merge_chunks(@PathVariable("id") int numeroProduction, @RequestParam String fileName, @RequestParam int lastChunkIndex, @RequestParam String checksum, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Production found = productionRepository.findById(id);
+    Production found = productionRepository.findById(numeroProduction);
     
     if (found != null)
     {
@@ -344,9 +348,9 @@ public class ProductionController
       {
         MessagesTransfer mt = new MessagesTransfer();
 
-        File dir = new File("../uploads-temp/" + id + "-" + fileName);
+        File dir = new File("../uploads-temp/" + numeroProduction + "-" + fileName);
         
-        String nomLocal = UUID.nameUUIDFromBytes(("" + id + "-" + fileName).getBytes()).toString() + ".zip";
+        String nomLocal = UUID.nameUUIDFromBytes(("" + numeroProduction + "-" + fileName).getBytes()).toString() + ".zip";
 
         File fic = new File("../uploads/" + nomLocal);
 
@@ -392,7 +396,19 @@ public class ProductionController
               found.setNomArchive(fileName);
               found.setNomLocal(nomLocal);
               found.setNumeroVersion(found.getNumeroVersion() + 1);
+             
+              Presentation show = presentationRepository.findByProduction(numeroProduction);
 
+              if (show != null)
+              {
+                // si nouvelle archive uploadée, remet à zéro le média lié à la présentation pour forcer l'actualisation manuelle du média.
+                
+                show.setEtatMedia(0); 
+                show.setDataMedia(null, null);
+                
+                presentationRepository.saveAndFlush(show);
+              }
+              
               succes = true;
             }
             else { LOG.error(messageSource.getMessage("chunk.checksum.failed", new Object[] { fileName, checksum, digestat }, locale)); }
@@ -441,20 +457,33 @@ public class ProductionController
 
       if ((numeroUser == 0) || (found.getParticipant().getNumeroParticipant() == numeroUser))
       {
-        // TODO : pas de suppression logique si présence dans les bulletins
+        boolean absence = (bulletinRepository.countIfProductionVoted(id) == 0);
         
-        found.setEnabled(false); 
-        
-        productionRepository.saveAndFlush(found);
- 
-        Presentation presente = presentationRepository.findByProduction(id);
-        
-        if (presente != null) { presentationRepository.delete(presente); }
-        
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setInformation(messageSource.getMessage("production.deleted", null, locale));
+        if (absence)
+        {
+          found.setEnabled(false); 
+          
+          productionRepository.saveAndFlush(found);
+   
+          Presentation presente = presentationRepository.findByProduction(id);
+          
+          if (presente != null) { presentationRepository.delete(presente); }
+          
+          MessagesTransfer mt = new MessagesTransfer();
+          mt.setInformation(messageSource.getMessage("production.deleted", null, locale));
 
-        return ResponseEntity.ok(mt);
+          return ResponseEntity.ok(mt);
+        }
+        else
+        {
+          found.setEnabled(true); 
+ 
+          MessagesTransfer mt = new MessagesTransfer();
+          mt.setInformation(messageSource.getMessage("production.indelible", null, locale));
+
+          return ResponseEntity.ok(mt);
+        }
+        
       }
     }      
     

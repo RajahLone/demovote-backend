@@ -35,8 +35,6 @@ import jakarta.servlet.http.HttpServletRequest;
 public class BulletinController 
 {
 
-  // TODO : possibilités selon flags de la catégorie
-  // TODO : validation automatique des votes à la clôture du scrutin
   // TODO : résultats
   
   @Autowired
@@ -94,24 +92,29 @@ public class BulletinController
       
       if ((categorie != null) && (participant != null))
       {
-        Bulletin nouveau = new Bulletin(); // création de l'enregistrement si absent
-        
-        nouveau.setCategorie(categorie);
-        nouveau.setParticipant(participant);
-        nouveau.setProduction01(null);
-        nouveau.setProduction02(null);
-        nouveau.setProduction03(null);
-        nouveau.setProduction04(null);
-        nouveau.setProduction05(null);
-        nouveau.setProduction06(null);
-        nouveau.setProduction07(null);
-        nouveau.setProduction08(null);
-        nouveau.setProduction09(null);
-        nouveau.setProduction10(null);
-        
-        bulletinRepository.saveAndFlush(nouveau);
-        
-        nombreChoix = nombreMax;
+        boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == true) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
+
+        if (possible)
+        {
+          Bulletin nouveau = new Bulletin(); // création de l'enregistrement si absent
+          
+          nouveau.setCategorie(categorie);
+          nouveau.setParticipant(participant);
+          nouveau.setProduction01(null);
+          nouveau.setProduction02(null);
+          nouveau.setProduction03(null);
+          nouveau.setProduction04(null);
+          nouveau.setProduction05(null);
+          nouveau.setProduction06(null);
+          nouveau.setProduction07(null);
+          nouveau.setProduction08(null);
+          nouveau.setProduction09(null);
+          nouveau.setProduction10(null);
+          
+          bulletinRepository.saveAndFlush(nouveau);
+          
+          nombreChoix = nombreMax;
+        }
       }
     }
 
@@ -181,43 +184,50 @@ public class BulletinController
     int numeroParticipant = this.getNumeroUser(authentication);
     
     BulletinShort bulletin = bulletinRepository.findByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
-    
+        
+    Categorie categorie = categorieRepository.findById(numeroCategorie); 
+
     Production production = productionRepository.findByIdLinkedByCategorie(numeroCategorie, numeroProduction);
     
-    if ((bulletin != null) && (production != null)) 
+    if ((bulletin != null) && (production != null) && (categorie != null)) 
     { 
-      int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == true) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
 
-      boolean existe = (bulletin.getPlace(numeroProduction, nombreMax) > 0);
-      
-      if (!existe)
+      if (possible)
       {
-        int place = bulletin.getPlaceLibre(nombreMax);
+        int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
+
+        boolean existe = (bulletin.getPlace(numeroProduction, nombreMax) > 0);
         
-        if (place > 0)
+        if (!existe)
         {
-          Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
-
-          switch (place)
-          {
-            case 1: vote.setProduction01(production); break;
-            case 2: vote.setProduction02(production); break;
-            case 3: vote.setProduction03(production); break;
-            case 4: vote.setProduction04(production); break;
-            case 5: vote.setProduction05(production); break;
-            case 6: vote.setProduction06(production); break;
-            case 7: vote.setProduction07(production); break;
-            case 8: vote.setProduction08(production); break;
-            case 9: vote.setProduction09(production); break;
-            case 10: vote.setProduction10(production); break;
-          }
+          int place = bulletin.getPlaceLibre(nombreMax);
           
-          bulletinRepository.saveAndFlush(vote);          
+          if (place > 0)
+          {
+            Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
 
-          MessagesTransfer mt = new MessagesTransfer();
-          mt.setInformation(messageSource.getMessage("vote.chosen", null, locale));
+            switch (place)
+            {
+              case 1: vote.setProduction01(production); break;
+              case 2: vote.setProduction02(production); break;
+              case 3: vote.setProduction03(production); break;
+              case 4: vote.setProduction04(production); break;
+              case 5: vote.setProduction05(production); break;
+              case 6: vote.setProduction06(production); break;
+              case 7: vote.setProduction07(production); break;
+              case 8: vote.setProduction08(production); break;
+              case 9: vote.setProduction09(production); break;
+              case 10: vote.setProduction10(production); break;
+            }
+            
+            bulletinRepository.saveAndFlush(vote);          
 
-          return ResponseEntity.ok(mt);
+            MessagesTransfer mt = new MessagesTransfer();
+            mt.setInformation(messageSource.getMessage("vote.chosen", null, locale));
+
+            return ResponseEntity.ok(mt);
+          }
         }
       }
     }
@@ -235,38 +245,45 @@ public class BulletinController
         
     BulletinShort bulletin = bulletinRepository.findByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
 
+    Categorie categorie = categorieRepository.findById(numeroCategorie); 
+
     Production production = productionRepository.findByIdLinkedByCategorie(numeroCategorie, numeroProduction);
     
-    if ((bulletin != null) && (production != null)) 
+    if ((bulletin != null) && (production != null) && (categorie != null)) 
     { 
-      int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == true) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
 
-      int place = bulletin.getPlace(numeroProduction, nombreMax);
-      
-      if (place > 0)
+      if (possible)
       {
-        Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
+        int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
 
-        switch (place) // pas de break; pour continuer les décalages jusqu'à la place 10
+        int place = bulletin.getPlace(numeroProduction, nombreMax);
+        
+        if (place > 0)
         {
-          case 1: vote.setProduction01(vote.getProduction02()); 
-          case 2: vote.setProduction02(vote.getProduction03()); 
-          case 3: vote.setProduction03(vote.getProduction04()); 
-          case 4: vote.setProduction04(vote.getProduction05()); 
-          case 5: vote.setProduction05(vote.getProduction06()); 
-          case 6: vote.setProduction06(vote.getProduction07()); 
-          case 7: vote.setProduction07(vote.getProduction08()); 
-          case 8: vote.setProduction08(vote.getProduction09()); 
-          case 9: vote.setProduction09(vote.getProduction10()); 
-          case 10: vote.setProduction10(null); 
-        }
-        
-        bulletinRepository.saveAndFlush(vote);          
-        
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setInformation(messageSource.getMessage("vote.discarded", null, locale));
+          Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
 
-        return ResponseEntity.ok(mt);
+          switch (place) // pas de break; pour continuer les décalages jusqu'à la place 10
+          {
+            case 1: vote.setProduction01(vote.getProduction02()); 
+            case 2: vote.setProduction02(vote.getProduction03()); 
+            case 3: vote.setProduction03(vote.getProduction04()); 
+            case 4: vote.setProduction04(vote.getProduction05()); 
+            case 5: vote.setProduction05(vote.getProduction06()); 
+            case 6: vote.setProduction06(vote.getProduction07()); 
+            case 7: vote.setProduction07(vote.getProduction08()); 
+            case 8: vote.setProduction08(vote.getProduction09()); 
+            case 9: vote.setProduction09(vote.getProduction10()); 
+            case 10: vote.setProduction10(null); 
+          }
+          
+          bulletinRepository.saveAndFlush(vote);          
+          
+          MessagesTransfer mt = new MessagesTransfer();
+          mt.setInformation(messageSource.getMessage("vote.discarded", null, locale));
+
+          return ResponseEntity.ok(mt);
+        }
       }
     }
      
@@ -283,40 +300,47 @@ public class BulletinController
     
     BulletinShort bulletin = bulletinRepository.findByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
     
+    Categorie categorie = categorieRepository.findById(numeroCategorie); 
+
     Production production = productionRepository.findByIdLinkedByCategorie(numeroCategorie, numeroProduction);
     
-    if ((bulletin != null) && (production != null)) 
+    if ((bulletin != null) && (production != null) && (categorie != null)) 
     { 
-      int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == true) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
 
-      int place = bulletin.getPlace(numeroProduction, nombreMax);
-      
-      if (place > 1)
+      if (possible)
       {
-        Production precedent = productionRepository.findByIdLinkedByCategorie(numeroCategorie, bulletin.getNumeroProduction(place - 1, nombreMax));
+        int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
 
-        Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
+        int place = bulletin.getPlace(numeroProduction, nombreMax);
         
-        switch (place)
+        if (place > 1)
         {
-          case 2: vote.setProduction01(production); vote.setProduction02(precedent); break;
-          case 3: vote.setProduction02(production); vote.setProduction03(precedent); break;
-          case 4: vote.setProduction03(production); vote.setProduction04(precedent); break;
-          case 5: vote.setProduction04(production); vote.setProduction05(precedent); break;
-          case 6: vote.setProduction05(production); vote.setProduction06(precedent); break;
-          case 7: vote.setProduction06(production); vote.setProduction07(precedent); break;
-          case 8: vote.setProduction07(production); vote.setProduction08(precedent); break;
-          case 9: vote.setProduction08(production); vote.setProduction09(precedent); break;
-          case 10: vote.setProduction09(production); vote.setProduction10(precedent); break;
+          Production precedent = productionRepository.findByIdLinkedByCategorie(numeroCategorie, bulletin.getNumeroProduction(place - 1, nombreMax));
+
+          Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
+          
+          switch (place)
+          {
+            case 2: vote.setProduction01(production); vote.setProduction02(precedent); break;
+            case 3: vote.setProduction02(production); vote.setProduction03(precedent); break;
+            case 4: vote.setProduction03(production); vote.setProduction04(precedent); break;
+            case 5: vote.setProduction04(production); vote.setProduction05(precedent); break;
+            case 6: vote.setProduction05(production); vote.setProduction06(precedent); break;
+            case 7: vote.setProduction06(production); vote.setProduction07(precedent); break;
+            case 8: vote.setProduction07(production); vote.setProduction08(precedent); break;
+            case 9: vote.setProduction08(production); vote.setProduction09(precedent); break;
+            case 10: vote.setProduction09(production); vote.setProduction10(precedent); break;
+          }
+          
+          bulletinRepository.saveAndFlush(vote);          
         }
         
-        bulletinRepository.saveAndFlush(vote);          
-      }
-      
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("vote.topped", null, locale));
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setInformation(messageSource.getMessage("vote.topped", null, locale));
 
-      return ResponseEntity.ok(mt);
+        return ResponseEntity.ok(mt);
+      }
     }
      
     return ResponseEntity.notFound().build(); 
@@ -332,40 +356,47 @@ public class BulletinController
     
     BulletinShort bulletin = bulletinRepository.findByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
     
+    Categorie categorie = categorieRepository.findById(numeroCategorie); 
+
     Production production = productionRepository.findByIdLinkedByCategorie(numeroCategorie, numeroProduction);
     
-    if ((bulletin != null) && (production != null)) 
+    if ((bulletin != null) && (production != null) && (categorie != null)) 
     { 
-      int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == true) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
 
-      int place = bulletin.getPlace(numeroProduction, nombreMax);
-      
-      if (place < nombreMax)
+      if (possible)
       {
-        Production suivant = productionRepository.findByIdLinkedByCategorie(numeroCategorie, bulletin.getNumeroProduction(place + 1, nombreMax));
+        int nombreMax = Math.max(1, Math.min(Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "NOMBRE_CHOIX")), 10));        
 
-        Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
+        int place = bulletin.getPlace(numeroProduction, nombreMax);
         
-        switch (place)
+        if (place < nombreMax)
         {
-          case 1: vote.setProduction01(suivant); vote.setProduction02(production); break;
-          case 2: vote.setProduction02(suivant); vote.setProduction03(production); break;
-          case 3: vote.setProduction03(suivant); vote.setProduction04(production); break;
-          case 4: vote.setProduction04(suivant); vote.setProduction05(production); break;
-          case 5: vote.setProduction05(suivant); vote.setProduction06(production); break;
-          case 6: vote.setProduction06(suivant); vote.setProduction07(production); break;
-          case 7: vote.setProduction07(suivant); vote.setProduction08(production); break;
-          case 8: vote.setProduction08(suivant); vote.setProduction09(production); break;
-          case 9: vote.setProduction09(suivant); vote.setProduction10(production); break;
+          Production suivant = productionRepository.findByIdLinkedByCategorie(numeroCategorie, bulletin.getNumeroProduction(place + 1, nombreMax));
+
+          Bulletin vote = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
+          
+          switch (place)
+          {
+            case 1: vote.setProduction01(suivant); vote.setProduction02(production); break;
+            case 2: vote.setProduction02(suivant); vote.setProduction03(production); break;
+            case 3: vote.setProduction03(suivant); vote.setProduction04(production); break;
+            case 4: vote.setProduction04(suivant); vote.setProduction05(production); break;
+            case 5: vote.setProduction05(suivant); vote.setProduction06(production); break;
+            case 6: vote.setProduction06(suivant); vote.setProduction07(production); break;
+            case 7: vote.setProduction07(suivant); vote.setProduction08(production); break;
+            case 8: vote.setProduction08(suivant); vote.setProduction09(production); break;
+            case 9: vote.setProduction09(suivant); vote.setProduction10(production); break;
+          }
+          
+          bulletinRepository.saveAndFlush(vote);          
         }
-        
-        bulletinRepository.saveAndFlush(vote);          
+
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setInformation(messageSource.getMessage("vote.bottomed", null, locale));
+
+        return ResponseEntity.ok(mt);
       }
-
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("vote.bottomed", null, locale));
-
-      return ResponseEntity.ok(mt);
     }
      
     return ResponseEntity.notFound().build(); 
@@ -381,19 +412,26 @@ public class BulletinController
     int numeroParticipant = this.getNumeroUser(authentication);
     
     Bulletin bulletin = bulletinRepository.getByCategorieAndParticipant(numeroCategorie, numeroParticipant); 
+    
+    Categorie categorie = categorieRepository.findById(numeroCategorie); 
    
-    if ((bulletin != null)) 
+    if ((bulletin != null) && (categorie != null)) 
     { 
-      if (bulletin.getProduction01() != null) // au moins une production choisie pour valider
-      {
-        bulletin.setConfirmed(true);
-        
-        bulletinRepository.saveAndFlush(bulletin);          
-        
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setInformation(messageSource.getMessage("vote.validated", null, locale));
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == true) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
 
-        return ResponseEntity.ok(mt);
+      if (possible)
+      {
+        if (bulletin.getProduction01() != null) // au moins une production choisie pour valider
+        {
+          bulletin.setConfirmed(true);
+          
+          bulletinRepository.saveAndFlush(bulletin);          
+          
+          MessagesTransfer mt = new MessagesTransfer();
+          mt.setInformation(messageSource.getMessage("vote.validated", null, locale));
+
+          return ResponseEntity.ok(mt);
+        }
       }
     }
      

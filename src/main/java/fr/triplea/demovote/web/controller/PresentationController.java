@@ -56,8 +56,6 @@ public class PresentationController
 {
   //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(PresentationController.class);
-
-  // TODO : raccourci ouvrir/fermer/calculer les votes
   
   @Autowired
   private PresentationRepository presentationRepository;
@@ -95,7 +93,7 @@ public class PresentationController
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    List<Categorie> categories = categorieRepository.findAll();
+    List<Categorie> categories = categorieRepository.findAll(0, true);
     
     List<ProductionShort> productions = productionRepository.findLinkedWithoutArchive();
    
@@ -584,9 +582,9 @@ public class PresentationController
 
   @GetMapping(value = "/formfile/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<PresentationFile> getFormFile(@PathVariable int id)
+  public ResponseEntity<PresentationFile> getFormFile(@PathVariable("id") int numeroProduction)
   { 
-    Presentation found = presentationRepository.findByProduction(id);
+    Presentation found = presentationRepository.findByProduction(numeroProduction);
     
     if (found != null) 
     { 
@@ -598,21 +596,23 @@ public class PresentationController
 
   @PutMapping(value = "/upload/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> update(@PathVariable int id, @RequestBody(required = true) PresentationFile presentation, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable("id") int numeroProduction, @RequestBody(required = true) PresentationFile presentation, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Presentation found = presentationRepository.findByProduction(id);
+    Presentation found = presentationRepository.findByProduction(numeroProduction);
     
-    if (found != null)
+    Categorie categorie = found.getCategorie();
+
+    if ((found != null) && (categorie != null))
     {
-      if (presentation.mediaData() != null)
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == false) && (categorie.isComputed() == false) && (categorie.isDisplayable() == false);
+
+      if ((presentation.mediaData() != null) && possible)
       {
         int etat = presentation.etatMedia();
         String nom = presentation.mediaName();
-        
-        // TODO : réinitialiser l'état si une nouvelle archive a été uploadé au niveau de la production
-        
+                
         if (presentation.mediaData() == null) { etat = 0; }
         
         MessagesTransfer mt = new MessagesTransfer();

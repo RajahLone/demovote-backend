@@ -100,7 +100,7 @@ public class CategorieController
       found.setNumeroOrdre(categorie.getNumeroOrdre());
       found.setEnabled(true);
       
-      found.setAvaiable(categorie.isAvailable());
+      found.setAvailable(categorie.isAvailable());
       found.setUploadable(categorie.isUploadable());
       found.setDisplayable(categorie.isDisplayable());
       found.setPollable(categorie.isPollable());
@@ -112,6 +112,64 @@ public class CategorieController
       mt.setInformation(messageSource.getMessage("categorie.updated", null, locale));
 
       return ResponseEntity.ok(mt);
+    }
+    
+    return ResponseEntity.notFound().build(); 
+  }
+
+  @GetMapping(value = "/open-poll/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Object> openPoll(@PathVariable int id, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Categorie c = categorieRepository.findById(id);
+    
+    if (c != null)
+    {
+      c.setPollable(true); 
+      
+      categorieRepository.saveAndFlush(c);
+      
+      MessagesTransfer mt = new MessagesTransfer();
+      mt.setAlerte(messageSource.getMessage("categorie.poll.opened", null, locale));
+
+      return ResponseEntity.ok(mt);
+    }      
+    
+    return ResponseEntity.notFound().build(); 
+  }
+
+  @GetMapping(value = "/close-polls")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Object> closePolls(HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    List<Categorie> categories = categorieRepository.findAll(0, true);
+    
+    if (categories != null)
+    {
+      if (categories.size() > 0)
+      {
+        for (int i = 0; i < categories.size(); i++)
+        {
+          Categorie c = categories.get(i);
+          
+          c.setPollable(false);
+          
+          // TODO : valider les votes, dépouiller les votes et calculer les résultats pour chaque catégorie
+          
+          c.setComputed(true);
+          
+          categorieRepository.saveAndFlush(c);
+        }
+
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setAlerte(messageSource.getMessage("categorie.polls.closed", null, locale));
+
+        return ResponseEntity.ok(mt);
+      }
     }
     
     return ResponseEntity.notFound().build(); 
