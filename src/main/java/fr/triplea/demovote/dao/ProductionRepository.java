@@ -190,13 +190,15 @@ public interface ProductionRepository extends JpaRepository<Production, Integer>
       + "p.auteurs, "
       + "p.groupes, "
       + "p.plateforme, "
+      + "p.informations_privees, "
+      + "CONCAT(g.pseudonyme, ' = ', g.nom, ' ', g.prenom) AS nom_gestionnaire, "
       + "0 AS nombre_points,"
       + "0 AS nombre_first "
       + "FROM vote.productions AS p "
       + "INNER JOIN vote.presentations AS s ON p.numero_production = s.numero_production "
+      + "INNER JOIN vote.participants AS g ON p.numero_participant = g.numero_participant "
       + "WHERE s.numero_categorie = :numero "
-      + "  AND p.flag_actif IS TRUE "
-      + "ORDER BY s.numero_ordre ASC, p.titre ASC ")
+      + "  AND p.flag_actif IS TRUE ")
   List<ProductionVote> findForCalculation(@Param("numero") int numeroCategorie);
  
   @Override

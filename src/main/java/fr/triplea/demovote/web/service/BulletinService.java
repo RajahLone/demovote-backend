@@ -11,7 +11,6 @@ import fr.triplea.demovote.dao.ProductionRepository;
 import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.BulletinShort;
 import fr.triplea.demovote.dto.ProductionVote;
-import jakarta.annotation.PostConstruct;
 
 @Service
 public class BulletinService 
@@ -37,12 +36,13 @@ public class BulletinService
   int points_position_09 = 0;
   int points_position_10 = 0;
   
-  boolean init = false;
-  
-  @PostConstruct
-  public void init()
+  public List<ProductionVote> decompterVotes(int numeroCategorie)
   {
-    if (init == false)
+    List<BulletinShort> bulletins = bulletinRepository.findByCategorie(numeroCategorie);
+    
+    List<ProductionVote> productions = productionRepository.findForCalculation(numeroCategorie);
+    
+    if ((bulletins != null) && (productions != null))
     {
       points_position_01 = Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "POINTS_POSITION_01"));
       points_position_02 = Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "POINTS_POSITION_02"));
@@ -55,18 +55,6 @@ public class BulletinService
       points_position_09 = Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "POINTS_POSITION_09"));
       points_position_10 = Integer.parseInt(variableRepository.findByTypeAndCode("Résultats", "POINTS_POSITION_10"));
 
-      init = true;
-    }
-  }
-  
-  public List<ProductionVote> decompterVotes(int numeroCategorie)
-  {
-    List<BulletinShort> bulletins = bulletinRepository.findByCategorie(numeroCategorie);
-    
-    List<ProductionVote> productions = productionRepository.findForCalculation(numeroCategorie);
-    
-    if ((bulletins != null) && (productions != null))
-    {
       if ((bulletins.size() > 0) && (productions.size() > 0))
       {
         for (int b = 0; b < bulletins.size(); b++)
@@ -90,7 +78,7 @@ public class BulletinService
           }
         }
         
-        productions.sort(Comparator.comparing(ProductionVote::getNombrePoints).thenComparing(ProductionVote::getNombreFirst));
+        productions.sort(Comparator.comparing(ProductionVote::getValue).reversed());
       }
     }
     

@@ -50,6 +50,9 @@ public interface BulletinRepository extends JpaRepository<Bulletin, Integer>
       + "FROM vote.bulletins AS u "
       + "WHERE u.numero_categorie = :categorie AND u.flag_valide IS TRUE ")
   List<BulletinShort> findByCategorie(@Param("categorie") int cat_id);
+  
+  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM vote.bulletins AS u WHERE u.numero_categorie = :categorie AND u.flag_valide IS TRUE ")
+  Integer countByCategorie(@Param("categorie") int cat_id);
 
   @NativeQuery("SELECT DISTINCT "
              + " u.* "

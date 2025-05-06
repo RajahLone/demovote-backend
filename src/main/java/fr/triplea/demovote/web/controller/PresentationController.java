@@ -364,7 +364,7 @@ public class PresentationController
       
       return ResponseEntity
               .ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + libelleCategorie +".html\"")
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"presentation." + libelleCategorie +".html\"")
               .header(HttpHeaders.CONTENT_LENGTH, "" + sb.length())
               .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML.toString())
               .body(sb.toString());

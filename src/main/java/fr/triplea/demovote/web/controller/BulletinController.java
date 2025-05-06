@@ -2,6 +2,8 @@ package fr.triplea.demovote.web.controller;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,7 +44,6 @@ import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.BulletinShort;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.ProductionChoice;
-import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.dto.ProductionVote;
 import fr.triplea.demovote.model.Bulletin;
 import fr.triplea.demovote.model.Categorie;
@@ -57,7 +59,7 @@ public class BulletinController
   //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(BulletinController.class);
 
-  // TODO : page des résultats, résultats PDF pour toutes les catégories + HTML par catégorie
+  // TODO : page des résultats
 
   @Autowired
   private VariableRepository variableRepository;
@@ -489,10 +491,8 @@ public class BulletinController
     Locale locale = localeResolver.resolveLocale(request);
 
     List<Categorie> categories = categorieRepository.findAll(0, true);
-    
-    List<ProductionShort> productions = productionRepository.findLinkedWithoutArchive();
-   
-    if ((categories != null) && (productions != null)) 
+       
+    if ((categories != null)) 
     { 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       
@@ -507,31 +507,36 @@ public class BulletinController
 
         PDRectangle A4_paysage = new PDRectangle(297 * POINTS_PER_MM, 210 * POINTS_PER_MM);
         
-        Table.TableBuilder tb = Table.builder().addColumnsOfWidth(20f, 100f, 100f, 100f, 105f, 190f, 190f).padding(4);
+        Table.TableBuilder tb = Table.builder().addColumnsOfWidth(40f, 100f, 50f, 50f, 100f, 100f, 100f, 105f, 160f).padding(4);
 
         for (Categorie categorie: categories)
         {
           if (categorie.isAvailable())
           {
-            tb.addRow(createTitleRow(categorie.getLibelle()));
+            int nombreVotants = bulletinRepository.countByCategorie(categorie.getNumeroCategorie());
+
+            tb.addRow(createTitleRow(categorie.getLibelle() + " : " + nombreVotants + " " + messageSource.getMessage("show.pdf.votes", null, locale)));
             tb.addRow(createHeaderRow(locale));
 
-            int nombre = 0;
-            
-            if ((productions.size() > 0)) 
-            { 
-              for (ProductionShort production: productions) 
+            List<ProductionVote> productions = bulletinService.decompterVotes(categorie.getNumeroCategorie());
+
+            if (productions != null)
+            {
+              if ((productions.size() > 0)) 
               { 
-                if (production.numeroCategorie() == categorie.getNumeroCategorie())
-                {
-                  nombre++;
-                  
-                  tb.addRow(createProductionRow(production, nombre));
-                }
+                int position = 1;
+                int place = 1;
+
+                for (int i = 0; i < productions.size(); i++) 
+                { 
+                  if (i > 0) { if (productions.get(i).getValue() != productions.get(i - 1).getValue()) { position = place; } } else { position = place; }
+                  tb.addRow(createProductionRow(productions.get(i), position));
+                  place++;
+                } 
               } 
-            } 
-            
-            tb.addRow(createTitleRow(categorie.getLibelle() + " : " + nombre + " " + messageSource.getMessage("show.pdf.productions", null, locale)));
+            }
+                        
+            tb.addRow(createTitleRow(categorie.getLibelle() + " : " + productions.size() + " " + messageSource.getMessage("show.pdf.productions", null, locale)));
             tb.addRow(createEmptyRow());
            }
         }
@@ -560,7 +565,7 @@ public class BulletinController
       
       return ResponseEntity
               .ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"presentations.pdf\"")
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"resultats.pdf\"")
               .header(HttpHeaders.CONTENT_LENGTH, "" + binaire.length)
               .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF.toString())
               .body(r); 
@@ -571,24 +576,26 @@ public class BulletinController
   private Row createTitleRow(String str) 
   {
     return Row.builder()
-              .add(TextCell.builder().text(str).colSpan(7).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0.1f).build())
+              .add(TextCell.builder().text(str).colSpan(9).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0.1f).build())
               .build();
   }
   private Row createEmptyRow() 
   {
     return Row.builder()
-              .add(TextCell.builder().text(" ").colSpan(7).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0).build())
+              .add(TextCell.builder().text(" ").colSpan(9).fontSize(10).backgroundColor(Color.WHITE).horizontalAlignment(HorizontalAlignment.LEFT).borderWidth(0).build())
               .build();
   }
   private Row createHeaderRow(Locale locale) 
   {
     return Row.builder()
-              .add(createHeaderCell(""))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.position", null, locale)))
               .add(createHeaderCell(messageSource.getMessage("show.pdf.title", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.number.points", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.number.firsts", null, locale)))
               .add(createHeaderCell(messageSource.getMessage("show.pdf.authors", null, locale)))
               .add(createHeaderCell(messageSource.getMessage("show.pdf.groups", null, locale)))
+              .add(createHeaderCell(messageSource.getMessage("show.pdf.plateform", null, locale)))
               .add(createHeaderCell(messageSource.getMessage("show.pdf.manager", null, locale)))
-              .add(createHeaderCell(messageSource.getMessage("show.pdf.comments", null, locale)))
               .add(createHeaderCell(messageSource.getMessage("show.pdf.private", null, locale)))
               .build();
   }
@@ -603,19 +610,21 @@ public class BulletinController
                    .fontSize(8)
                    .build();
   }
-  private Row createProductionRow(ProductionShort production, int nombre) 
+  private Row createProductionRow(ProductionVote production, int nombre) 
   {
     return Row.builder()
-              .add(createCell("#" + nombre))
-              .add(createCell(production.titre()))
-              .add(createCell(production.auteurs()))
-              .add(createCell(production.groupes()))
-              .add(createCell(production.nomGestionnaire()))
-              .add(createCell(production.commentaire()))
-              .add(createCell(production.informationsPrivees()))
+              .add(createCell("#" + nombre, 10))
+              .add(createCell(production.getTitre(), 8))
+              .add(createCell("" + production.getNombrePoints(), 10))
+              .add(createCell("" + production.getNombreFirst(), 10))
+              .add(createCell(production.getAuteurs(), 8))
+              .add(createCell(production.getGroupes(), 8))
+              .add(createCell(production.getPlateforme(), 8))
+              .add(createCell(production.getNomGestionnaire(), 8))
+              .add(createCell(production.getInformationsPrivees(), 8))
               .build();
   }
-  private TextCell createCell(String str)
+  private TextCell createCell(String str, int s)
   {
     return TextCell.builder()
                    .text(str)
@@ -623,7 +632,7 @@ public class BulletinController
                    .textColor(Color.BLACK)
                    .horizontalAlignment(HorizontalAlignment.LEFT)
                    .borderWidth(0.1f)
-                   .fontSize(8)
+                   .fontSize(s)
                    .build();
   }
 
@@ -641,7 +650,7 @@ public class BulletinController
     
     List<ProductionVote> productions = bulletinService.decompterVotes(numeroCategorie);
     
-    /*if ((categorie != null) && (presentations != null))
+    if ((categorie != null) && (productions != null))
     {
       String libelleCategorie = categorie.getLibelle();
          
@@ -657,94 +666,34 @@ public class BulletinController
       sb.append("</head>\n\n");
       sb.append("<body>\n");
 
-      sb.append("<div class=\"diapo_start\" id=\"diapo_page_0\">\n");
+      // TODO : résultats HTML par catégorie
       
-      sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
-      sb.append("\t").append("<div class=\"diapo_range\">").append(messageSource.getMessage("show.file.starting", null, locale)).append("</div>\n");
+      sb.append("<div class=\"ranking_page\" id=\"ranking_page\">\n");
+      
+      sb.append("\t").append("<div class=\"ranking_compo\">").append(libelleCategorie).append("</div>\n");
+      
+      int position = 1;
+      int place = 1;
 
-      sb.append("\t").append("<div class=\"diapo_hub\">\n");
-      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" style=\"visibility:hidden;\">&#9665;</button>\n");
-      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_next(0);\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9655;</button>\n");
-      sb.append("\t").append("</div>\n");
-      
-      sb.append("</div>\n");
-
-      int n = 1;
-      
-      for (int i = 0; i < presentations.size(); i++)
+      for (int i = 0; i < productions.size(); i++)
       {
-        Presentation d = presentations.get(i);
-        Production p = d.getProduction();
+        if (i > 0) { if (productions.get(i).getValue() != productions.get(i - 1).getValue()) { position = place; } } else { position = place; }
 
-        sb.append("<div class=\"diapo_page\" id=\"diapo_page_" + n + "\">\n");
+        ProductionVote p = productions.get(i);
 
-        sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
-        sb.append("\t").append("<div class=\"diapo_order\">").append("#").append("" + (i + 1)).append("</div>\n");
-        sb.append("\t").append("<div class=\"diapo_title\">").append(p.getTitre()).append("</div>\n");
-        sb.append("\t").append("<div class=\"diapo_authors\">").append(messageSource.getMessage("show.file.by", null, locale)).append(" ").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
-        sb.append("\t").append("<div class=\"diapo_comments\">");
-        if (p.hasPlateforme()) { sb.append(messageSource.getMessage("show.file.on", null, locale)).append(" ").append(p.getPlateforme()).append("<br/>"); }
-        sb.append(p.getCommentaire()).append("</div>\n");
+        sb.append("<div class=\"ranking_item\" id=\"diapo_item_" + i + "\">\n");
 
-        if (d.getEtatMedia() == 1)
-        {
-          if (d.getMimeMedia().startsWith("image/"))
-          {
-            sb.append("\t").append("<div id=\"diapo_pict_").append(n).append("\" class=\"diapo_image_container\">\n");
-            sb.append("\t").append("\t").append("<div class=\"diapo_image_content\" onClick=\"pict_hide(").append(n).append(");\"><img src=\"").append(d.getDataMediaAsString()).append("\" alt=\"\" class=\"diapo_image\" /></div>\n");
-            sb.append("\t").append("</div>\n");
-          }
-          else if (d.getMimeMedia().startsWith("audio/"))
-          {
-            sb.append("\t").append("<div id=\"diapo_file_").append(n).append("\" class=\"diapo_audio_container\">\n");
-            sb.append("\t").append("\t").append("<audio controls><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</audio>\n");
-            sb.append("\t").append("</div>\n");
-          }
-          else if (d.getMimeMedia().startsWith("video/"))
-          {
-            sb.append("\t").append("<div id=\"diapo_file_").append(n).append("\" class=\"diapo_video_container\">\n");
-            sb.append("\t").append("\t").append("<video controls width=\"480\" height=\"240\"><source src=\"").append(d.getDataMediaAsString()).append("\" type=\"").append(d.getMimeMedia()).append("\" />").append("</video>\n");
-            sb.append("\t").append("</div>\n");
-          }
-        }
-
-        sb.append("\t").append("<div id=\"diapo_ctrl_").append(n).append("\" class=\"diapo_hub\">\n");
-        sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_prev(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9665;</button>\n");
-        sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_next(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.next", null, locale)).append("\">&#9655;</button>\n");
-        if ((d.getEtatMedia() == 1))
-        {
-          if (d.getMimeMedia().startsWith("image/"))
-          {
-            sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"pict_open(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.open", null, locale)).append("\">&#9713;</button>\n");
-          }
-          else
-          {
-            sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"file_open(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.open", null, locale)).append("\">&#9713;</button>\n");
-          }
-        }
-        else if ((d.getEtatMedia() == 2))
-        {
-          sb.append("\t").append("\t").append("<button class=\"diapo_warning\">").append(messageSource.getMessage("show.file.acknowlegded", null, locale)).append("</button>\n");
-        }
-        else
-        {
-          sb.append("\t").append("\t").append("<button class=\"diapo_alert\">").append(messageSource.getMessage("show.file.missing", null, locale)).append("</button>\n");
-        }
-        sb.append("\t").append("</div>\n");
+        sb.append("\t").append("<div class=\"ranking_order\">").append("#").append("" + position).append("</div>\n");
+        sb.append("\t").append("<div class=\"ranking_title\">").append(p.getTitre()).append("</div>\n");
+        sb.append("\t").append("<div class=\"ranking_points\">").append(p.getNombrePoints() + " / " + p.getNombreFirst()).append("</div>\n");
+        sb.append("\t").append("<div class=\"ranking_authors\">").append(messageSource.getMessage("show.file.by", null, locale)).append(" ").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
+        sb.append("\t").append("<div class=\"ranking_plateform\">").append(messageSource.getMessage("show.file.on", null, locale)).append(" ").append(p.getPlateforme()).append("</div>\n");
 
         sb.append("</div>\n");
-        n++;
+        
+        place++;
       }
-      
-      sb.append("<div class=\"diapo_page\" id=\"diapo_page_" + n + "\">\n");
-      
-      sb.append("\t").append("<div class=\"diapo_compo\">").append(libelleCategorie).append("</div>\n");
-      sb.append("\t").append("<div class=\"diapo_range\">").append(messageSource.getMessage("show.file.ending", null, locale)).append("</div>\n");
-
-      sb.append("\t").append("<div class=\"diapo_hub\">\n");
-      sb.append("\t").append("\t").append("<button class=\"diapo_bouton\" onClick=\"show_prev(").append(n).append(");\" title=\"").append(messageSource.getMessage("show.file.previous", null, locale)).append("\">&#9665;</button>\n");
-      sb.append("\t").append("</div>\n");
-      
+            
       sb.append("</div>\n");
 
       sb.append("<script type=\"text/javascript\">\n");
@@ -759,11 +708,11 @@ public class BulletinController
       
       return ResponseEntity
               .ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + libelleCategorie +".html\"")
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"resultats." + libelleCategorie +".html\"")
               .header(HttpHeaders.CONTENT_LENGTH, "" + sb.length())
               .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML.toString())
               .body(sb.toString());
-    }*/
+    }
     
     return ResponseEntity.notFound().build();
   }  
