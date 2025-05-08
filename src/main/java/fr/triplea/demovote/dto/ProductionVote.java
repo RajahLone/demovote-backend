@@ -45,7 +45,8 @@ public class ProductionVote
 
   public void setPlateforme(String plateforme) { this.plateforme = plateforme; }
   public String getPlateforme() { return plateforme; }
-  
+  public boolean hasPlateforme() { if (this.plateforme == null) { return false; } return (this.plateforme.length() > 0); }
+
   public void setInformationsPrivees(String informationsPrivees) { this.informationsPrivees = informationsPrivees; }
   public String getInformationsPrivees() { return informationsPrivees; }
 

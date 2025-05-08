@@ -59,8 +59,6 @@ public class BulletinController
   //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(BulletinController.class);
 
-  // TODO : page des résultats
-
   @Autowired
   private VariableRepository variableRepository;
 
@@ -565,7 +563,7 @@ public class BulletinController
       
       return ResponseEntity
               .ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"resultats.pdf\"")
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"ranks.all.pdf\"")
               .header(HttpHeaders.CONTENT_LENGTH, "" + binaire.length)
               .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF.toString())
               .body(r); 
@@ -637,7 +635,7 @@ public class BulletinController
   }
 
   
-  @Value("classpath:styles/diapos.css")
+  @Value("classpath:styles/ranks.css")
   private Resource styleDiaposResource;
   
   @GetMapping(value = "/diapos/{id}")
@@ -665,15 +663,13 @@ public class BulletinController
       sb.append("</style>\n");
       sb.append("</head>\n\n");
       sb.append("<body>\n");
-
-      // TODO : résultats HTML par catégorie
       
       sb.append("<div class=\"ranking_page\" id=\"ranking_page\">\n");
       
-      sb.append("\t").append("<div class=\"ranking_compo\">").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"ranking_compo\">").append(messageSource.getMessage("show.file.results", null, locale)).append(" ").append(libelleCategorie).append("</div>\n");
+      sb.append("\t").append("<div class=\"ranking_list\">");
       
-      int position = 1;
-      int place = 1;
+      int position = 1; int place = 1;
 
       for (int i = 0; i < productions.size(); i++)
       {
@@ -681,34 +677,45 @@ public class BulletinController
 
         ProductionVote p = productions.get(i);
 
-        sb.append("<div class=\"ranking_item\" id=\"diapo_item_" + i + "\">\n");
+        sb.append("\t\t").append("<div class=\"ranking_item\" id=\"ranking_item_").append(i).append("\">\n");
 
-        sb.append("\t").append("<div class=\"ranking_order\">").append("#").append("" + position).append("</div>\n");
-        sb.append("\t").append("<div class=\"ranking_title\">").append(p.getTitre()).append("</div>\n");
-        sb.append("\t").append("<div class=\"ranking_points\">").append(p.getNombrePoints() + " / " + p.getNombreFirst()).append("</div>\n");
-        sb.append("\t").append("<div class=\"ranking_authors\">").append(messageSource.getMessage("show.file.by", null, locale)).append(" ").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
-        sb.append("\t").append("<div class=\"ranking_plateform\">").append(messageSource.getMessage("show.file.on", null, locale)).append(" ").append(p.getPlateforme()).append("</div>\n");
+        sb.append("\t\t\t").append("<div class=\"ranking_title\"><span class=\"ranking_order\">").append("#" + position).append(" - </span>").append(p.getTitre()).append(" <span class=\"ranking_points faded\">(").append(p.getNombrePoints() + " / " + p.getNombreFirst()).append(")</span></div>\n");
+        sb.append("\t\t\t").append("<div class=\"ranking_authors\"><span class=\"faded\">").append(messageSource.getMessage("show.file.by", null, locale)).append("</span> ").append(p.getAuteurs()).append(" / ").append(p.getGroupes()).append("</div>\n");
+        if (p.hasPlateforme()) { sb.append("\t\t\t").append("<div class=\"ranking_plateform\"><span class=\"faded\">").append(messageSource.getMessage("show.file.on", null, locale)).append("</span> ").append(p.getPlateforme()).append("</div>\n"); }
 
-        sb.append("</div>\n");
+        sb.append("\t\t").append("</div>\n");
         
         place++;
       }
-            
+      
+      sb.append("\t").append("</div>\n");      
       sb.append("</div>\n");
 
+      position = 1; place = 1;
+
+      sb.append("\t").append("<div class=\"ranking_hub\">\n");
+      
+      for (int i = 0; i < productions.size(); i++)
+      {
+        if (i > 0) { if (productions.get(i).getValue() != productions.get(i - 1).getValue()) { position = place; } } else { position = place; }
+
+        sb.append("\t\t").append("<button class=\"ranking_bouton\" id=\"ranking_button_").append(i).append("\" onClick=\"show_prod(").append(i).append(");\" title=\"").append(messageSource.getMessage("show.file.reveal", null, locale) + " #" + position).append("\">").append("#" + position).append("</button>\n");
+
+        place++; 
+      }
+      
+      sb.append("\t").append("</div>\n");
+
+      
       sb.append("<script type=\"text/javascript\">\n");
-      sb.append("function show_prev(num) { var cur = document.getElementById(\"diapo_page_\" + num); var prv = document.getElementById(\"diapo_page_\" + (num - 1)); if (cur) { cur.style.visibility = 'hidden'; cur.style.display = 'none'; } if (prv) { prv.style.visibility = 'visible'; prv.style.display = 'block'; } }\n");
-      sb.append("function show_next(num) { var cur = document.getElementById(\"diapo_page_\" + num); var nxt = document.getElementById(\"diapo_page_\" + (num + 1)); if (cur) { cur.style.visibility = 'hidden'; cur.style.display = 'none'; } if (nxt) { nxt.style.visibility = 'visible'; nxt.style.display = 'block'; } }\n");
-      sb.append("function pict_open(num) { var hub = document.getElementById(\"diapo_ctrl_\" + num); var pic = document.getElementById(\"diapo_pict_\" + num); if (hub) { hub.style.visibility = 'hidden'; hub.style.display = 'none'; } if (pic) { pic.style.visibility = 'visible'; pic.style.display = 'block'; } }\n");
-      sb.append("function pict_hide(num) { var hub = document.getElementById(\"diapo_ctrl_\" + num); var pic = document.getElementById(\"diapo_pict_\" + num); if (hub) { hub.style.visibility = 'visible'; hub.style.display = 'block'; } if (pic) { pic.style.visibility = 'hidden'; pic.style.display = 'none'; } }\n");
-      sb.append("function file_open(num) { var fil = document.getElementById(\"diapo_file_\" + num); if (fil) { if (fil.style.visibility == 'visible') { fil.style.visibility = 'hidden'; fil.style.display = 'none'; } else { fil.style.visibility = 'visible'; fil.style.display = 'block'; } } }\n");
+      sb.append("function show_prod(num) { var cur = document.getElementById(\"ranking_item_\" + num); var but = document.getElementById(\"ranking_button_\" + num); if (cur) { cur.style.visibility = 'visible'; cur.style.display = 'block'; } if (but) { but.style.visibility = 'hidden'; but.style.display = 'none'; } }\n");
       sb.append("</script>\n");
       sb.append("</body>\n");
       sb.append("</html>\n");
       
       return ResponseEntity
               .ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"resultats." + libelleCategorie +".html\"")
+              .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"ranks." + libelleCategorie +".html\"")
               .header(HttpHeaders.CONTENT_LENGTH, "" + sb.length())
               .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML.toString())
               .body(sb.toString());
@@ -716,5 +723,59 @@ public class BulletinController
     
     return ResponseEntity.notFound().build();
   }  
+
+
+  @GetMapping(value = "/results/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public List<ProductionVote> resultats(@PathVariable("id") int numeroCategorie, final Authentication authentication, HttpServletRequest request) 
+  {
+    Categorie categorie = categorieRepository.findById(numeroCategorie); 
+   
+    List<ProductionVote> productions = new ArrayList<ProductionVote>();
+    
+    if (categorie != null) 
+    { 
+      boolean possible = (categorie.isAvailable() == true) && (categorie.isPollable() == false) && (categorie.isComputed() == true) && (categorie.isDisplayable() == true);
+
+      if (possible)
+      {
+        productions = bulletinService.decompterVotes(numeroCategorie);
+        
+        if (productions != null)
+        {
+          if (productions.size() > 0)
+          {
+            for (int i = 0; i < productions.size(); i++)
+            {
+              productions.get(i).setInformationsPrivees(""); // ne pas diffuser les informations privées aux utilisateurs
+              productions.get(i).setNomGestionnaire("");     // ne pas diffuser le nom du gestionnaire aux utilisateurs
+            }
+          }
+        }
+      }
+    }
+     
+    return productions; 
+  }
+
+
+  @GetMapping(value = "/count-voters/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Integer> compterVotants(@PathVariable("id") int numeroCategorie) 
+  {     
+    int nombreVotants = 0; 
+    
+    Categorie found = categorieRepository.findById(numeroCategorie);
+    
+    if (found != null)
+    {
+      if (found.isDisplayable())
+      {
+        nombreVotants = bulletinRepository.countByCategorie(numeroCategorie);
+      }
+    }
+ 
+    return ResponseEntity.ok(Integer.valueOf(nombreVotants));
+  }
 
 }

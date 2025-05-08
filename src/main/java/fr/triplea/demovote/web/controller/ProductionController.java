@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.BulletinRepository;
+import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dao.PresentationRepository;
 import fr.triplea.demovote.dao.ProductionRepository;
@@ -45,6 +46,7 @@ import fr.triplea.demovote.dto.ProductionFile;
 import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.dto.ProductionTransfer;
 import fr.triplea.demovote.dto.ProductionUpdate;
+import fr.triplea.demovote.model.Categorie;
 import fr.triplea.demovote.model.Participant;
 import fr.triplea.demovote.model.Presentation;
 import fr.triplea.demovote.model.Production;
@@ -65,6 +67,9 @@ public class ProductionController
   
   @Autowired
   private PresentationRepository presentationRepository;
+
+  @Autowired
+  private CategorieRepository categorieRepository;
 
   @Autowired
   private ParticipantRepository participantRepository;
@@ -101,15 +106,19 @@ public class ProductionController
   @ResponseBody
   public ResponseEntity<Resource> getFile(@PathVariable("id") int numeroProduction, final Authentication authentication) 
   {
-    // TODO : après résultats affichés, download autorisé pour tous
-    
     Production p = productionRepository.findById(numeroProduction);
+    
+    Categorie c = categorieRepository.findByProductionPresentee(numeroProduction);
+   
+    boolean resultatsPublies = false;
+    
+    if (c != null) { if (c.isDisplayable()) { resultatsPublies = true; }}
     
     if (p != null) 
     { 
       int numeroUser = this.getNumeroUser(authentication);
-      
-      if ((numeroUser == 0) || (p.getNumeroGestionnaire() == numeroUser))
+            
+      if ((numeroUser == 0) || (p.getNumeroGestionnaire() == numeroUser) || (resultatsPublies == true))
       {
         byte[] data = null;
         

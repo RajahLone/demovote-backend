@@ -33,7 +33,8 @@ import jakarta.servlet.http.HttpServletRequest;
 public class CategorieController 
 {
 
-    private final BulletinRepository bulletinRepository;
+  @Autowired
+  private BulletinRepository bulletinRepository;
 
   @Autowired
   private CategorieRepository categorieRepository;
@@ -47,10 +48,6 @@ public class CategorieController
   @Autowired
   private MessageSource messageSource;
 
-
-    CategorieController(BulletinRepository bulletinRepository) {
-        this.bulletinRepository = bulletinRepository;
-    }
 
 
   @GetMapping(value = "/list")

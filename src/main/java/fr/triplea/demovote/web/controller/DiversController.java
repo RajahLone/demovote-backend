@@ -16,6 +16,9 @@ import fr.triplea.demovote.dto.MessagesTransfer;
 public class DiversController 
 {
 
+  // TODO : réglement concours utilisateur
+  // TODO : documentation administrateur
+  
   @Autowired
   private VariableRepository variableRepository;
  
