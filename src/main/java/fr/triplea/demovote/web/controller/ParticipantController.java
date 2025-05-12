@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +45,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/participant")
 public class ParticipantController 
 {
-
+  
   @Autowired
   private RoleRepository roleRepository;
 
@@ -381,6 +382,35 @@ public class ParticipantController
     }      
     
     return ResponseEntity.notFound().build(); 
+  }
+
+  
+
+  @PutMapping(value = "/arrived")
+  @PreAuthorize("hasRole('ORGA')")
+  @Transactional
+  public ResponseEntity<Object> update(@RequestBody List<Integer> numerosParticipants, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    if (numerosParticipants != null)
+    {
+      if (numerosParticipants.size() > 0)
+      {
+        participantRepository.setFlagArrives(numerosParticipants);
+        participantRepository.flush();
+        
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("changed", Boolean.TRUE);
+
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setAlerte(messageSource.getMessage("participant.arrived", null, locale));
+
+        return ResponseEntity.ok(response); 
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
   }
 
 }

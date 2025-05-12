@@ -38,6 +38,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/sign")
 public class AuthController 
 {
+  
+  // TODO : liste des participants arrivés sur le formulaire de login pour aider le participant ?
   // TODO : captcha ?
   
   @SuppressWarnings("unused") 
@@ -95,6 +97,8 @@ public class AuthController
       
       if (passwordEncoder.matches(pass, userDetails.getPassword()))
       {
+        // TODO : restreindre la connexion aux participants avec flag 'arrivés' à true ?
+        
         SecurityContextHolder.getContext().setAuthentication(authentication);
         
         String token = jwtTokenUtil.generateJwtToken(authentication);

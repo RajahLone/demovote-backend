@@ -3,6 +3,7 @@ package fr.triplea.demovote.dao;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
@@ -86,5 +87,9 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
 
   @NativeQuery("SELECT DISTINCT p.numero_participant, p.pseudonyme FROM vote.participants AS p WHERE (p.flag_actif IS TRUE) AND (p.numero_participant <> :id) AND (LENGTH(p.pseudonyme) > 0) ORDER BY p.pseudonyme ASC ")
   List<PseudonymeOptionList> getPseudonymeOptionList(@Param("id") int id);
+
+  @Modifying
+  @NativeQuery("UPDATE vote.participants SET flag_arrive = TRUE WHERE numero_participant IN :numeros ")
+  void setFlagArrives(@Param("numeros") List<Integer> listeNumeroParticipants);
 
 }

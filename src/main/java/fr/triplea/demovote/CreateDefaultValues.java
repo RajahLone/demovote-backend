@@ -98,7 +98,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addVariableIfMissing("Accueil", "PARTICIPANTS_ARRIVES_SEULEMENT", "TRUE");
     
     addVariableIfMissing("Navigation", "LISTE_PARTICIPANTS_MAX", "300");
-    addVariableIfMissing("Navigation", "LISTE_VARIABLES_MAX", "100");
      
     addVariableIfMissing("Résultats", "NOMBRE_CHOIX", "3");
     addVariableIfMissing("Résultats", "POINTS_POSITION_01", "3");
