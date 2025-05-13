@@ -18,7 +18,16 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.numero_participant = :id AND p.flag_actif IS TRUE ")
   Participant findById(@Param("id") int id);
-
+  
+  @NativeQuery("SELECT DISTINCT "
+      + "COUNT(p.*) AS nombre "
+      + "FROM vote.participants AS p "
+      + "WHERE p.flag_actif IS TRUE "
+      + "AND ((:nom IS NULL) OR (UPPER(p.nom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.prenom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.pseudonyme) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.groupe) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.email) LIKE CONCAT('%', :nom, '%'))) "
+      + "AND ((:statut = 0) OR (:statut = 1 AND p.statut = 'EN_ATTENTE'::vote.statut_participant)) "
+      + "AND ((:arrive = 0) OR (:arrive = 1 AND p.flag_arrive = FALSE) OR (:arrive = 2 AND p.flag_arrive = TRUE)) ")
+  Integer count(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive);
+  
   @NativeQuery("SELECT DISTINCT "
       + "p.numero_participant, "
       + "p.nom, "
@@ -37,9 +46,10 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "AND ((:nom IS NULL) OR (UPPER(p.nom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.prenom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.pseudonyme) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.groupe) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.email) LIKE CONCAT('%', :nom, '%'))) "
       + "AND ((:statut = 0) OR (:statut = 1 AND p.statut = 'EN_ATTENTE'::vote.statut_participant)) "
       + "AND ((:arrive = 0) OR (:arrive = 1 AND p.flag_arrive = FALSE) OR (:arrive = 2 AND p.flag_arrive = TRUE)) "
-      + "ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<ParticipantList> getListOrderedByNom(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive);
-
+      + "ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC "
+      + "LIMIT :limite OFFSET :debut ")
+  List<ParticipantList> getPageOrderedByNom(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive, @Param("debut") int debut, @Param("limite") Integer limite);
+  
   @NativeQuery("SELECT DISTINCT "
       + "p.numero_participant, "
       + "p.nom, "
@@ -58,8 +68,9 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
       + "AND ((:nom IS NULL) OR (UPPER(p.nom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.prenom) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.pseudonyme) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.groupe) LIKE CONCAT('%', :nom, '%')) OR (UPPER(p.email) LIKE CONCAT('%', :nom, '%'))) "
       + "AND ((:statut = 0) OR (:statut = 1 AND p.statut = 'EN_ATTENTE'::vote.statut_participant)) "
       + "AND ((:arrive = 0) OR (:arrive = 1 AND p.flag_arrive = FALSE) OR (:arrive = 2 AND p.flag_arrive = TRUE)) "
-      + "ORDER BY p.numero_participant ASC ")
-  List<ParticipantList> getListOrderedByDateInscription(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive);
+      + "ORDER BY p.numero_participant ASC "
+      + "LIMIT :limite OFFSET :debut ")
+  List<ParticipantList> getPageOrderedByDateInscription(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive, @Param("debut") int debut, @Param("limite") Integer limite);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_actif IS TRUE ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
   List<Participant> findAll();

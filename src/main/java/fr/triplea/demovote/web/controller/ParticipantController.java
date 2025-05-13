@@ -31,7 +31,9 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dao.RoleRepository;
+import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
+import fr.triplea.demovote.dto.Pagination;
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
 import fr.triplea.demovote.dto.ParticipantTransfer;
@@ -45,12 +47,15 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/participant")
 public class ParticipantController 
 {
-  
+
   @Autowired
   private RoleRepository roleRepository;
 
   @Autowired
   private ParticipantRepository participantRepository;
+  
+  @Autowired
+  private VariableRepository variableRepository;
   
   @Autowired
   private PasswordEncoder passwordEncoder;
@@ -64,15 +69,59 @@ public class ParticipantController
 
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('ORGA')")
-  public List<ParticipantList> getList(@RequestParam("nom") String filtreNom, @RequestParam("statut") int filtreStatut, @RequestParam("arrive") int filtreArrive, @RequestParam("tri") int choixTri) 
+  public List<ParticipantList> getList(
+      @RequestParam("nom") String filtreNom, 
+      @RequestParam("statut") int filtreStatut, 
+      @RequestParam("arrive") int filtreArrive, 
+      @RequestParam("tri") int choixTri, 
+      @RequestParam(name="page", defaultValue="0") int numeroPage, 
+      @RequestParam(name="size", defaultValue="0") Integer nombreParPage
+      ) 
   { 
     if (filtreNom != null) { if (filtreNom.isBlank()) { filtreNom = null; } else { filtreNom = filtreNom.trim().toUpperCase(); } }
     
-    if (choixTri == 1) { return participantRepository.getListOrderedByDateInscription(filtreNom, filtreStatut, filtreArrive); }
+    if (nombreParPage == 0) { try { nombreParPage = Integer.parseInt(variableRepository.findByTypeAndCode("Navigation", "LISTE_PARTICIPANTS_MAX")); } catch(Exception e) { nombreParPage = null; } }
     
-    // TODO : pagination pour réduire affichage
+    if ((nombreParPage == null) || (nombreParPage == 0)) { numeroPage = 0; }
     
-    return participantRepository.getListOrderedByNom(filtreNom, filtreStatut, filtreArrive);
+    int offset = 0;
+    
+    if (numeroPage > 0) { offset = ((numeroPage * nombreParPage) + 1); }
+    
+    if (choixTri == 1) 
+    { 
+      return participantRepository.getPageOrderedByDateInscription(filtreNom, filtreStatut, filtreArrive, offset, nombreParPage); 
+    }
+    else 
+    {
+      return participantRepository.getPageOrderedByNom(filtreNom, filtreStatut, filtreArrive, offset, nombreParPage);
+    }
+  }
+
+  @GetMapping(value = "/pagination")
+  @PreAuthorize("hasRole('ORGA')")
+  public Pagination getCount(
+      @RequestParam("nom") String filtreNom, 
+      @RequestParam("statut") int filtreStatut, 
+      @RequestParam("arrive") int filtreArrive, 
+      @RequestParam(name="page", defaultValue="0") int numeroPage
+      ) 
+  { 
+    if (filtreNom != null) { if (filtreNom.isBlank()) { filtreNom = null; } else { filtreNom = filtreNom.trim().toUpperCase(); } }
+    
+    int nombreParPage = 100;
+    
+    try { nombreParPage = Integer.parseInt(variableRepository.findByTypeAndCode("Navigation", "LISTE_PARTICIPANTS_MAX")); } catch(Exception e) { nombreParPage = 100; }
+
+    int nombreElements = participantRepository.count(filtreNom, filtreStatut, filtreArrive);
+     
+    int nombrePages = 0;
+    
+    int decompte = nombreElements; while (decompte > 0) { nombrePages++; decompte -= nombreParPage; }
+    
+    numeroPage = Math.max(0, Math.min(numeroPage, nombrePages - 1));
+    
+    return new Pagination(nombreElements, nombreParPage, nombrePages, numeroPage);
   }
 
   

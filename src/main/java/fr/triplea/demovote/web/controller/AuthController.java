@@ -25,6 +25,7 @@ import fr.triplea.demovote.dto.JourneesTransfer;
 import fr.triplea.demovote.dto.RefreshTokenTransfer;
 import fr.triplea.demovote.dto.UserCredentials;
 import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.ParticipantStatut;
 import fr.triplea.demovote.model.RefreshToken;
 import fr.triplea.demovote.model.Role;
 import fr.triplea.demovote.security.MyUserDetailsService;
@@ -97,35 +98,55 @@ public class AuthController
       
       if (passwordEncoder.matches(pass, userDetails.getPassword()))
       {
-        // TODO : restreindre la connexion aux participants avec flag 'arrivés' à true ?
-        
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        
-        String token = jwtTokenUtil.generateJwtToken(authentication);
-        
-        refreshTokenService.deleteByNumeroParticipant(found.getNumeroParticipant());
-        
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getNumeroParticipant());
-                
-        uc = new UserCredentials();
-        
-        uc.setNumeroParticipant(found.getNumeroParticipant());
-        uc.setUsername(usrn);
-        uc.setPassword("<success@auth>");
-        uc.setNom(found.getNom());
-        uc.setPrenom(found.getPrenom());
-        uc.setDelaiAvantDeconnexion(found.getDelaiDeconnexion());
-        uc.setAccessToken(token);
-        uc.setRefreshToken(refreshToken.getToken());
-        uc.setErreur("");
-
-        List<Role> roles = found.getRoles();
+        if (found.getStatut().equals(ParticipantStatut.EN_ATTENTE))
+        {
+          // si le règlement est toujours en attente, il faut aller à l'accueil pour régulariser
+          
+          uc = new UserCredentials();
+          
+          uc.setNumeroParticipant(0);
+          uc.setUsername("");
+          uc.setPassword("");
+          uc.setNom("");
+          uc.setPrenom("");
+          uc.setDelaiAvantDeconnexion(15);
+          uc.setAccessToken("");
+          uc.setRefreshToken("");
+          uc.setRole("");
+          uc.setErreur(messageSource.getMessage("auth.user.notpaid", null, locale));
          
-        if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
-        if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
-        if (!(uc.hasRole())) { uc.setRole("USER"); }
+          return ResponseEntity.ok(uc);
+        }
+        else
+        {
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+          
+          String token = jwtTokenUtil.generateJwtToken(authentication);
+          
+          refreshTokenService.deleteByNumeroParticipant(found.getNumeroParticipant());
+          
+          RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getNumeroParticipant());
+                  
+          uc = new UserCredentials();
+          
+          uc.setNumeroParticipant(found.getNumeroParticipant());
+          uc.setUsername(usrn);
+          uc.setPassword("<success@auth>");
+          uc.setNom(found.getNom());
+          uc.setPrenom(found.getPrenom());
+          uc.setDelaiAvantDeconnexion(found.getDelaiDeconnexion());
+          uc.setAccessToken(token);
+          uc.setRefreshToken(refreshToken.getToken());
+          uc.setErreur("");
 
-        return ResponseEntity.ok(uc);
+          List<Role> roles = found.getRoles();
+           
+          if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
+          if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
+          if (!(uc.hasRole())) { uc.setRole("USER"); }
+
+          return ResponseEntity.ok(uc);
+        }
       }
       else
       {
