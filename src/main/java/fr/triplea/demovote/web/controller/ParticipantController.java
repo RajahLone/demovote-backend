@@ -151,7 +151,7 @@ public class ParticipantController
       ParticipantTransfer p = new ParticipantTransfer();
       
       p.setDateCreation(found.hasDateCreation() ? dtf.format(found.getDateCreation()) : "");
-      p.setDateModification(found.hasDateCreation() ? dtf.format(found.getDateModification()) : ""); 
+      p.setDateModification(found.hasDateModification() ? dtf.format(found.getDateModification()) : ""); 
       p.setNumeroParticipant(found.getNumeroParticipant());
       
       p.setNom(found.getNom());
