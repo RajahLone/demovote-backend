@@ -14,15 +14,17 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.security.web.transport.HttpsRedirectFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.security.web.csrf.CsrfFilter;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 import fr.triplea.demovote.security.cors.CorsFilter;
 import fr.triplea.demovote.security.csrf.CsrfHeaderFilter;
@@ -58,9 +60,8 @@ public class SecurityConfig
   @Bean
   public AuthenticationManager authenticationManager() throws Exception 
   {
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(myUserDetailsService);
     
-    authProvider.setUserDetailsService(myUserDetailsService);
     authProvider.setPasswordEncoder(passwordEncoder());
     
     return new ProviderManager(authProvider);
@@ -83,7 +84,7 @@ public class SecurityConfig
   @Bean
   public CorsFilter corsFilter() { return new CorsFilter(); }
  
-  Class<? extends ChannelProcessingFilter> cpf_clazz = ChannelProcessingFilter.class;
+  Class<? extends HttpsRedirectFilter> cpf_clazz = HttpsRedirectFilter.class;
 
   private CsrfTokenRepository csrfTokenRepository() 
   {
@@ -103,7 +104,7 @@ public class SecurityConfig
   SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception 
   {
     http.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository()))
-        .requiresChannel(channel -> channel.anyRequest().requiresSecure())
+        .redirectToHttps(withDefaults())
         .authenticationManager(authenticationManager())
         .authorizeHttpRequests((ahreq) -> ahreq
           .requestMatchers("/divers/**", "/sign/**", "/webcam/**").permitAll()

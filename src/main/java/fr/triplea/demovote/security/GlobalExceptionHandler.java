@@ -27,7 +27,7 @@ public class GlobalExceptionHandler
   @ResponseStatus(HttpStatus.FORBIDDEN)
   public ResponseEntity<JsonErrorResponse> handleTokenRefreshException(RefreshTokenException ex) 
   {
-    LOG.error(ex.getMessage());
+    LOG.error(ex.getMessage()); //ex.printStackTrace();
     
     JsonErrorResponse jer = new JsonErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage());
 
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ResponseEntity<JsonErrorResponse> handleAllExceptions(Exception ex) 
   {
-    LOG.error(ex.getMessage());
+    LOG.error(ex.getMessage()); //ex.printStackTrace();
     
     String message =  ex.getMessage();
     
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResponseEntity<JsonErrorResponse> handleNullPointerException(NullPointerException ex) 
   {
-    LOG.error(ex.getMessage());
+    LOG.error(ex.getMessage()); //ex.printStackTrace();
     
     JsonErrorResponse jer = new JsonErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
 
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<JsonErrorResponse> handleNotFound(ResourceNotFoundException ex) 
   {
-    LOG.error(ex.getMessage());
+    LOG.error(ex.getMessage()); //ex.printStackTrace();
     
     JsonErrorResponse jer = new JsonErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
     

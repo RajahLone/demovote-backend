@@ -93,7 +93,7 @@ public class XssRequestWrapper extends HttpServletRequestWrapper
     {
       ObjectNode objectNode = (ObjectNode) node;
     
-      objectNode.fields().forEachRemaining(entry -> 
+      objectNode.properties().forEach(entry -> 
       {
         JsonNode valueNode = entry.getValue();
         
