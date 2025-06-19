@@ -5,6 +5,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+application.properties
+myCertificate.crt
+springboot.p12
 
 ### STS ###
 .apt_generated
