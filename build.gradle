@@ -53,13 +53,13 @@ configurations.implementation {
   exclude group: 'commons-logging', module: 'commons-logging'
 }
 
-bootJar {
-
-  exclude('application.properties')
-  exclude('styles/ranks.css')
-  exclude('styles/shows.css')
+processResources {
+  exclude('**/application.properties')
+  exclude('**/myCertificate.crt')
+  exclude('**/springboot.p12')
+  exclude('**/styles/*.css')
 }
 
-tasks.named('test') { useJUnitPlatform() }
+//tasks.named('test') { useJUnitPlatform() }
 
 tasks.withType(JavaCompile).configureEach { options.compilerArgs.add("-parameters") }

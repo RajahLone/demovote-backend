@@ -1,9 +1,6 @@
 .DS_Store
 HELP.md
 .gradle
-application.properties
-myCertificate.crt
-springboot.p12
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
