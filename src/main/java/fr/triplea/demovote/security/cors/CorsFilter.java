@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -17,12 +18,15 @@ public class CorsFilter extends OncePerRequestFilter
   
   private final Logger LOG = LoggerFactory.getLogger(CorsFilter.class);
 
+  @Value("${cors.allow.origin}")
+  private String AccessControlAllowOriginUrl;
+
   public CorsFilter() { LOG.info("CorsFilter init"); }
 
   @Override
   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException
   {
-    response.setHeader("Access-Control-Allow-Origin", "https://localhost:4200");
+    response.setHeader("Access-Control-Allow-Origin", AccessControlAllowOriginUrl);
     response.setHeader("Access-Control-Allow-Credentials", "true");
     response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS, DELETE");
     response.setHeader("Access-Control-Max-Age", "3600");
