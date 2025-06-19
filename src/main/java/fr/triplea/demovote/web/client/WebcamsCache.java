@@ -54,7 +54,11 @@ public class WebcamsCache
   @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
   public void recuperer() 
   {
-    if (!(variableRepository.findByTypeAndCode("Caméras", "RECUPERATION_ACTIVE")).equalsIgnoreCase("TRUE")) { return; }
+    String actif = variableRepository.findByTypeAndCode("Caméras", "RECUPERATION_ACTIVE");
+    
+    if (actif == null) { return; }
+    
+    if (!actif.equalsIgnoreCase("TRUE")) { return; }
 
     SSLContext sslContext = null;
     try 
