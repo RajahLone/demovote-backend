@@ -94,6 +94,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addVariableIfMissing("Application", "LIBELLE_LONG_JOUR1", "Vendredi 1er Novembre");
     addVariableIfMissing("Application", "LIBELLE_LONG_JOUR2", "Samedi 2 Novembre");
     addVariableIfMissing("Application", "LIBELLE_LONG_JOUR3", "Dimanche 3 Novembre");
+    
+    addVariableIfMissing("Application", "FLAG_AMIGABUS", "TRUE");
+    addVariableIfMissing("Application", "FLAG_DODOSURPLACE", "TRUE");
 
     addVariableIfMissing("Accueil", "PARTICIPANTS_ARRIVES_SEULEMENT", "TRUE");
     
