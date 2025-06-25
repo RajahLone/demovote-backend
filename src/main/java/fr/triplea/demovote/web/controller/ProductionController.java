@@ -86,13 +86,26 @@ public class ProductionController
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
-  public List<Production> getList(@RequestParam(required = false) String type, @RequestParam(required = false) Integer solo, final Authentication authentication) 
+  public List<Production> getList(
+      @RequestParam(defaultValue="0") int tri, 
+      @RequestParam(required = false) String type, 
+      @RequestParam(required = false) Integer solo, 
+      final Authentication authentication) 
   { 
     if (type != null) { if (type.isBlank()) { type = null; } }
     
     if (solo != null) { solo = Math.max(0, Math.min(solo, 1)); } else { solo = 0; }  
     
-    List<ProductionShort> prods = productionRepository.findAllWithoutArchive(this.getNumeroUser(authentication), type, solo);
+    List<ProductionShort> prods = null;
+    
+    if (tri == 1) 
+    {
+      prods = productionRepository.findAllWithoutArchiveOrderedByInvertedId(this.getNumeroUser(authentication), type, solo);
+    }
+    else 
+    {
+      prods = productionRepository.findAllWithoutArchiveOrderedByTitle(this.getNumeroUser(authentication), type, solo);
+    }
      
     List<Production> ret = new ArrayList<Production>();
     
