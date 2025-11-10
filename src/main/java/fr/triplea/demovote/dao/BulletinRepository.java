@@ -62,16 +62,16 @@ public interface BulletinRepository extends JpaRepository<Bulletin, Integer>
   
   @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre "
              + "FROM vote.bulletins AS u "
-             + "WHERE (p.numero_production01 = :numero) "
-             + "   OR (p.numero_production02 = :numero) "
-             + "   OR (p.numero_production03 = :numero) "
-             + "   OR (p.numero_production04 = :numero) "
-             + "   OR (p.numero_production05 = :numero) "
-             + "   OR (p.numero_production06 = :numero) "
-             + "   OR (p.numero_production07 = :numero) "
-             + "   OR (p.numero_production08 = :numero) "
-             + "   OR (p.numero_production09 = :numero) "
-             + "   OR (p.numero_production10 = :numero) ")
+             + "WHERE (u.numero_production01 = :numero) "
+             + "   OR (u.numero_production02 = :numero) "
+             + "   OR (u.numero_production03 = :numero) "
+             + "   OR (u.numero_production04 = :numero) "
+             + "   OR (u.numero_production05 = :numero) "
+             + "   OR (u.numero_production06 = :numero) "
+             + "   OR (u.numero_production07 = :numero) "
+             + "   OR (u.numero_production08 = :numero) "
+             + "   OR (u.numero_production09 = :numero) "
+             + "   OR (u.numero_production10 = :numero) ")
   Integer countIfProductionVoted(@Param("numero") int numeroProduction);
 
   @Modifying(flushAutomatically = true)
@@ -79,17 +79,17 @@ public interface BulletinRepository extends JpaRepository<Bulletin, Integer>
   int validateAll();
 
   @Modifying(clearAutomatically = true)
-  @NativeQuery("DELETE FROM vote.bulletins "
-      + "WHERE (numero_production01 IS NULL) "
-      + "  AND (numero_production02 IS NULL) "
-      + "  AND (numero_production03 IS NULL) "
-      + "  AND (numero_production04 IS NULL) "
-      + "  AND (numero_production05 IS NULL) "
-      + "  AND (numero_production06 IS NULL) "
-      + "  AND (numero_production07 IS NULL) "
-      + "  AND (numero_production08 IS NULL) "
-      + "  AND (numero_production09 IS NULL) "
-      + "  AND (numero_production10 IS NULL) ")
+  @NativeQuery("DELETE FROM vote.bulletins AS u "
+      + "WHERE (u.numero_production01 IS NULL) "
+      + "  AND (u.numero_production02 IS NULL) "
+      + "  AND (u.numero_production03 IS NULL) "
+      + "  AND (u.numero_production04 IS NULL) "
+      + "  AND (u.numero_production05 IS NULL) "
+      + "  AND (u.numero_production06 IS NULL) "
+      + "  AND (u.numero_production07 IS NULL) "
+      + "  AND (u.numero_production08 IS NULL) "
+      + "  AND (u.numero_production09 IS NULL) "
+      + "  AND (u.numero_production10 IS NULL) ")
   int cleanAll();
 
 }
