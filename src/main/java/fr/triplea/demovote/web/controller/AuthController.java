@@ -144,7 +144,7 @@ public class AuthController
           if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { uc.setRole("ADMIN"); } } }
           if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("ORGA")) { uc.setRole("ORGA"); } } }
           if (!(uc.hasRole())) { uc.setRole("USER"); }
-
+          
           return ResponseEntity.ok(uc);
         }
       }
