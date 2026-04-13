@@ -42,10 +42,15 @@ public class DiversController
 
     jt.setJour1Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR1"));
     jt.setJour1Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR1"));
+    jt.setJour1Event(variableRepository.findByTypeAndCode("Application", "LIBELLE_PLANNING_JOUR1"));
+    
     jt.setJour2Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR2"));
     jt.setJour2Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR2"));
+    jt.setJour2Event(variableRepository.findByTypeAndCode("Application", "LIBELLE_PLANNING_JOUR2"));
+    
     jt.setJour3Court(variableRepository.findByTypeAndCode("Application", "LIBELLE_COURT_JOUR3"));
     jt.setJour3Long(variableRepository.findByTypeAndCode("Application", "LIBELLE_LONG_JOUR3"));
+    jt.setJour3Event(variableRepository.findByTypeAndCode("Application", "LIBELLE_PLANNING_JOUR3"));
     
     jt.setAmigabus(variableRepository.findByTypeAndCode("Application", "FLAG_AMIGABUS").equalsIgnoreCase("TRUE"));
     jt.setDodosurplace(variableRepository.findByTypeAndCode("Application", "FLAG_DODOSURPLACE").equalsIgnoreCase("TRUE"));

@@ -107,7 +107,7 @@ public class SecurityConfig
         .redirectToHttps(withDefaults())
         .authenticationManager(authenticationManager())
         .authorizeHttpRequests((ahreq) -> ahreq
-          .requestMatchers("/divers/**", "/sign/**", "/webcam/**").permitAll()
+          .requestMatchers("/divers/**", "/sign/**", "/webcam/**", "/evenement/**").permitAll()
           .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")
           .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").hasRole("ADMIN")
           .requestMatchers("/participant/**").hasRole("ORGA")
