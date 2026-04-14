@@ -55,9 +55,9 @@ public class EvenementController
   
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ORGA')")
-  public ResponseEntity<Evenement> getForm(@PathVariable("id") int numeroEvenement)
+  public ResponseEntity<EvenementTransfer> getForm(@PathVariable("id") int numeroEvenement)
   { 
-    Evenement c = evenementRepository.findById(numeroEvenement);
+    EvenementTransfer c = evenementRepository.findById(numeroEvenement);
     
     if (c != null) { return ResponseEntity.ok(c); }
     
