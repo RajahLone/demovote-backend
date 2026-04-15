@@ -38,21 +38,19 @@ public class Evenement
   @UpdateTimestamp
   @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateModification;
-  
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "numero_evenement", nullable = false)
   private Integer numeroEvenement;
 
   @Temporal(TemporalType.TIMESTAMP)
-  @CreationTimestamp
   @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime dateDebut;
 
   @Temporal(TemporalType.TIMESTAMP)
-  @CreationTimestamp
   @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
-  private LocalDateTime dateFin;
+  private LocalDateTime dateFin = null;
 
   @Enumerated(EnumType.STRING) 
   private EvenementType type;
@@ -85,13 +83,18 @@ public class Evenement
   public void setNumeroEvenement(Integer numeroEvenement) { this.numeroEvenement = numeroEvenement; }
   public Integer getNumeroEvenement() { return this.numeroEvenement; }
   
+  @Transient
+  DateTimeFormatter ef = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.FRANCE);
+
   public void setDateDebut(LocalDateTime d) { this.dateDebut = d; }
-  public void setDateDebut(String s) { try { this.dateDebut = LocalDateTime.parse(s, df); } catch (DateTimeParseException dtpe) { this.dateDebut = null; } }
+  public void setDateDebut(String s) { try { this.dateDebut = LocalDateTime.parse(s, ef); } catch (DateTimeParseException dtpe) { this.dateDebut = null; } }
   public LocalDateTime getDateDebut() { return this.dateDebut; }
   
   public void setDateFin(LocalDateTime d) { this.dateFin = d; }
-  public void setDateFin(String s) { try { this.dateFin = LocalDateTime.parse(s, df); } catch (DateTimeParseException dtpe) { this.dateFin = null; } }
+  public void setDateFin(String s) { try { this.dateFin = LocalDateTime.parse(s, ef); } catch (DateTimeParseException dtpe) { this.dateFin = null; } }
   public LocalDateTime getDateFin() { return this.dateFin; }
+  @Transient
+  public void nullifyDateFin() { this.dateFin = null; }
   
   public void setType(EvenementType enu) { this.type = enu; }
   public EvenementType getType() { return this.type; }
@@ -131,9 +134,6 @@ public class Evenement
       
     final Evenement c = (Evenement) obj;
     if (getNumeroEvenement() == null) { if (c.getNumeroEvenement() == null) { return false; } } else if (!getNumeroEvenement().equals(c.getNumeroEvenement())) { return false; }
-    if (getIntitule() == null) { if (c.getIntitule() == null) { return false; } } else if (!getIntitule().equals(c.getIntitule())) { return false; }
-    if (getDescriptif() == null) { if (c.getDescriptif() == null) { return false; } } else if (!getDescriptif().equals(c.getDescriptif())) { return false; }
-    if (getLien() == null) { if (c.getLien() == null) { return false; } } else if (!getLien().equals(c.getLien())) { return false; }
     
     return true;
   }

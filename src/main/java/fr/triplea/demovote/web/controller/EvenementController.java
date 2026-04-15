@@ -57,7 +57,7 @@ public class EvenementController
   @PreAuthorize("hasRole('ORGA')")
   public ResponseEntity<EvenementTransfer> getForm(@PathVariable("id") int numeroEvenement)
   { 
-    EvenementTransfer c = evenementRepository.findById(numeroEvenement);
+    EvenementTransfer c = evenementRepository.searchById(numeroEvenement);
     
     if (c != null) { return ResponseEntity.ok(c); }
     
@@ -74,13 +74,13 @@ public class EvenementController
     
     fresh.setNumeroEvenement(null);
       
-    fresh.setDateDebut(evenement.jourDebut() + " " + evenement.heureDebut() + ":00");
+    fresh.setDateDebut(evenement.jourDebut() + " " + evenement.heureDebut());
 
     if (fresh.getDateDebut() != null) 
     {
       LocalDateTime end = LocalDateTime.from(fresh.getDateDebut());
       
-      fresh.setDateFin(end.plusMinutes(evenement.duree()));
+      if (evenement.duree() > 0) { fresh.setDateFin(end.plusMinutes(evenement.duree())); } else { fresh.nullifyDateFin(); }
       
       if (evenement.type().equals("REPAS")) { fresh.setType(EvenementType.REPAS); }
       else if(evenement.type().equals("CONFERENCE")) { fresh.setType(EvenementType.CONFERENCE); }
@@ -113,13 +113,13 @@ public class EvenementController
     
     if (found != null)
     {
-      found.setDateDebut(evenement.jourDebut() + " " + evenement.heureDebut() + ":00");
+      found.setDateDebut(evenement.jourDebut() + " " + evenement.heureDebut());
 
       if (found.getDateDebut() != null)
       {
         LocalDateTime end = LocalDateTime.from(found.getDateDebut());
         
-        found.setDateFin(end.plusMinutes(evenement.duree()));
+        if (evenement.duree() > 0) { found.setDateFin(end.plusMinutes(evenement.duree())); } else { found.nullifyDateFin(); }
      
         if (evenement.type().equals("REPAS")) { found.setType(EvenementType.REPAS); }
         else if(evenement.type().equals("CONFERENCE")) { found.setType(EvenementType.CONFERENCE); }
@@ -138,7 +138,6 @@ public class EvenementController
 
         return ResponseEntity.ok(mt);
       }
-      
     }
     
     return ResponseEntity.notFound().build(); 

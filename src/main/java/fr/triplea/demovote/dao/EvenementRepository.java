@@ -12,7 +12,10 @@ import fr.triplea.demovote.model.Evenement;
 public interface EvenementRepository extends JpaRepository<Evenement, Integer> 
 {
   
-  @NativeQuery("SELECT DISTINCT " 
+  @NativeQuery("SELECT e.* FROM vote.evenements AS e WHERE e.numero_evenement = :numero ")
+  Evenement findById(@Param("numero") int numeroEvenement);
+
+  @NativeQuery("SELECT " 
       + "e.numero_evenement, "
       + "TO_CHAR(e.date_debut, 'YYYY-MM-DD') AS jour_debut, "
       + "TO_CHAR(e.date_debut, 'HH24:MI') AS heure_debut, "
@@ -24,7 +27,7 @@ public interface EvenementRepository extends JpaRepository<Evenement, Integer>
       + "e.lien "
       + "FROM vote.evenements AS e "
       + "WHERE e.numero_evenement = :numero ")
-  EvenementTransfer findById(@Param("numero") int numeroEvenement);
+  EvenementTransfer searchById(@Param("numero") int numeroEvenement);
   
   @NativeQuery("SELECT DISTINCT e.* FROM vote.evenements AS e ORDER BY e.date_debut ASC ")
   List<Evenement> findAll();
