@@ -39,11 +39,11 @@ public class Message
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="numero_participant", referencedColumnName="numero_participant")
-  private Participant participant;
+  private User participant;
   
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="numero_destinataire", referencedColumnName="numero_participant")
-  private Participant destinataire;
+  private User destinataire;
 
   @Column(length = 4000, nullable = false)
   private String ligne;
@@ -62,11 +62,11 @@ public class Message
   public void setNumeroMessage(Integer numeroMessage) { this.numeroMessage = numeroMessage; }
   public Integer getNumeroMessage() { return this.numeroMessage; }
   
-  public void setParticipant(Participant p) { this.participant = p; }
-  public Participant getParticipant() { return this.participant; }
+  public void setParticipant(User p) { this.participant = p; }
+  public User getParticipant() { return this.participant; }
 
-  public void setDestinataire(Participant d) { this.destinataire = d; }
-  public Participant getDestinataire() { return this.destinataire; }
+  public void setDestinataire(User d) { this.destinataire = d; }
+  public User getDestinataire() { return this.destinataire; }
 
   public void setLigne(String str) { if (str != null) { this.ligne = StringUtils.truncate(str, 4000); } }
   public String getLigne() { return this.ligne; }

@@ -23,7 +23,7 @@ import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.dto.MotDePasseTransfer;
 import fr.triplea.demovote.dto.ParticipantTransfer;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.Role;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -59,7 +59,7 @@ public class AccountController
 
     if (authentication != null)
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
       
       if (found != null) 
       { 
@@ -118,7 +118,7 @@ public class AccountController
 
     if (authentication != null)
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
       
       if (found != null)
       {
@@ -156,7 +156,7 @@ public class AccountController
 
     if (authentication != null)
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
       
       if (found != null)
       {

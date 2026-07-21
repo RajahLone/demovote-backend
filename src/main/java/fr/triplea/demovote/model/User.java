@@ -37,7 +37,7 @@ import jakarta.persistence.Transient;
 
 @Entity(name = "vote.participants")
 @Table(name = "participants")
-public class Participant
+public class User
 {
   
   @Temporal(TemporalType.TIMESTAMP)
@@ -160,7 +160,7 @@ public class Participant
   private List<Message> messagesDestinataire;
 
   
-  public Participant() { super(); }
+  public User() { super(); }
 
   
   @Transient
@@ -338,7 +338,7 @@ public class Participant
     if (obj == null) { return false; }
     if (getClass() != obj.getClass()) { return false; }
       
-    final Participant p = (Participant) obj;
+    final User p = (User) obj;
     if (getNumeroParticipant() == null) { if (p.getNumeroParticipant() == null) { return false; } } else if (!getNumeroParticipant().equals(p.getNumeroParticipant())) { return false; }
     
     return true;

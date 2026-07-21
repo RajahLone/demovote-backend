@@ -25,7 +25,7 @@ import fr.triplea.demovote.dao.CategorieRepository;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
 import fr.triplea.demovote.model.Categorie;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -243,7 +243,7 @@ public class CategorieController
     
     if (auth != null)
     {
-      Participant found = participantRepository.findByPseudonyme(auth.getName());
+      User found = participantRepository.findByPseudonyme(auth.getName());
       
       if (found != null)
       {

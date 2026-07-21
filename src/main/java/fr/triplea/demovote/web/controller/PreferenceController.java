@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.demovote.dao.PreferenceRepository;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.Preference;
 
 @RestController
@@ -30,7 +30,7 @@ public class PreferenceController
   
   @PostMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
-  public List<Preference> get(@RequestParam(required = true) Participant numParticipant, @RequestParam(required = false) int numTraitement) 
+  public List<Preference> get(@RequestParam(required = true) User numParticipant, @RequestParam(required = false) int numTraitement) 
   { 
     return preferenceRepository.findByParticipantAndTraitement(numParticipant, numTraitement); 
   }

@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dao.RoleRepository;
 import fr.triplea.demovote.dao.VariableRepository;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.Role;
 import fr.triplea.demovote.model.Variable;
 
@@ -49,9 +49,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     Role userRole = addRoleIfMissing("ROLE_USER");
     
     
-    List<Participant> participants = participantRepository.findAll();
+    List<User> participants = participantRepository.findAll();
     
-    for (Participant participant : participants)
+    for (User participant : participants)
     {
       boolean changed = false;
       

@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
+import fr.triplea.demovote.dao.RefreshTokenRepository;
 import fr.triplea.demovote.dao.RoleRepository;
 import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.MessagesTransfer;
@@ -37,7 +38,7 @@ import fr.triplea.demovote.dto.Pagination;
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
 import fr.triplea.demovote.dto.ParticipantTransfer;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.ParticipantModePaiement;
 import fr.triplea.demovote.model.ParticipantStatut;
 import fr.triplea.demovote.model.Role;
@@ -53,6 +54,9 @@ public class ParticipantController
 
   @Autowired
   private ParticipantRepository participantRepository;
+
+  @Autowired
+  private RefreshTokenRepository refreshTokenRepository;
   
   @Autowired
   private VariableRepository variableRepository;
@@ -144,7 +148,7 @@ public class ParticipantController
 
     DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
     
-    Participant found = participantRepository.findById(numeroParticipant);   
+    User found = participantRepository.findById(numeroParticipant);   
     
     if (found != null)
     {
@@ -211,7 +215,7 @@ public class ParticipantController
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Participant found = participantRepository.findById(0);
+    User found = participantRepository.findById(0);
     
     if (found == null) 
     {
@@ -219,7 +223,7 @@ public class ParticipantController
       {
         if (!(participant.getPseudonyme().isBlank()))
         {
-          found = new Participant();
+          found = new User();
           
           found.setRoles(found.getRoles());
           found.setEnabled(true);
@@ -316,7 +320,7 @@ public class ParticipantController
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Participant found = participantRepository.findById(numeroParticipant);
+    User found = participantRepository.findById(numeroParticipant);
     
     if (found != null)
     {
@@ -412,10 +416,12 @@ public class ParticipantController
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Participant found = participantRepository.findById(numeroParticipant);
+    User found = participantRepository.findById(numeroParticipant);
     
     if (found != null)
     {
+      refreshTokenRepository.deleteByNumeroParticipant(found.getNumeroParticipant());
+      
       found.setEnabled(false); 
       found.setPseudonyme(found.getPseudonyme() + "_" + UUID.randomUUID().toString());
       

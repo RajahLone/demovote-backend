@@ -49,7 +49,7 @@ public class Role
   private String libelle;
 
   @ManyToMany(mappedBy = "roles")
-  private List<Participant> participants;
+  private List<User> participants;
 
 
   public Role() { super(); }
@@ -79,8 +79,8 @@ public class Role
   @Transient
   public boolean isRole(String s) { if (this.libelle != null) { if (this.libelle.equals("ROLE_" + s)) { return true; } } return false; }
  
-  public List<Participant> getParticipants() { return participants; }
-  public void setUsers(final List<Participant> participants) { this.participants = participants; }
+  public List<User> getParticipants() { return participants; }
+  public void setUsers(final List<User> participants) { this.participants = participants; }
 
   
 

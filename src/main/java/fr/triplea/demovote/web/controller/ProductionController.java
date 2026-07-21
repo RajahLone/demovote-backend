@@ -47,7 +47,7 @@ import fr.triplea.demovote.dto.ProductionShort;
 import fr.triplea.demovote.dto.ProductionTransfer;
 import fr.triplea.demovote.dto.ProductionUpdate;
 import fr.triplea.demovote.model.Categorie;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.Presentation;
 import fr.triplea.demovote.model.Production;
 import fr.triplea.demovote.model.ProductionType;
@@ -205,7 +205,7 @@ public class ProductionController
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Integer> create(@RequestBody(required = true) ProductionTransfer production, HttpServletRequest request) 
   { 
-    Participant participant = participantRepository.findById(production.numeroParticipant());
+    User participant = participantRepository.findById(production.numeroParticipant());
 
     if (participant != null) 
     {
@@ -257,7 +257,7 @@ public class ProductionController
 
       if ((numeroUser == 0) || (production.numeroGestionnaire() == numeroUser))
       {
-        Participant participant = participantRepository.findById(production.numeroGestionnaire());
+        User participant = participantRepository.findById(production.numeroGestionnaire());
         
         if (participant != null)
         {
@@ -529,7 +529,7 @@ public class ProductionController
     
     if (auth != null)
     {
-      Participant found = participantRepository.findByPseudonyme(auth.getName());
+      User found = participantRepository.findByPseudonyme(auth.getName());
       
       if (found != null)
       {

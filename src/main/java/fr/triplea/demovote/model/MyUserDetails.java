@@ -4,11 +4,9 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -16,10 +14,6 @@ public class MyUserDetails implements UserDetails
 {
 
   private static final long serialVersionUID = -2662964904357800987L;
-
-  @Autowired
-  @JsonIgnore
-  public PasswordEncoder passwordEncoder;
   
   private Integer id; 
   
@@ -38,7 +32,7 @@ public class MyUserDetails implements UserDetails
     this.authorities = authorities;
   }
   
-  public static MyUserDetails createInstance(Participant participant) 
+  public static MyUserDetails createInstance(User participant) 
   {
     Set<GrantedAuthority> authorities = participant.getRoles().stream().map((role) -> new SimpleGrantedAuthority(role.getLibelle())).collect(Collectors.toSet());
 

@@ -67,7 +67,7 @@ public class Production
   
   @ManyToOne
   @JoinColumn(name="numero_participant", referencedColumnName="numero_participant")
-  private Participant participant;
+  private User participant;
   
   @Transient
   private Integer numeroGestionnaire;
@@ -167,8 +167,8 @@ public class Production
   @Transient
   public boolean isEnabled() { return (getEnabled().booleanValue()); }
   
-  public void setParticipant(Participant p) { this.participant = p; }
-  public Participant getParticipant() { return this.participant; }
+  public void setParticipant(User p) { this.participant = p; }
+  public User getParticipant() { return this.participant; }
   
   @Transient
   public void setNumeroGestionnaire(Integer num) { if (num != null) { this.numeroGestionnaire = num; } }

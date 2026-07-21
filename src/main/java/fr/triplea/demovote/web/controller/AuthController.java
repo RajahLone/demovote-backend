@@ -24,7 +24,7 @@ import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.JourneesTransfer;
 import fr.triplea.demovote.dto.RefreshTokenTransfer;
 import fr.triplea.demovote.dto.UserCredentials;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.ParticipantStatut;
 import fr.triplea.demovote.model.RefreshToken;
 import fr.triplea.demovote.model.Role;
@@ -88,7 +88,7 @@ public class AuthController
     
     if (usrn.isEmpty() || pass.isEmpty()) { return ResponseEntity.notFound().build(); }
     
-    Participant found = participantRepository.findByPseudonyme(usrn);
+    User found = participantRepository.findByPseudonyme(usrn);
         
     if (found != null)
     { 
@@ -198,7 +198,7 @@ public class AuthController
     
     if (found == null) { throw new RefreshTokenException(refreshTokenActif, messageSource.getMessage("refreshtoken.expired", null, locale)); }
 
-    Participant participant = found.getParticipant();
+    User participant = found.getParticipant();
         
     rtt.setAccessToken(jwtTokenUtil.generateTokenFromPseudonyme(participant.getPseudonyme()));
     
@@ -210,7 +210,7 @@ public class AuthController
   {
     if (authentication != null)
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
       
       if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.getNumeroParticipant()); }
     }

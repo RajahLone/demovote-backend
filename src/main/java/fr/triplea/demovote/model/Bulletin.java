@@ -27,7 +27,7 @@ public class Bulletin
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="numero_participant", referencedColumnName="numero_participant")
-  private Participant participant;
+  private User participant;
   
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "numero_production01", referencedColumnName="numero_production")
@@ -82,8 +82,8 @@ public class Bulletin
   public void setCategorie(Categorie c) { this.categorie = c; }
   public Categorie getCategorie() { return this.categorie; }
 
-  public void setParticipant(Participant p) { this.participant = p; }
-  public Participant getParticipant() { return this.participant; }
+  public void setParticipant(User p) { this.participant = p; }
+  public User getParticipant() { return this.participant; }
   
   public void setProduction01(Production p) { this.production01 = p; }
   public Production getProduction01() { return this.production01; }

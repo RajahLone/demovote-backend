@@ -10,14 +10,14 @@ import org.springframework.data.repository.query.Param;
 import fr.triplea.demovote.dto.ParticipantList;
 import fr.triplea.demovote.dto.ParticipantOptionList;
 import fr.triplea.demovote.dto.PseudonymeOptionList;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.Role;
 
-public interface ParticipantRepository extends JpaRepository<Participant, Integer> 
+public interface ParticipantRepository extends JpaRepository<User, Integer> 
 {
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.numero_participant = :id AND p.flag_actif IS TRUE ")
-  Participant findById(@Param("id") int id);
+  User findById(@Param("id") int id);
   
   @NativeQuery("SELECT DISTINCT "
       + "COUNT(p.*) AS nombre "
@@ -73,25 +73,25 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
   List<ParticipantList> getPageOrderedByDateInscription(@Param("nom") String nom, @Param("statut") int statut, @Param("arrive") int arrive, @Param("debut") int debut, @Param("limite") Integer limite);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_actif IS TRUE ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<Participant> findAll();
+  List<User> findAll();
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants_roles AS rp INNER JOIN vote.participants AS p ON rp.numero_participant = p.numero_participant INNER JOIN vote.roles AS r ON rp.numero_role = r.numero_role WHERE p.flag_actif IS TRUE AND r.flag_actif IS TRUE AND rp.numero_role = :role ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<Participant> findByRole(@Param("role") Role role);
+  List<User> findByRole(@Param("role") Role role);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_actif IS TRUE AND p.pseudonyme = :pseudo ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  Participant findByPseudonyme(@Param("pseudo") String pseudonyme);
+  User findByPseudonyme(@Param("pseudo") String pseudonyme);
   
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.status = :status AND p.flag_actif IS TRUE ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<Participant> findByStatut(@Param("status") String status);
+  List<User> findByStatut(@Param("status") String status);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_arrive = :arrive AND p.flag_actif IS TRUE ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<Participant> findByArrived(@Param("arrive") boolean flag_arrive);
+  List<User> findByArrived(@Param("arrive") boolean flag_arrive);
 
   @NativeQuery("SELECT DISTINCT p.* FROM vote.participants AS p WHERE p.flag_dodo_sur_place = :dodo AND p.flag_actif IS TRUE ORDER BY p.nom ASC, p.prenom ASC, p.pseudonyme ASC ")
-  List<Participant> findBySleepingOnSite(@Param("dodo") boolean flag_dodo_sur_place);
+  List<User> findBySleepingOnSite(@Param("dodo") boolean flag_dodo_sur_place);
   
   @Override
-  void delete(Participant participant);
+  void delete(User participant);
 
   @NativeQuery("SELECT DISTINCT p.numero_participant, p.pseudonyme, p.nom, p.prenom FROM vote.participants AS p WHERE p.flag_actif IS TRUE ORDER BY p.pseudonyme ASC, p.nom ASC, p.prenom ASC ")
   List<ParticipantOptionList> getParticipantOptionList();

@@ -29,7 +29,7 @@ public class RefreshToken
 
   @OneToOne
   @JoinColumn(name = "numero_participant", referencedColumnName = "numero_participant")
-  private Participant participant;
+  private User participant;
 
   @Column(nullable = false, unique = true, length = 4000)
   private String token;
@@ -42,8 +42,8 @@ public class RefreshToken
   public void setId(Integer i) { this.id = i; }
   public Integer getId() { return this.id; }
   
-  public void setParticipant(Participant p) { this.participant = p; }
-  public Participant getParticipant() { return this.participant; }
+  public void setParticipant(User p) { this.participant = p; }
+  public User getParticipant() { return this.participant; }
   
   public void setToken(String str) { if (str != null) { this.token = StringUtils.truncate(str, 4000); } }
   public String getToken() { return this.token; }

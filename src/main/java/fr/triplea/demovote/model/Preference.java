@@ -44,7 +44,7 @@ public class Preference
 
   @ManyToOne
   @JoinColumn(name="numero_participant", referencedColumnName="numero_participant")
-  private Participant participant;
+  private User participant;
   
   private Integer numeroTraitement;
 
@@ -69,8 +69,8 @@ public class Preference
   public void setNumeroPreference(Integer numeroPreference) { this.numeroPreference = numeroPreference; }
   public Integer getNumeroPreference() { return this.numeroPreference; }
   
-  public void setParticipant(Participant p) { this.participant = p; }
-  public Participant getParticipant() { return this.participant; }
+  public void setParticipant(User p) { this.participant = p; }
+  public User getParticipant() { return this.participant; }
   
   public void setNumeroTraitement(int t) { this.numeroTraitement = Integer.valueOf(t); }
   public Integer getNumeroTraitement() { return this.numeroTraitement; }

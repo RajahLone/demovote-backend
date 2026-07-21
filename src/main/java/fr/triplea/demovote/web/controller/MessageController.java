@@ -20,7 +20,7 @@ import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.dto.MessageShort;
 import fr.triplea.demovote.dto.PseudonymeOptionList;
 import fr.triplea.demovote.model.Message;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 
 @RestController
 @RequestMapping("/chat")
@@ -43,7 +43,7 @@ public class MessageController
   { 
     if (authentication != null)
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
 
       if (found != null)
       {
@@ -62,7 +62,7 @@ public class MessageController
 
     if (authentication != null)
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
       
       if ((found != null) && (last >= 0)) 
       {         
@@ -83,7 +83,7 @@ public class MessageController
 
     if ((authentication != null) && (message != null))
     {
-      Participant found = participantRepository.findByPseudonyme(authentication.getName());
+      User found = participantRepository.findByPseudonyme(authentication.getName());
       
       if ((found != null) && (last >= 0) && (authentication.getName().equals(message.pseudonyme()))) 
       { 
@@ -99,7 +99,7 @@ public class MessageController
           m.setParticipant(found);
           m.setLigne(ligne);
           
-          Participant destinataire = participantRepository.findById(message.numeroDestinataire());
+          User destinataire = participantRepository.findById(message.numeroDestinataire());
           
           if (destinataire != null) { m.setDestinataire(destinataire); } else { m.setDestinataire(null); }
           

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.triplea.demovote.dao.ParticipantRepository;
 import fr.triplea.demovote.model.MyUserDetails;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 
 @Service("userDetailsService")
 @Transactional
@@ -28,7 +28,7 @@ public class MyUserDetailsService implements UserDetailsService
   {
     try 
     {
-      final Participant participant = participantRepository.findByPseudonyme(pseudonyme);
+      final User participant = participantRepository.findByPseudonyme(pseudonyme);
       
       if (participant == null) { throw new UsernameNotFoundException("Pseudonyme non trouvé : " + pseudonyme); }
 

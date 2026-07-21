@@ -47,7 +47,7 @@ import fr.triplea.demovote.dto.ProductionChoice;
 import fr.triplea.demovote.dto.ProductionVote;
 import fr.triplea.demovote.model.Bulletin;
 import fr.triplea.demovote.model.Categorie;
-import fr.triplea.demovote.model.Participant;
+import fr.triplea.demovote.model.User;
 import fr.triplea.demovote.model.Production;
 import fr.triplea.demovote.web.service.BulletinService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -113,7 +113,7 @@ public class BulletinController
     {
       Categorie categorie = categorieRepository.findById(numeroCategorie);
 
-      Participant participant = participantRepository.findById(numeroParticipant);
+      User participant = participantRepository.findById(numeroParticipant);
       
       if ((categorie != null) && (participant != null))
       {
@@ -471,7 +471,7 @@ public class BulletinController
     
     if (auth != null)
     {
-      Participant found = participantRepository.findByPseudonyme(auth.getName());
+      User found = participantRepository.findByPseudonyme(auth.getName());
       
       if (found != null)
       {
