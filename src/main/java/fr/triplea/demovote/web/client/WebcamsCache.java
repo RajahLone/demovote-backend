@@ -54,62 +54,66 @@ public class WebcamsCache
   @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
   public void recuperer() 
   {
-    String actif = variableRepository.findByTypeAndCode("Caméras", "RECUPERATION_ACTIVE");
-    
-    if (actif == null) { return; }
-    
-    if (!actif.equalsIgnoreCase("TRUE")) { return; }
-
-    SSLContext sslContext = null;
     try 
     {
-      sslContext = SSLContexts.custom()
-                    .loadTrustMaterial((chain, authType) -> { final X509Certificate cert = chain[0]; return ("CN=" + domaineOrigine).equalsIgnoreCase(cert.getSubjectX500Principal().getName()); })
-                    .build();
-    } 
-    catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) { LOG.error(e.toString()); sslContext = null; }
-        
-    if (sslContext == null) { return; } 
-    
-    TlsSocketStrategy tlsStrategy = new DefaultClientTlsStrategy(sslContext);
-   
-    HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
-                                       .setTlsSocketStrategy(tlsStrategy)
-                                       .setDefaultTlsConfig(TlsConfig.custom().setHandshakeTimeout(Timeout.ofSeconds(30)).setSupportedProtocols(TLS.V_1_3).build())
-                                       .build();  
-    
-    if (cm == null) { return; }
-    
-    CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(cm).build();
-    
-    if (httpclient == null) { return; }
-    
-    boolean termine = false;
-    id = 1;
-    String url = null;
-
-    while (termine == false)
-    {
-      url = variableRepository.findByTypeAndCode("Caméras", "RECUPERATION_IMAGE_" + id);
+      String actif = variableRepository.findByTypeAndCode("Caméras", "RECUPERATION_ACTIVE");
       
-      if (url == null) { termine = true; }
-      else
-      if (url.equalsIgnoreCase("NONE") || !url.startsWith("https://")) { termine = true; }
-      else
+      if (actif == null) { return; }
+      
+      if (!actif.equalsIgnoreCase("TRUE")) { return; }
+
+      SSLContext sslContext = null;
+      try 
       {
-        HttpGet httpget = new HttpGet(url);
+        sslContext = SSLContexts.custom()
+                      .loadTrustMaterial((chain, authType) -> { final X509Certificate cert = chain[0]; return ("CN=" + domaineOrigine).equalsIgnoreCase(cert.getSubjectX500Principal().getName()); })
+                      .build();
+      } 
+      catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) { LOG.error(e.toString()); sslContext = null; }
+          
+      if (sslContext == null) { return; } 
+      
+      TlsSocketStrategy tlsStrategy = new DefaultClientTlsStrategy(sslContext);
+     
+      HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                                         .setTlsSocketStrategy(tlsStrategy)
+                                         .setDefaultTlsConfig(TlsConfig.custom().setHandshakeTimeout(Timeout.ofSeconds(30)).setSupportedProtocols(TLS.V_1_3).build())
+                                         .build();  
+      
+      if (cm == null) { return; }
+      
+      CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(cm).build();
+      
+      if (httpclient == null) { return; }
+      
+      boolean termine = false;
+      id = 1;
+      String url = null;
+
+      while (termine == false)
+      {
+        url = variableRepository.findByTypeAndCode("Caméras", "RECUPERATION_IMAGE_" + id);
         
-        HttpClientContext clientContext = HttpClientContext.create();
-        
-        try 
+        if (url == null) { termine = true; }
+        else
+        if (url.equalsIgnoreCase("NONE") || !url.startsWith("https://")) { termine = true; }
+        else
         {
-          httpclient.execute(httpget, clientContext, response ->  { if (response.getCode() == 200){ inclureVue(EntityUtils.toByteArray(response.getEntity())); } return null; });
-        } 
-        catch (IOException e) { LOG.error(e.toString()); }
-        
-        id++;
+          HttpGet httpget = new HttpGet(url);
+          
+          HttpClientContext clientContext = HttpClientContext.create();
+          
+          try 
+          {
+            httpclient.execute(httpget, clientContext, response ->  { if (response.getCode() == 200){ inclureVue(EntityUtils.toByteArray(response.getEntity())); } return null; });
+          } 
+          catch (IOException e) { LOG.error(e.toString()); }
+          
+          id++;
+        }
       }
     }
+    catch (Exception e) { LOG.error(e.toString()); }
   }
   
   private void inclureVue(byte[] b)

@@ -48,14 +48,14 @@ public class AccountController
   private MessageSource messageSource;
 
   private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
-  private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dtf_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
   
   @GetMapping(value = "/form")
   public ResponseEntity<ParticipantTransfer> getForm(final Authentication authentication, HttpServletRequest request) 
   {         
     Locale locale = localeResolver.resolveLocale(request);
 
-    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
+    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dtf_en; }
 
     if (authentication != null)
     {

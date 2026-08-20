@@ -138,7 +138,7 @@ public class ParticipantController
 
 
   private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
-  private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dtf_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
  
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ORGA')")
@@ -146,7 +146,7 @@ public class ParticipantController
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
+    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dtf_en; }
     
     User found = participantRepository.findById(numeroParticipant);   
     
