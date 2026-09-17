@@ -230,7 +230,7 @@ public class Production
       
       BufferedImage originalImage = ImageIO.read(bais);
       
-      BufferedImage thumbnail = Thumbnails.of(originalImage).crop(Positions.CENTER).size(300, 300).asBufferedImage();
+      BufferedImage thumbnail = Thumbnails.of(originalImage).crop(Positions.CENTER).size(Math.min(300, originalImage.getWidth()), Math.min(300, originalImage.getHeight())).asBufferedImage();
       
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       
