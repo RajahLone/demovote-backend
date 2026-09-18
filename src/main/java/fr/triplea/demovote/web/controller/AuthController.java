@@ -205,7 +205,7 @@ public class AuthController
     return ResponseEntity.ok(rtt);
   }
   
-  @PostMapping("/out")
+  @GetMapping("/out")
   public ResponseEntity<UserCredentials> signOut(final Authentication authentication)
   {
     if (authentication != null)

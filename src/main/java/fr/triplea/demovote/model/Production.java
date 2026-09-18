@@ -230,7 +230,11 @@ public class Production
       
       BufferedImage originalImage = ImageIO.read(bais);
       
-      BufferedImage thumbnail = Thumbnails.of(originalImage).crop(Positions.CENTER).size(Math.min(300, originalImage.getWidth()), Math.min(300, originalImage.getHeight())).asBufferedImage();
+      // need to convert to ARGB, some pixels low encoding show black'n'white when thumbnailed
+      BufferedImage convertedImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+      convertedImage.getGraphics().drawImage(originalImage, 0, 0, null);
+      
+      BufferedImage thumbnail = Thumbnails.of(convertedImage).crop(Positions.CENTER).size(Math.min(300, originalImage.getWidth()), Math.min(300, originalImage.getHeight())).asBufferedImage();
       
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       
