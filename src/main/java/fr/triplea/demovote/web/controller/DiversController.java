@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.triplea.demovote.dto.ApplicationInfo;
 import fr.triplea.demovote.dao.VariableRepository;
 import fr.triplea.demovote.dto.JourneesTransfer;
 import fr.triplea.demovote.dto.MessagesTransfer;
@@ -21,7 +22,20 @@ public class DiversController
   
   @Autowired
   private VariableRepository variableRepository;
- 
+  
+  @GetMapping(value = "/info")
+  public ResponseEntity<ApplicationInfo> getApplicationInfo() 
+  { 
+    ApplicationInfo ai = new ApplicationInfo();
+
+    ai.setVersion("1.0.0");
+    ai.setFramework("Java 17+ - Spring Boot 3.5.16");
+    ai.setDate("20260922");
+    ai.setAuthors(new String[] {"Rajah Lone"});
+    
+    return ResponseEntity.ok(ai); 
+  }
+
   @GetMapping(value = "/welcome")
   public ResponseEntity<MessagesTransfer> getWelcomeMessage() 
   { 
