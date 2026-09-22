@@ -7,7 +7,7 @@ User=root
 Group=root
 
 Type=exec
-ExecStart=java -jar /home/rajah/demovote-backend-0.1.0.war
+ExecStart=java -jar /home/rajah/demovote-backend.war
 WorkingDirectory=/home/rajah/demovote-backend
 SuccessExitStatus=143
 
