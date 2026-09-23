@@ -53,7 +53,7 @@ configurations.implementation {
   exclude group: 'commons-logging', module: 'commons-logging'
 }
 
-//ext['tomcat.version'] = '10.1.54'
+ext['tomcat.version'] = '10.1.60'
 
 processResources {
   exclude('**/application.properties')
